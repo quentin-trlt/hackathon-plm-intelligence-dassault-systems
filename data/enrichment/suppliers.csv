@@ -1,16 +1,16 @@
 supplier_id,name,country,source_note
-SUP-001,SKF Automotive,SE,Tier-2 leader mondial roulements haute vitesse e-drive (100Cr6)
-SUP-002,Schaeffler Technologies (INA/FAG),DE,Tier-2 équipementier roulements coniques et boîtes de transmission
-SUP-003,GKN Driveline (Dowlais),GB,Tier-1 spécialiste mondial réducteurs et pignons de transmission taillés
-SUP-004,Dana Incorporated,US,Tier-1 leader composants différentiel et arbres de transmission
-SUP-005,EuroGroup Laminations,IT,Tier-2 découpage et empilage paquets de tôles magnétiques stator M235-35A
-SUP-006,Marelli Electric Powertrain,IT,Tier-1 bobinage statorique Hairpin cuivre haute tension 800V
-SUP-007,Nemak Casting Solutions,MX,Tier-1 fonderie HPDC aluminium sous vide pour carters e-drive étanches
-SUP-008,GF Casting Solutions,CH,Tier-1 fonderie aluminium et chemise de refroidissement moteur EN AW-6082-T6
-SUP-009,Georg Fischer Iron Casting,DE,Tier-1 fonderie fonte ductile nodulaire EN-GJS-600-3 boîtiers différentiels
-SUP-010,Bulten Fasteners,SE,Tier-2 fournisseur FSP visserie haute résistance classe 10.9 zinc-flake coated
-SUP-011,Freudenberg Sealing Technologies,DE,Tier-2 référence mondiale joints spi Simmerring FKM étanchéité arbre
-SUP-012,Hutchinson Fluid Management,FR,Tier-1 spécialiste tubulures et connecteurs polyamide PA66-GF30 e-cooling
-SUP-013,Kirchhoff Automotive,DE,Tier-2 emboutissage et découpe acier de structure S355J2 pour plaques paliers
-SUP-014,LISI Automotive,FR,Tier-2 fixations filetées automobile classe 10.9 (source secondaire)
-SUP-015,ElringKlinger AG,DE,Tier-2 joints et étanchéité dynamique transmission électrique (source secondaire)
+SUP-001,SKF Automotive,SE,"ASSUMPTION: real company chosen as plausible Tier-2 supplier of high-speed e-drive bearings (100Cr6); no actual supply relationship, catalogue or lead time verified."
+SUP-002,Schaeffler Technologies (INA/FAG),DE,"ASSUMPTION: real company chosen as plausible Tier-2 supplier of tapered and cylindrical roller bearings (100Cr6); no actual supply relationship, catalogue or lead time verified."
+SUP-003,GKN Driveline (Dowlais),GB,"ASSUMPTION: real company chosen as plausible Tier-2 gear maker (forging, hobbing, case hardening of 20MnCr5/42CrMo4); no actual supply relationship, catalogue or lead time verified."
+SUP-004,Dana Incorporated,US,"ASSUMPTION: real company chosen as plausible Tier-2 supplier of differential gears, pins and side shafts; no actual supply relationship, catalogue or lead time verified."
+SUP-005,EuroGroup Laminations,IT,"ASSUMPTION: real company chosen as plausible Tier-2 stamping and stacking of M235-35A stator laminations, used as backup source; no actual supply relationship, catalogue or lead time verified."
+SUP-006,In-house e-motor plant,FR,"ASSUMPTION: our own plant; stator lamination stacking and hairpin winding are the core know-how of an e-motor supplier, so they are made in-house."
+SUP-007,Nemak Casting Solutions,MX,"ASSUMPTION: real company chosen as plausible Tier-2 vacuum HPDC aluminium foundry for sealed e-drive housings; no actual supply relationship, catalogue or lead time verified."
+SUP-008,GF Casting Solutions,CH,"ASSUMPTION: real company chosen as plausible Tier-2 aluminium extrusion and machining (wrought alloy EN AW-6082-T6); no actual supply relationship, catalogue or lead time verified."
+SUP-009,Georg Fischer Iron Casting,DE,"ASSUMPTION: real company chosen as plausible Tier-2 ductile iron foundry (EN-GJS-600-3) for differential casings; no actual supply relationship, catalogue or lead time verified."
+SUP-010,Bulten Fasteners,SE,"ASSUMPTION: real company chosen as plausible Tier-2 supplier of class 10.9 zinc-flake coated fasteners; no actual supply relationship, catalogue or lead time verified."
+SUP-011,Freudenberg Sealing Technologies,DE,"ASSUMPTION: real company chosen as plausible Tier-2 supplier of FKM radial shaft seals; no actual supply relationship, catalogue or lead time verified."
+SUP-012,Hutchinson Fluid Management,FR,"ASSUMPTION: real company chosen as plausible Tier-2 supplier of PA66-GF30 cooling pipes and quick connectors; no actual supply relationship, catalogue or lead time verified."
+SUP-013,Kirchhoff Automotive,DE,"ASSUMPTION: real company chosen as plausible Tier-2 laser cutting and stamping of S355J2 steel plates; no actual supply relationship, catalogue or lead time verified."
+SUP-014,LISI Automotive,FR,"ASSUMPTION: real company chosen as plausible Tier-2 fastener maker, class 10.9, second source; no actual supply relationship, catalogue or lead time verified."
+SUP-015,ElringKlinger AG,DE,"ASSUMPTION: real company chosen as plausible Tier-2 seal maker, second source for FKM shaft seals; no actual supply relationship, catalogue or lead time verified."
