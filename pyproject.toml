@@ -12,6 +12,7 @@ dependencies = ["lxml>=5.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
+agent = ["openai>=1.40", "python-dotenv>=1.0"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/plm"]
