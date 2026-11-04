@@ -687,10 +687,10 @@ def _risk_entry(ctx: ToolContext, risk: PartRisk, details: bool = False) -> Resu
     entry: Result = {
         "part": ctx.summary(product),
         "level": risk.level,
-        "criticality": risk.criticality,
-        "probability": round(risk.probability, 2),
-        "impact": round(risk.impact, 2),
-        "price_risk": risk.price_risk,
+        "criticality_score_0_100": risk.criticality,
+        "probability_score_0_1": round(risk.probability, 2),
+        "impact_score_0_1": round(risk.impact, 2),
+        "price_risk_score_0_100": risk.price_risk,
         "price_level": risk.price_level,
         "evidence": ctx.cite(f"Risk score of {product.name}", risk.sources, product.plm_id, RISK_CAVEAT),
     }
@@ -702,7 +702,7 @@ def _risk_entry(ctx: ToolContext, risk: PartRisk, details: bool = False) -> Resu
             "code": c.code,
             "axis": c.axis,
             "value": c.value,
-            "score": round(c.score, 2),
+            "score_0_1": round(c.score, 2),
             "explanation": c.explanation,
             "evidence": ctx.cite(f"{c.code} of {product.name}", c.sources, product.plm_id, RISK_CAVEAT),
         }
@@ -971,9 +971,10 @@ TOOLS: tuple[Tool, ...] = (
     ),
     Tool(
         "get_risk_ranking",
-        "Official criticality ranking of the physical parts (probability x impact, 0-100, level high/medium/low) "
+        "Official criticality ranking of the physical parts (probability x impact, level high/medium/low) "
         "with the main drivers of each score. view='price' ranks by price risk instead (material volatility x cost "
-        "share). Use it for any question on critical parts, risks or priorities.",
+        "share). Criticality and price risk are scores out of 100, not percentages: write them as 63.7/100. "
+        "Use it for any question on critical parts, risks or priorities.",
         _params(
             {
                 "view": {"type": "string", "enum": ["supply", "price"], "description": "Default supply"},
@@ -986,7 +987,8 @@ TOOLS: tuple[Tool, ...] = (
     Tool(
         "get_part_risk",
         "Why a part is (or is not) critical: every risk criterion with its value, score and explanation. "
-        "For an assembly: risk levels of the parts below it and the most critical ones.",
+        "For an assembly: risk levels of the parts below it and the most critical ones. Criticality and price risk "
+        "are scores out of 100, criteria scores out of 1; none of them is a percentage.",
         _params({"plm_id": _PLM_ID}, ("plm_id",)),
         get_part_risk,
     ),

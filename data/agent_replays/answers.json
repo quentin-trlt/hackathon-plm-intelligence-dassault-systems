@@ -2715,6 +2715,242 @@
         "rejected_text": null
       }
     },
+    "which part is the most critical": {
+      "question": "Which part is the most critical?",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "ff208df457929c97",
+      "recorded_at": "2026-11-04T16:19:25+00:00",
+      "answer": {
+        "text": "**Most critical part (supply‑risk view)**  \n\n| Part | PLM ID | Criticality (%) | Risk level |\n|------|--------|----------------|------------|\n| ECAR‑3D_motor | prd-12535825-00000109 | 63.7 % | high |\n\nThis part has the highest supply‑risk score in the motor’s PLM data [E2][E1].",
+        "evidence": [
+          {
+            "id": "E2",
+            "label": "Risk score of ECAR-3D_motor",
+            "plm_id": "prd-12535825-00000109",
+            "note": "Official risk score of the application (docs/risk_rules.md). Supplier, lead time and volatility data are team assumptions from the enrichment files.",
+            "refs": [
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 39,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 36,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 37,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 38,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 41,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1180,
+                "element": "Product",
+                "xml_id": "ID_61",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021976"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 3,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2868,
+                "element": "ProductInst",
+                "xml_id": "ID_148",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C14"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3120,
+                "element": "ProductInst",
+                "xml_id": "ID_161",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CFB"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3140,
+                "element": "ProductInst",
+                "xml_id": "ID_162",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FEE"
+              }
+            ]
+          },
+          {
+            "id": "E1",
+            "label": "PLM element of ECAR-3D_motor (prd-12535825-00000109)",
+            "plm_id": "prd-12535825-00000109",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1180,
+                "element": "Product",
+                "xml_id": "ID_61",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021976"
+              }
+            ]
+          }
+        ],
+        "tool_calls": [
+          {
+            "name": "get_risk_ranking",
+            "arguments": "{\"limit\":1,\"view\":\"supply\"}",
+            "seconds": 0.0019045419976464473,
+            "error": null
+          }
+        ],
+        "warnings": [
+          "1 sentence(s) state a figure without a citation"
+        ],
+        "usage": {
+          "prompt_tokens": 5875,
+          "completion_tokens": 284
+        },
+        "rejected_text": null
+      }
+    },
+    "which part is the most exposed to a raw material price increase": {
+      "question": "Which part is the most exposed to a raw material price increase?",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "ff208df457929c97",
+      "recorded_at": "2026-11-04T16:19:25+00:00",
+      "answer": {
+        "text": "The part with the highest exposure to a raw‑material price increase is **ECAR‑3D Stator Coils** (price‑risk = 100 % – “high” level)[E2].",
+        "evidence": [
+          {
+            "id": "E2",
+            "label": "Risk score of ECAR-3D_Stator Coils",
+            "plm_id": "prd-12535825-00000121",
+            "note": "Official risk score of the application (docs/risk_rules.md). Supplier, lead time and volatility data are team assumptions from the enrichment files.",
+            "refs": [
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 10,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 325,
+                "element": "Product",
+                "xml_id": "ID_16",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219EE"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 9,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1522,
+                "element": "ProductInst",
+                "xml_id": "ID_79",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021BFE"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1698,
+                "element": "ProductInst",
+                "xml_id": "ID_88",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C40"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1892,
+                "element": "ProductInst",
+                "xml_id": "ID_98",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EFC"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1912,
+                "element": "ProductInst",
+                "xml_id": "ID_99",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022072"
+              }
+            ]
+          }
+        ],
+        "tool_calls": [
+          {
+            "name": "get_risk_ranking",
+            "arguments": "{\"view\":\"price\"}",
+            "seconds": 0.0006088750014896505,
+            "error": null
+          }
+        ],
+        "warnings": [],
+        "usage": {
+          "prompt_tokens": 7579,
+          "completion_tokens": 253
+        },
+        "rejected_text": null
+      }
+    },
     "which supplier do we depend on the most": {
       "question": "Which supplier do we depend on the most?",
       "model": "openai/gpt-oss-120b",

@@ -300,8 +300,10 @@ def test_risk_ranking_matches_the_risk_service(ctx: ToolContext) -> None:
     official = ctx.risk.ranking()
     assert [p["part"]["plm_id"] for p in result["parts"]] == [r.plm_id for r in official[:3]]
     assert result["truncated"] and result["scored_part_count"] == len(official)
+    assert result["parts"][0]["criticality_score_0_100"] == official[0].criticality
     price = call(ctx, "get_risk_ranking", view="price", level="high")
     assert all(p["price_level"] == "high" for p in price["parts"])
+    assert price["parts"][0]["price_risk_score_0_100"] == ctx.risk.price_ranking()[0].price_risk
 
 
 def test_part_risk_explains_every_criterion_and_resolves_wrappers(ctx: ToolContext) -> None:
