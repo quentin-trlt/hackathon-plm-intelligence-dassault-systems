@@ -10,6 +10,7 @@ import pandas as pd
 import streamlit as st
 
 from plm.analysis.cost import MaterialCostService
+from plm.analysis.impact import ChangeImpactService
 from plm.analysis.risk import MESHING_ARTEFACTS, Criterion, PartRisk, RiskService
 from plm.model import Product
 from plm.parser import CsvEnrichmentRepository, PlmData, XmlPlmRepository, load
@@ -25,6 +26,7 @@ class Services:
     data: PlmData
     cost: MaterialCostService
     risk: RiskService
+    impact: ChangeImpactService
 
     @property
     def plm(self) -> XmlPlmRepository:
@@ -39,7 +41,8 @@ class Services:
 def get_services() -> Services:
     data = load(XML_PATH, ENRICHMENT_DIR)
     cost = MaterialCostService(data.plm, data.enrichment)
-    return Services(data=data, cost=cost, risk=RiskService(data.plm, data.enrichment, cost))
+    risk = RiskService(data.plm, data.enrichment, cost)
+    return Services(data=data, cost=cost, risk=risk, impact=ChangeImpactService(data.plm, data.enrichment, cost, risk))
 
 
 def label(product: Product) -> str:

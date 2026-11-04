@@ -42,6 +42,9 @@ QUESTIONS: dict[str, str] = {
     "rotor_magnet": "How many rotor magnets are in the motor?",
     "stator_cost_share": "Quelle part du coût matière vient du stator ?",
     "reducer_mass": "Quelle est la masse du sous-ensemble REDUCER FRONT ?",
+    "most_critical": "Which part is the most critical?",
+    "price_exposure": "Which part is the most exposed to a raw material price increase?",
+    "screw_copper_change": "If the D10 L155 screw were made of copper, how much would the motor material cost change?",
     "off_topic_fr": "Donne moi une recette de tarte aux pommes",
     "off_topic_en": "What is the capital of France?",
 }
@@ -162,6 +165,10 @@ def golden_cases(data: PlmData) -> list[Case]:
     by_assembly = tool("aggregate_leaves", group_by="assembly", metric="material_cost_eur", top=30)["groups"]
     stator = next(g for g in by_assembly if "stator" in normalize(g["key"]))
     reducer = next(p for p in plm.products() if core_name(p.name) == "reducer front")
+    most_critical = tool("get_risk_ranking", limit=1)["parts"][0]["part"]
+    most_exposed = tool("get_risk_ranking", view="price", limit=1)["parts"][0]["part"]
+    copper = next(m.material for m in data.enrichment.material_prices() if m.material.startswith("Copper"))
+    screw_change = tool("assess_change", plm_id=screw_l155, new_material=copper)
 
     return [
         Case("subassemblies", (grounded, mentions(*(core_name(n) for n in subassemblies)))),
@@ -210,6 +217,18 @@ def golden_cases(data: PlmData) -> list[Case]:
         Case("rotor_magnet", (not_refused, used_tool("search_products"))),
         Case("stator_cost_share", (grounded, has_numbers(stator["share_of_total_pct"]))),
         Case("reducer_mass", (grounded, has_numbers(reducer.mass_kg))),
+        Case(
+            "most_critical",
+            (grounded, used_tool("get_risk_ranking", "get_part_risk"), mentions(core_name(most_critical["name"]))),
+        ),
+        Case(
+            "price_exposure",
+            (grounded, used_tool("get_risk_ranking", "get_risk_exposure"), mentions(core_name(most_exposed["name"]))),
+        ),
+        Case(
+            "screw_copper_change",
+            (grounded, used_tool("assess_change"), has_numbers(abs(screw_change["motor_material_cost_change_eur"]))),
+        ),
         Case("off_topic_fr", (refused,)),
         Case("off_topic_en", (refused,)),
     ]

@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import pytest
+from conftest import ENRICHMENT_DIR
 
 from plm.analysis.cost import MaterialCostService
 from plm.analysis.risk import MESHING_ARTEFACTS, RiskConfig, RiskService
 from plm.parser import CsvEnrichmentRepository, XmlPlmRepository
-
-from conftest import ENRICHMENT_DIR
 
 
 @pytest.fixture(scope="module")

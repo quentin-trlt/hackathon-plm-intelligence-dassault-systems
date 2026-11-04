@@ -1,36 +1,38 @@
-"""Change impact: replace a component by one of another mass or material, and trace what it affects."""
+"""Change impact: change or replace a component and trace what it affects. Logic in plm.analysis.impact."""
 
 from __future__ import annotations
-
-from collections import defaultdict
 
 import pandas as pd
 import streamlit as st
 
 import ui
-from plm.model import Product, SourceRef
-from services import Services, label, leaves_below, part_risk, sourcing_frame
+from plm.analysis.impact import ChangeImpact
+from plm.analysis.risk import PartRisk
+from services import Services, label, leaves_below, sourcing_frame
 
 DEFAULT_TARGET = "ECAR-3D_DifferentialSideShaft"
+MODES = ("Change mass or material", "Replace by an existing part")
 
 
-def _units_below(s: Services, plm_id: str) -> dict[str, int]:
-    """For every assembly above the product: units of the product inside one unit of that assembly."""
-    by_path = {occ.path: occ for occ in s.plm.occurrences()}
-    per_ancestor: dict[str, dict[tuple[str, ...], int]] = defaultdict(lambda: defaultdict(int))
-    for occ in s.plm.where_used(plm_id):
-        for depth, ancestor in enumerate(occ.path[:-1]):
-            ancestor_path = occ.path[: depth + 1]
-            ratio = occ.cumulative_quantity // by_path[ancestor_path].cumulative_quantity
-            per_ancestor[ancestor][ancestor_path] += ratio
-    return {ancestor: next(iter(paths.values())) for ancestor, paths in per_ancestor.items()}
-
-
-def _proposal(s: Services) -> tuple[Product, float, str | None, float | None, list[SourceRef]]:
-    """Component, proposed unit mass and material, proposed unit material cost, with the price rows used."""
+def _proposal(s: Services) -> ChangeImpact:
     candidates = [p for p in s.plm.products() if not p.is_root]
     default = next((i for i, p in enumerate(candidates) if p.name == DEFAULT_TARGET), 0)
-    product = st.selectbox("Component to replace", candidates, index=default, format_func=label)
+    product = st.selectbox("Component to change", candidates, index=default, format_func=label)
+    mode = st.radio("Proposed change", MODES, key=f"mode-{product.plm_id}")
+    if mode == MODES[1]:
+        replacements = s.impact.replacement_candidates(product.plm_id)
+        if not replacements:
+            st.info("No product of the extract can replace this one.")
+            return s.impact.assess(product.plm_id)
+        replacement = st.selectbox(
+            "Replacement part",
+            replacements,
+            format_func=label,
+            key=f"replacement-{product.plm_id}",
+            help="Products of the same kind (part or assembly), excluding the component itself and its parents.",
+        )
+        return s.impact.assess(product.plm_id, replacement_plm_id=replacement.plm_id)
+
     new_mass = st.number_input(
         "Proposed unit mass (kg)",
         min_value=0.0,
@@ -42,7 +44,7 @@ def _proposal(s: Services) -> tuple[Product, float, str | None, float | None, li
     )
     if product.material is None:
         st.text_input("Proposed material", value="None, this is an assembly", disabled=True)
-        return product, new_mass, None, None, []
+        return s.impact.assess(product.plm_id, new_mass_kg=new_mass)
 
     materials = [p.material for p in s.enrichment.material_prices()]
     if product.material not in materials:
@@ -54,22 +56,24 @@ def _proposal(s: Services) -> tuple[Product, float, str | None, float | None, li
         key=f"material-{product.plm_id}",
         help=f"Current material: {product.material}.",
     )
-    price = s.enrichment.material_price(new_material)
-    if price is None:
-        return product, new_mass, new_material, None, []
-    return product, new_mass, new_material, new_mass * price.price_eur_per_kg, [price.source]
+    return s.impact.assess(product.plm_id, new_mass_kg=new_mass, new_material=new_material)
 
 
-def _figures(s: Services, product: Product, new_mass: float, new_unit_cost: float | None, impacted: int) -> None:
+def _changed(result: ChangeImpact) -> bool:
+    return (
+        result.replacement is not None
+        or result.proposed_unit_mass_kg != result.current_unit_mass_kg
+        or result.proposed_material != result.target.material
+    )
+
+
+def _figures(s: Services, result: ChangeImpact) -> None:
     root = s.plm.root()
-    quantity = s.plm.total_quantity(product.plm_id).value
-    mass_delta = (new_mass - product.mass_kg) * quantity
-    current_cost = s.cost.unit_cost(product.plm_id)
     root_cost = s.cost.unit_cost(root.plm_id)
-
+    mass_delta = result.root_mass_delta_kg
     items = [
-        ui.Figure("Impacted assemblies", str(impacted), "Every assembly above the component."),
-        ui.Figure("Units in motor", str(quantity), "Each unit carries the change."),
+        ui.Figure("Impacted assemblies", str(len(result.impacted)), "Every assembly above the component."),
+        ui.Figure("Units in motor", str(result.quantity_in_root), "Each unit carries the change."),
         ui.Figure(
             "Motor mass",
             f"{root.mass_kg + mass_delta:.3f} kg",
@@ -78,8 +82,8 @@ def _figures(s: Services, product: Product, new_mass: float, new_unit_cost: floa
             delta_worse=None if mass_delta == 0 else mass_delta > 0,
         ),
     ]
-    if new_unit_cost is not None and current_cost is not None and root_cost is not None:
-        cost_delta = (new_unit_cost - current_cost.value) * quantity
+    cost_delta = result.root_cost_delta_eur
+    if cost_delta is not None and root_cost is not None:
         items.append(
             ui.Figure(
                 "Motor material cost",
@@ -92,88 +96,120 @@ def _figures(s: Services, product: Product, new_mass: float, new_unit_cost: floa
         )
     else:
         items.append(
-            ui.Figure("Motor material cost", "Not computed", "Needs a part with a priced material.", team_data=True)
+            ui.Figure("Motor material cost", "Not computed", "Needs every price involved to be known.", team_data=True)
         )
     ui.figures(items)
 
 
-def _impacted_frame(s: Services, product: Product, new_mass: float) -> pd.DataFrame:
-    unit_delta = new_mass - product.mass_kg
-    units_below = _units_below(s, product.plm_id)
-    rows = []
-    for occ in s.plm.occurrences():
-        units = units_below.get(occ.plm_id)
-        if not units:
-            continue
-        assembly = s.plm.product(occ.plm_id)
-        rows.append(
+def _impacted(result: ChangeImpact) -> None:
+    st.subheader("Impacted assemblies", anchor=False)
+    frame = pd.DataFrame(
+        [
             {
-                "Assembly": assembly.name,
-                "Kind": assembly.item_kind,
-                "Level": occ.depth,
-                "Units of the component": units,
-                "Declared mass (kg)": assembly.mass_kg,
-                "Projected mass (kg)": assembly.mass_kg + unit_delta * units,
-                "PLM ID": assembly.plm_id,
+                "Assembly": a.name,
+                "Kind": a.item_kind,
+                "Level": a.depth,
+                "Units of the component": a.units,
+                "Declared mass (kg)": a.declared_mass_kg,
+                "Projected mass (kg)": a.projected_mass_kg,
+                "Material cost (EUR)": a.current_cost_eur,
+                "Projected cost (EUR)": a.projected_cost_eur,
+                "PLM ID": a.plm_id,
             }
+            for a in result.impacted
+        ]
+    )
+    money = st.column_config.NumberColumn(format="%.2f")
+    mass = st.column_config.NumberColumn(format="%.3f")
+    st.dataframe(
+        frame,
+        hide_index=True,
+        width="stretch",
+        column_config={
+            "Declared mass (kg)": mass,
+            "Projected mass (kg)": mass,
+            "Material cost (EUR)": money,
+            "Projected cost (EUR)": money,
+        },
+    )
+    st.caption("Projected cost per assembly: current material cost plus the unit cost change x units. Team prices.")
+
+
+def _side(title: str, material: str | None, volatility: str | None) -> None:
+    st.markdown(f"**{title}**")
+    with st.container(horizontal=True, gap="small"):
+        st.badge(material or "No material", color="gray")
+        st.badge(f"Volatility {volatility or 'unknown'}", color="violet")
+
+
+def _risk(risk: PartRisk | None) -> None:
+    if risk is not None:
+        ui.risk_badge(risk.level, risk.criticality)
+
+
+def _suppliers(s: Services, plm_id: str) -> None:
+    frame = sourcing_frame(s, leaves_below(s, plm_id))
+    if frame.empty:
+        st.info("No supplier is recorded in data/enrichment/part_sourcing.csv.")
+        return
+    st.dataframe(
+        frame.drop(columns=["Source note", "CSV line"]),
+        hide_index=True,
+        width="stretch",
+        column_config={"Single source": st.column_config.CheckboxColumn()},
+    )
+
+
+def _before_after(s: Services, result: ChangeImpact) -> None:
+    st.subheader("Before and after", anchor=False)
+    before, after = st.columns(2, gap="large")
+    with before:
+        _side(f"Current: {result.target.name}", result.target.material, result.current_volatility)
+        _risk(result.current_risk)
+        _suppliers(s, result.target.plm_id)
+    with after:
+        proposed = result.replacement or result.target
+        title = label(result.replacement) if result.replacement else f"{result.target.name}, modified"
+        _side(f"Proposed: {title}", result.proposed_material, result.proposed_volatility)
+        _risk(result.proposed_risk)
+        if result.replacement is None:
+            st.caption("Same suppliers as today: a mass or material change does not model a supplier change.")
+        _suppliers(s, proposed.plm_id)
+    if result.proposed_volatility and result.current_volatility != result.proposed_volatility:
+        st.warning(
+            f"Price exposure changes: {result.current_volatility or 'unknown'} volatility today, "
+            f"{result.proposed_volatility} with the proposed material."
         )
-    return pd.DataFrame(rows).drop_duplicates(subset="PLM ID")
+    st.caption("Suppliers, lead times and volatility classes are team data from data/enrichment/.")
 
 
 def render(s: Services) -> None:
     ui.page_header(
         "Change impact",
-        "Propose a replacement for a component and see which assemblies, suppliers, mass and material cost it touches.",
+        "Change a component or replace it by another part of the extract, and see which assemblies, suppliers, "
+        "mass and material cost it touches.",
     )
     form_col, result_col = st.columns([1, 2.4], gap="large")
     with form_col:
         with st.container(border=True):
             st.markdown("**Proposed change**")
-            product, new_mass, new_material, new_unit_cost, price_refs = _proposal(s)
-        changed = new_mass != product.mass_kg or (new_material is not None and new_material != product.material)
-        if not changed:
-            st.caption("Change the mass or the material to see the roll-up on the motor.")
+            result = _proposal(s)
+        if not _changed(result):
+            st.caption("Change the mass, the material or pick a replacement to see the roll-up on the motor.")
 
-    leaves = leaves_below(s, product.plm_id)
-    occurrences = s.plm.where_used(product.plm_id)
     with result_col:
-        impacted = _impacted_frame(s, product, new_mass)
-        _figures(s, product, new_mass, new_unit_cost, len(impacted))
+        _figures(s, result)
         ui.key()
-
-        risks = [r for r in (part_risk(s, pid) for pid in leaves) if r is not None]
-        if len(risks) == 1:
-            st.markdown(f"Current risk of **{risks[0].name}**")
-            ui.risk_badge(risks[0].level, risks[0].criticality)
-
-        st.subheader("Where the component sits", anchor=False)
-        ui.paths(([s.plm.product(pid).name for pid in occ.path], occ.cumulative_quantity) for occ in occurrences)
-
-        st.subheader("Impacted assemblies", anchor=False)
-        st.dataframe(
-            impacted,
-            hide_index=True,
-            width="stretch",
-            column_config={
-                "Declared mass (kg)": st.column_config.NumberColumn(format="%.3f"),
-                "Projected mass (kg)": st.column_config.NumberColumn(format="%.3f"),
-            },
+        st.caption(
+            "Costs are material costs only (mass x price per kg). The data holds no purchase price, tooling, "
+            "requalification or validation cost: the real cost of a change is higher."
         )
 
-        st.subheader("Suppliers to consult", anchor=False)
-        sourcing = sourcing_frame(s, leaves)
-        if sourcing.empty:
-            st.info("No supplier is recorded for the parts concerned in data/enrichment/part_sourcing.csv.")
-        else:
-            st.dataframe(
-                sourcing.drop(columns=["CSV line"]),
-                hide_index=True,
-                width="stretch",
-                column_config={"Single source": st.column_config.CheckboxColumn()},
-            )
-            st.caption("Current suppliers of the parts being replaced, with their lead time to re-supply. Team data.")
-
-        refs: list[SourceRef] = [product.source, *price_refs]
-        refs += [ref for occ in occurrences for ref in occ.sources]
-        refs += [row.source for pid in leaves for row in s.enrichment.sourcing(pid)]
-        ui.show_sources(refs)
+        st.subheader("Where the component sits", anchor=False)
+        ui.paths(
+            ([s.plm.product(pid).name for pid in occ.path], occ.cumulative_quantity)
+            for occ in s.plm.where_used(result.target.plm_id)
+        )
+        _impacted(result)
+        _before_after(s, result)
+        ui.show_sources(result.sources)

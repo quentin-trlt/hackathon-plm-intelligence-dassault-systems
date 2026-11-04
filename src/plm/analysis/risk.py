@@ -62,9 +62,7 @@ class RiskConfig:
     frozen_states: frozenset[str] = frozenset({"FROZEN"})
     band_low: float = 0.33  # axis value below: low
     band_high: float = 0.66  # axis value at or above: high
-    volatility_scores: dict[str, float] = field(
-        default_factory=lambda: {"low": 0.2, "medium": 0.5, "high": 1.0}
-    )
+    volatility_scores: dict[str, float] = field(default_factory=lambda: {"low": 0.2, "medium": 0.5, "high": 1.0})
     price_risk_high: float = 50.0  # price_risk at or above: high
     price_risk_medium: float = 20.0  # price_risk at or above: medium
 
@@ -344,36 +342,75 @@ class RiskService:
         rows = self._sourcing[plm_id]
         refs = tuple(r.source for r in rows)
         if not rows:
-            return Criterion("SUPPLY", "probability", self._w("SUPPLY"), 1.0, "no supplier",
-                             "No supplier is recorded for this part: treated as maximum risk.", refs)
+            return Criterion(
+                "SUPPLY",
+                "probability",
+                self._w("SUPPLY"),
+                1.0,
+                "no supplier",
+                "No supplier is recorded for this part: treated as maximum risk.",
+                refs,
+            )
         if len(rows) == 1:
             row = rows[0]
             name = self._enrichment.supplier(row.supplier_id).name
             if row.make_or_buy == "make":
-                return Criterion("SUPPLY", "probability", self._w("SUPPLY"), 0.5, "single source (in-house)",
-                                 f"Only made in-house ({name}): no alternative, but the risk is under our control.",
-                                 refs)
-            return Criterion("SUPPLY", "probability", self._w("SUPPLY"), 1.0, "single source (bought)",
-                             f"Only one external supplier ({name}): any failure stops the part.", refs)
+                return Criterion(
+                    "SUPPLY",
+                    "probability",
+                    self._w("SUPPLY"),
+                    0.5,
+                    "single source (in-house)",
+                    f"Only made in-house ({name}): no alternative, but the risk is under our control.",
+                    refs,
+                )
+            return Criterion(
+                "SUPPLY",
+                "probability",
+                self._w("SUPPLY"),
+                1.0,
+                "single source (bought)",
+                f"Only one external supplier ({name}): any failure stops the part.",
+                refs,
+            )
         score = 0.25 if len(rows) == 2 else 0.0
-        return Criterion("SUPPLY", "probability", self._w("SUPPLY"), score, f"{len(rows)} sources",
-                         f"{len(rows)} sources can deliver the part.", refs)
+        return Criterion(
+            "SUPPLY",
+            "probability",
+            self._w("SUPPLY"),
+            score,
+            f"{len(rows)} sources",
+            f"{len(rows)} sources can deliver the part.",
+            refs,
+        )
 
     def _concentration(self, plm_id: str) -> Criterion:
         rows = self._sourcing[plm_id]
         if len(rows) != 1:
-            return Criterion("CONCENTRATION", "probability", self._w("CONCENTRATION"), 0.0, "n/a (multi-source)",
-                             "Several sources: the failure of one supplier does not stop the part.",
-                             tuple(r.source for r in rows))
+            return Criterion(
+                "CONCENTRATION",
+                "probability",
+                self._w("CONCENTRATION"),
+                0.0,
+                "n/a (multi-source)",
+                "Several sources: the failure of one supplier does not stop the part.",
+                tuple(r.source for r in rows),
+            )
         supplier_id = rows[0].supplier_id
         same = self._single_by_supplier[supplier_id]
         n = len(same)
         score = _clamp((n - 1) / (self._cfg.concentration_full - 1))
         name = self._enrichment.supplier(supplier_id).name
         refs = tuple(r.source for p in same for r in self._sourcing[p])
-        return Criterion("CONCENTRATION", "probability", self._w("CONCENTRATION"), score,
-                         f"{n} single-sourced parts on {name}",
-                         f"{name} is the only source of {n} part(s): one failure stops all of them.", refs)
+        return Criterion(
+            "CONCENTRATION",
+            "probability",
+            self._w("CONCENTRATION"),
+            score,
+            f"{n} single-sourced parts on {name}",
+            f"{name} is the only source of {n} part(s): one failure stops all of them.",
+            refs,
+        )
 
     def _maturity(self, plm_id: str) -> Criterion:
         p = self._plm.product(plm_id)
@@ -385,10 +422,16 @@ class RiskService:
             state, state_text = 0.5, f"not frozen ({p.maturity})"
         revision = _clamp((p.revision_index - 1) / 3)
         score = state + 0.5 * revision
-        return Criterion("MATURITY", "probability", self._w("MATURITY"), score,
-                         f"{p.maturity}, rev. {p.revision}",
-                         f"Design {state_text}, revision {p.revision} (index {p.revision_index}): "
-                         "the more revisions, the less stable the design.", (p.source,))
+        return Criterion(
+            "MATURITY",
+            "probability",
+            self._w("MATURITY"),
+            score,
+            f"{p.maturity}, rev. {p.revision}",
+            f"Design {state_text}, revision {p.revision} (index {p.revision_index}): "
+            "the more revisions, the less stable the design.",
+            (p.source,),
+        )
 
     def _cost_share(self, plm_id: str) -> tuple[float | None, tuple[SourceRef, ...]]:
         if self._cost is None or not self._root_cost:
@@ -404,8 +447,15 @@ class RiskService:
         if share is None:
             return None
         score = _clamp(share / self._cfg.cost_share_full)
-        return Criterion("COST_SHARE", "impact", self._w("COST_SHARE"), score, f"{share:.1%} of material cost",
-                         f"The part (all units) is {share:.1%} of the e-drive material cost.", refs)
+        return Criterion(
+            "COST_SHARE",
+            "impact",
+            self._w("COST_SHARE"),
+            score,
+            f"{share:.1%} of material cost",
+            f"The part (all units) is {share:.1%} of the e-drive material cost.",
+            refs,
+        )
 
     def _lead_time(self, plm_id: str) -> Criterion | None:
         rows = [r for r in self._sourcing[plm_id] if r.lead_time_days is not None]
@@ -414,17 +464,29 @@ class RiskService:
         best = min(rows, key=lambda r: r.lead_time_days)
         lo, hi = self._cfg.lead_time_low_days, self._cfg.lead_time_high_days
         score = _clamp((best.lead_time_days - lo) / (hi - lo))
-        return Criterion("LEAD_TIME", "impact", self._w("LEAD_TIME"), score, f"{best.lead_time_days} days",
-                         f"Fastest re-supply takes {best.lead_time_days} days.", tuple(r.source for r in rows))
+        return Criterion(
+            "LEAD_TIME",
+            "impact",
+            self._w("LEAD_TIME"),
+            score,
+            f"{best.lead_time_days} days",
+            f"Fastest re-supply takes {best.lead_time_days} days.",
+            tuple(r.source for r in rows),
+        )
 
     def _reuse(self, plm_id: str) -> Criterion:
         occurrences = self._plm.where_used(plm_id)
         n = len(occurrences)
         score = _clamp((n - 1) / 2)
-        return Criterion("REUSE", "impact", self._w("REUSE"), score, f"used in {n} place(s)",
-                         f"The part appears in {n} place(s) of the product structure: "
-                         "a problem spreads to every one of them.",
-                         _merge(*(o.sources for o in occurrences)))
+        return Criterion(
+            "REUSE",
+            "impact",
+            self._w("REUSE"),
+            score,
+            f"used in {n} place(s)",
+            f"The part appears in {n} place(s) of the product structure: a problem spreads to every one of them.",
+            _merge(*(o.sources for o in occurrences)),
+        )
 
     def _volatility(self, plm_id: str) -> Criterion | None:
         material = self._plm.product(plm_id).material
@@ -432,6 +494,13 @@ class RiskService:
         if price is None or price.price_volatility is None:
             return None
         score = self._cfg.volatility_scores[price.price_volatility]
-        return Criterion("PRICE_VOLATILITY", "price", 0.0, score, f"{price.price_volatility} ({material})",
-                         f"The price of {material} has a {price.price_volatility} volatility: "
-                         "a rise directly increases the cost of this part.", (price.source,))
+        return Criterion(
+            "PRICE_VOLATILITY",
+            "price",
+            0.0,
+            score,
+            f"{price.price_volatility} ({material})",
+            f"The price of {material} has a {price.price_volatility} volatility: "
+            "a rise directly increases the cost of this part.",
+            (price.source,),
+        )

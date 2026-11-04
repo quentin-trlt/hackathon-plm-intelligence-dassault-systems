@@ -293,3 +293,56 @@ def test_mass_share_of_a_subassembly(ctx: ToolContext, plm_data: PlmData) -> Non
     expected = 100 * plm_data.plm.product(REDUCER).mass_kg / plm_data.plm.root().mass_kg
     assert card["share_of_motor_mass_pct"] == pytest.approx(expected, abs=0.05)
     assert "share_of_motor_mass_pct" not in call(ctx, "get_product", plm_id=plm_data.plm.root().plm_id)
+
+
+def test_risk_ranking_matches_the_risk_service(ctx: ToolContext) -> None:
+    result = call(ctx, "get_risk_ranking", limit=3)
+    official = ctx.risk.ranking()
+    assert [p["part"]["plm_id"] for p in result["parts"]] == [r.plm_id for r in official[:3]]
+    assert result["truncated"] and result["scored_part_count"] == len(official)
+    price = call(ctx, "get_risk_ranking", view="price", level="high")
+    assert all(p["price_level"] == "high" for p in price["parts"])
+
+
+def test_part_risk_explains_every_criterion_and_resolves_wrappers(ctx: ToolContext) -> None:
+    result = call(ctx, "get_part_risk", plm_id=SCREW_L155_WRAPPER)
+    assert result["part"]["plm_id"] == SCREW_L155
+    assert {c["code"] for c in result["criteria"]} >= {"SUPPLY", "MATURITY", "COST_SHARE"}
+    assembly = call(ctx, "get_part_risk", plm_id=REDUCER)
+    assert sum(assembly["count_by_level"].values()) == assembly["scored_parts_below"]
+    assert "meshing" in execute(ctx, "get_part_risk", '{"plm_id": "prd-12535825-00000118"}')["error"]
+
+
+def test_risk_exposure_by_supplier_and_material(ctx: ToolContext) -> None:
+    suppliers = call(ctx, "get_risk_exposure", by="supplier", top=30)["groups"]
+    shares = [g["share_of_material_cost_stopped_if_it_fails_pct"] for g in suppliers]
+    assert shares == sorted(shares, reverse=True)
+    materials = call(ctx, "get_risk_exposure", by="material", top=30)["groups"]
+    assert sum(g["share_of_mass_pct"] for g in materials) == pytest.approx(100, abs=0.5)
+    assert "by" in execute(ctx, "get_risk_exposure", '{"by": "colour"}')["error"]
+
+
+def test_assess_change_material_and_replacement(ctx: ToolContext) -> None:
+    copper = next(m.material for m in ctx.enrichment.material_prices() if m.material.startswith("Copper"))
+    result = call(ctx, "assess_change", plm_id=SCREW_L155, new_material=copper)
+    assert result["units_in_motor"] == 14 and result["motor_material_cost_change_eur"] > 0
+    assert result["price_volatility"]["proposed"] == "high"
+    assert "wrapper" not in kinds(result["impacted_assemblies"])
+    other = call(ctx, "assess_change", plm_id=SIDE_SHAFT, replacement_plm_id="prd-12535825-00000123")
+    assert other["replacement"]["plm_id"] == "prd-12535825-00000123"
+    assert (
+        "Unknown or unpriced material"
+        in execute(ctx, "assess_change", json.dumps({"plm_id": SCREW_L155, "new_material": "Gold"}))["error"]
+    )
+    assert "error" in execute(ctx, "assess_change", json.dumps({"plm_id": SCREW_L155, "replacement_plm_id": REDUCER}))
+
+
+def test_new_tools_cite_registered_evidence(ctx: ToolContext) -> None:
+    results = [
+        call(ctx, "get_risk_ranking"),
+        call(ctx, "get_part_risk", plm_id=SIDE_SHAFT),
+        call(ctx, "get_risk_exposure", by="material"),
+        call(ctx, "assess_change", plm_id=SIDE_SHAFT, new_mass_kg=1.0),
+    ]
+    ids = evidence_ids(results)
+    assert ids and all(i in ctx.registry for i in ids)
