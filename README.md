@@ -1,57 +1,60 @@
-# PLM Intelligence — transformer un extrait PLM en décisions traçables
+# PLM Intelligence — turning a PLM extract into traceable decisions
 
-Projet 7 du hackathon ESILV A5 DPM/PLM (4 au 6 novembre 2026), « PLM Intelligence Challenge », proposé par Dassault Systèmes.
+Project 7 of the ESILV A5 DPM/PLM hackathon (4 to 6 November 2026), "PLM Intelligence Challenge", proposed by Dassault Systèmes.
 
-Nous sommes l'équipe engineering et digital d'un fournisseur de moteurs électriques pour l'automobile. Notre client OEM pilote ses développements dans 3DEXPERIENCE et ne nous transmet qu'un extrait XML brut de la structure produit. L'application transforme cet extrait en informations exploitables pour décider sur le coût, le risque, la qualité et la durabilité : explorer la BOM, repérer les composants critiques et mesurer l'impact d'un changement de composant. Chaque information affichée renvoie à l'élément XML dont elle provient.
+We are the engineering and digital team of an electric motor supplier for the automotive industry. Our OEM customer runs its developments in 3DEXPERIENCE and only sends us a raw XML extract of the product structure. The application turns this extract into information that supports decisions on cost, risk, quality and sustainability: exploring the BOM, spotting critical components and assessing the impact of a component change. Every piece of information displayed links back to the XML element it comes from.
 
-## Contexte
+## Context
 
-Dans ce cas d'usage, l'OEM est le client et nous sommes son fournisseur de moteurs électriques. L'OEM gère le cycle de vie de ses véhicules dans 3DEXPERIENCE, mais nous n'avons pas accès à son environnement PLM. Notre seule source est un extrait XML qui décrit la structure produit, les assemblages, les composants, leurs attributs, leurs versions et leurs états de maturité.
+In this use case, the OEM is the customer and we are its electric motor supplier. The OEM manages the lifecycle of its vehicles in 3DEXPERIENCE, but we have no access to its PLM environment. Our only source is an XML extract describing the product structure, assemblies, components, their attributes, versions and maturity states.
 
-Tout ce que l'application calcule ou affiche doit donc pouvoir être relié à un élément précis de cet extrait. C'est le principe directeur du projet.
+Everything the application computes or displays must therefore be traceable to a specific element of this extract. This is the guiding principle of the project.
 
-## Fonctionnalités
+## Features
 
-- **Product Explorer** : naviguer dans la BOM et les assemblages, chercher et filtrer, inspecter un composant et ses propriétés, comparer les versions et les états de cycle de vie.
-- **Product Intelligence** : identifier les composants critiques, les dépendances fournisseurs et les risques liés au cycle de vie.
-- **Change Impact Analysis** : à partir d'un remplacement de composant envisagé, retrouver les assemblages, fournisseurs et coûts impactés.
-- **Assistant IA (optionnel)** : interroger les données en langage naturel, chaque réponse affichant les sources PLM qui la justifient.
+- **Product Explorer**: navigate the BOM and assemblies, search and filter, inspect a component and its properties, compare versions and lifecycle states.
+- **Product Intelligence**: identify critical components, supplier dependencies and lifecycle risks.
+- **Change Impact Analysis**: starting from a proposed component replacement, find the impacted assemblies, suppliers and costs.
+- **AI assistant (optional)**: query the data in natural language, with every answer showing the PLM sources that support it.
 
-## Questions métier couvertes
+## Business questions
 
-| Question | Ce que l'application doit permettre de répondre |
+| Question | What the application must answer |
 |---|---|
-| Understand | Quels sont les sous-ensembles majeurs du moteur ? Quelles versions et propriétés existent ? |
-| Identify risks | Quels composants sont critiques ? Où sont les dépendances fournisseurs ou de cycle de vie ? |
-| Assess a change | Si un composant est remplacé, quels assemblages, fournisseurs et coûts sont touchés ? |
+| Understand | What are the major subassemblies of the motor? Which versions and properties exist? |
+| Identify risks | Which components are critical? Where are the supplier or lifecycle dependencies? |
+| Assess a change | If a component is replaced, which assemblies, suppliers and costs are affected? |
 
 ## Architecture
 
 ```
-XML OEM ──► parser ──► modèle de données ──┬──► analyses ──┬──► interface
-                                           └──► agent ─────┘
+OEM XML ──► parser ──► data model ──┬──► analysis ──┬──► interface
+                                    └──► agent ─────┘
 ```
 
-Le parser lit l'extrait et le traduit en un modèle de données interne qui conserve, pour chaque objet, la référence de son élément XML d'origine. Les analyses et l'agent travaillent uniquement sur ce modèle, et l'interface affiche leurs résultats avec leurs sources.
+The parser reads the extract and translates it into an internal data model that keeps, for every object, a reference to its original XML element. The analysis modules and the agent work on this model only, and the interface displays their results together with their sources.
 
-| Dossier | Rôle |
+| Folder | Role |
 |---|---|
-| `data/raw/` | Extrait XML fourni par l'OEM, local uniquement (voir [Données](#données)) |
-| `docs/` | Mapping XML vers le modèle de données, règles de risque, scénarios de démo |
-| `src/plm/parser/` | Lecture du XML et mapping vers le modèle de données |
-| `src/plm/analysis/` | Exploration de la BOM, calcul des risques, change impact |
-| `src/plm/agent/` | Assistant IA avec citation des sources |
-| `app/` | Interface web |
-| `tests/` | Tests automatisés |
-| `presentation/` | Supports du pitch |
+| `data/raw/` | XML extract provided by the OEM (see [Data](#data)) |
+| `data/enrichment/` | Non-PLM data written by the team: material prices, suppliers, part sourcing |
+| `docs/` | XML mapping, data contract, risk rules, demo scenarios |
+| `src/plm/parser/` | XML and enrichment loading, mapping to the data model |
+| `src/plm/analysis/` | BOM exploration, cost, risk, change impact |
+| `src/plm/agent/` | AI assistant with source citation |
+| `app/` | Web interface |
+| `tests/` | Automated tests |
+| `presentation/` | Pitch material |
 
-## Données
+## Data
 
-L'extrait XML de l'OEM se place dans `data/raw/`. Il s'agit de données partenaires : il n'est jamais commité ni déployé publiquement. Le `.gitignore` exclut tout le contenu de `data/raw/` ainsi que tout fichier `*.xml` situé en dehors de `docs/`.
+The OEM XML extract lives in `data/raw/` and is versioned in this private repository. It is partner data: it must never be published or deployed publicly. The `.gitignore` excludes every `*.xml` file outside `docs/` and `data/raw/`.
 
-## Installation et lancement
+The files in `data/enrichment/` hold data that is not in the extract (prices, suppliers, sourcing). They are written by the team, and every row states its source in a `source_note` column.
 
-Prérequis : Python 3.11 ou plus récent.
+## Installation and usage
+
+Requirement: Python 3.11 or later.
 
 ```bash
 python -m venv .venv
@@ -59,13 +62,13 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Charger l'extrait et les fichiers d'enrichissement, puis afficher un résumé et la couverture de l'enrichissement :
+Load the extract and the enrichment files, then print a summary and the enrichment coverage:
 
 ```bash
 python -m plm.parser
 ```
 
-Dans le code, tout passe par un point d'entrée unique :
+In code, everything goes through a single entry point. The full guide (objects, API, examples per module, pitfalls) is in [PARSER.md](PARSER.md).
 
 ```python
 from plm.parser import load
@@ -75,42 +78,42 @@ data.plm.where_used("prd-12535825-00000081")
 data.enrichment.coverage(data.plm)
 ```
 
-Tests et lint :
+Tests and lint:
 
 ```bash
 pytest
 ruff check src tests && ruff format --check src tests
 ```
 
-TODO : commande de lancement de l'interface, une fois le framework choisi.
+TODO: command to launch the interface, once the framework is chosen.
 
-## Organisation de l'équipe
+## Team organisation
 
-| Workstream | Périmètre | Dossiers | Responsable |
+| Workstream | Scope | Folders | Owner |
 |---|---|---|---|
-| Data | Parsing et mapping du XML, modèle de données | `src/plm/parser`, `docs/` | |
-| Analysis | Graphe BOM, risques, change impact | `src/plm/analysis` | |
-| UI | Interface et parcours de démo | `app/` | |
-| Agent | Assistant IA sourcé (optionnel) | `src/plm/agent` | |
-| Pitch | Scénarios de démo, slides | `presentation/`, `docs/` | |
+| Data | XML parsing and mapping, data model | `src/plm/parser`, `docs/` | |
+| Analysis | BOM graph, risks, change impact | `src/plm/analysis` | |
+| UI | Interface and demo flow | `app/` | |
+| Agent | AI assistant with sources (optional) | `src/plm/agent` | |
+| Pitch | Demo scenarios, slides | `presentation/`, `docs/` | |
 
-## Conventions Git
+## Git conventions
 
-- `main` reste démontrable à tout moment.
-- Branches courtes nommées `feat/<workstream>-<sujet>` ou `fix/<workstream>-<sujet>`.
-- Toute modification passe par une PR vers `main`, relue par au moins une personne.
-- Merge en squash.
-- Merges fréquents, toutes les 2 à 3 heures, pour limiter les divergences.
+- `main` is demo-ready at all times.
+- Short-lived branches named `feat/<workstream>-<topic>` or `fix/<workstream>-<topic>`.
+- Every change goes through a PR to `main`, reviewed by at least one person.
+- Squash merge.
+- Frequent merges, every 2 to 3 hours, to limit divergence.
 
-## Planning
+## Schedule
 
-| Jour | Objectifs |
+| Day | Goals |
 |---|---|
-| J1 (4 nov.) | Analyse du XML et Product Explorer |
-| J2 (5 nov.) | Risques, change impact et assistant |
-| J3 (6 nov.) | Finalisation de la démo et pitch |
+| D1 (4 Nov.) | XML analysis and Product Explorer |
+| D2 (5 Nov.) | Risks, change impact and assistant |
+| D3 (6 Nov.) | Demo finalisation and pitch |
 
-## Équipe
+## Team
 
 - Quentin TARLET
 - Chloé DAUNAS
