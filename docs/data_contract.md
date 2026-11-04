@@ -115,14 +115,21 @@ Pre-filled with one row per leaf (36 rows), in tree order. Add one row per extra
 | `lead_time_days` | int, optional | ≥ 0 |
 | `source_note` | str | Mandatory |
 
-The enrichment loader rejects a file that breaks these rules and reports the offending line.
+### Loading rules
+
+- A row whose value columns are all empty (everything except the key and the informational columns) is "not filled yet": it is skipped and listed in the coverage report. This lets the pre-filled templates be completed in place.
+- A row with some value columns filled must be complete and valid, otherwise the whole load fails with one message per problem, as `file:line: reason`.
+- A missing file or directory is treated as empty, never as an error.
+- `make_or_buy` is case-insensitive. A decimal comma or a `;` separator (Excel in French locale) is rejected with an explicit message.
+
+To check the files after editing them, run `python -m plm.parser` from the repository root. It loads everything, reports any contract violation, then lists the materials without a price and the leaves without a supplier.
 
 ## Ownership
 
 | Interface | Implemented by | Location |
 |---|---|---|
 | `PlmRepository` | Parser owner | `src/plm/parser/` |
-| `EnrichmentRepository` | To assign | `src/plm/parser/` |
+| `EnrichmentRepository` | Parser owner | `src/plm/parser/` |
 | `CostService` | Prices owner | `src/plm/analysis/` |
 | `material_prices.csv` | Prices owner | `data/enrichment/` |
 | `suppliers.csv`, `part_sourcing.csv` | Suppliers owner | `data/enrichment/` |

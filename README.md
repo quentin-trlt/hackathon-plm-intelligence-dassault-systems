@@ -51,7 +51,38 @@ L'extrait XML de l'OEM se place dans `data/raw/`. Il s'agit de données partenai
 
 ## Installation et lancement
 
-TODO : la stack technique n'est pas encore figée. Cette section sera complétée avec les prérequis, l'installation des dépendances et la commande de lancement de l'application.
+Prérequis : Python 3.11 ou plus récent.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+Charger l'extrait et les fichiers d'enrichissement, puis afficher un résumé et la couverture de l'enrichissement :
+
+```bash
+python -m plm.parser
+```
+
+Dans le code, tout passe par un point d'entrée unique :
+
+```python
+from plm.parser import load
+
+data = load()
+data.plm.where_used("prd-12535825-00000081")
+data.enrichment.coverage(data.plm)
+```
+
+Tests et lint :
+
+```bash
+pytest
+ruff check src tests && ruff format --check src tests
+```
+
+TODO : commande de lancement de l'interface, une fois le framework choisi.
 
 ## Organisation de l'équipe
 
