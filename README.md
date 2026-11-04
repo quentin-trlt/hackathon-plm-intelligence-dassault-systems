@@ -4,6 +4,8 @@ Project 7 of the ESILV A5 DPM/PLM hackathon (4 to 6 November 2026), "PLM Intelli
 
 We are the engineering and digital team of an electric motor supplier for the automotive industry. Our OEM customer runs its developments in 3DEXPERIENCE and only sends us a raw XML extract of the product structure. The application turns this extract into information that supports decisions on cost, risk, quality and sustainability: exploring the BOM, spotting critical components and assessing the impact of a component change. Every piece of information displayed links back to the XML element it comes from.
 
+Application Link : https://dassault-systemes-plm-project.netlify.app/
+
 ## Context
 
 In this use case, the OEM is the customer and we are its electric motor supplier. The OEM manages the lifecycle of its vehicles in 3DEXPERIENCE, but we have no access to its PLM environment. Our only source is an XML extract describing the product structure, assemblies, components, their attributes, versions and maturity states.
