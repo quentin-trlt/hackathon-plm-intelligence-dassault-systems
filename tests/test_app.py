@@ -62,6 +62,29 @@ def test_explorer_tabs_and_filters(plm) -> None:
     assert any("match the search and filters" in c.value for c in at.caption)
 
 
+def _structure_rows(at: AppTest) -> list[str]:
+    return list(next(d.value for d in at.dataframe if "Structure" in d.value.columns)["Structure"])
+
+
+def test_structure_tree_folds(plm) -> None:
+    root = plm.root()
+    visible = [occ for occ in plm.occurrences() if plm.product(occ.plm_id).item_kind != "wrapper"]
+    at = _view("explorer")
+    rows = _structure_rows(at)
+    assert rows[0] == f"▾ {root.name}"
+    assert len(rows) == 1 + len(plm.children(root.plm_id))
+    assert all(row.strip().startswith("▸ ") for row in rows[1:])
+
+    next(b for b in at.button if b.label == "Expand all").click().run()
+    assert not at.exception, [e.value for e in at.exception]
+    rows = _structure_rows(at)
+    assert len(rows) == len(visible)
+    assert not any(row.strip().startswith("▸ ") for row in rows)
+
+    next(b for b in at.button if b.label == "Collapse all").click().run()
+    assert len(_structure_rows(at)) == 1 + len(plm.children(root.plm_id))
+
+
 def test_change_impact_modes(plm) -> None:
     at = _view("impact")
     mode = next(r for r in at.radio if "Replace by an existing part" in r.options)
