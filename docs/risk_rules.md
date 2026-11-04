@@ -24,6 +24,22 @@ Every criterion keeps its raw value, a sentence explaining it, and its `SourceRe
 | `LEAD_TIME` | Impact | 0.35 | `part_sourcing.csv` | Shortest lead time among the sources: 30 days or less → 0, 120 days or more → 1, linear between |
 | `REUSE` | Impact | 0.15 | XML structure (`where_used`) | `(occurrences − 1) / 2`, capped at 1 |
 
+## Price exposure
+
+Supply disruption and price exposure are two different risks: in the second one the part is delivered, but costs more. They are scored separately, so a cheap but single-sourced part and an expensive but secured part are not mixed up.
+
+| Code | Data | Rule |
+|---|---|---|
+| `PRICE_VOLATILITY` | `price_volatility` column of `material_prices.csv` | low 0.2 · medium 0.5 · high 1.0 |
+
+`price_risk = 100 × PRICE_VOLATILITY × COST_SHARE`, with `price_level` high at 50 or more, medium at 20 or more. It is `None` when the volatility or the cost is unknown. `price_ranking()` lists parts by price risk.
+
+Volatility classes: copper is high (LME +35 % between Nov 2025 and Aug 2026), aluminium alloys medium (about +15 % over the same period). The other classes are team assumptions, stated in each `source_note`.
+
+## Material dependency
+
+`material_exposure()` groups the scored leaves by material: parts, physical units, mass and cost in the root product with their shares, suppliers involved, single-sourced parts and volatility. It answers "what stops or gets more expensive if this material is short or rises?". Shares are computed on the scored perimeter, so they add up to 100 %.
+
 ## Heat map
 
 Each axis is split into bands: low (< 0.33), medium (0.33 to 0.66), high (≥ 0.66).
@@ -45,4 +61,4 @@ Each axis is split into bands: low (< 0.33), medium (0.33 to 0.66), high (≥ 0.
 - Supplier, make/buy and lead time data are team assumptions (`source_note` starts with `ASSUMPTION`). The scores are only as good as these assumptions.
 - `MATURITY` barely discriminates on this extract: all products are `IN_WORK`.
 - `COST_SHARE` uses material cost only. Bought parts such as bearings and screws cost far more than their material, so their impact is underestimated.
-- Raw-material price volatility (copper, aluminium) is not a criterion yet. It would need a column in `material_prices.csv`.
+- Volatility is a three-level class, not a measured statistic. Only copper and aluminium are backed by market data.

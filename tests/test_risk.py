@@ -98,3 +98,35 @@ def test_supplier_exposure_sums_single_sourced_cost(risk):
     assert sum(s.single_sourced_cost_share for s in exposure) <= 1.0 + 1e-9
     shares = [s.single_sourced_cost_share for s in exposure]
     assert shares == sorted(shares, reverse=True)
+
+
+def test_material_exposure_adds_up(plm, risk):
+    exposure = risk.material_exposure()
+    assert sum(m.mass_share for m in exposure) == pytest.approx(1.0)
+    assert sum(m.cost_share for m in exposure) == pytest.approx(1.0)
+    shares = [m.cost_share for m in exposure]
+    assert shares == sorted(shares, reverse=True)
+    gear_steel = next(m for m in exposure if m.material == "Case-hardening steel 20MnCr5")
+    assert gear_steel.units == 9 and gear_steel.mass_kg == pytest.approx(20.5)
+    assert all(m.sources for m in exposure)
+
+
+def test_price_risk_combines_volatility_and_cost_share(plm, risk, enrichment):
+    for r in risk.ranking():
+        vol, cost = r.criterion("PRICE_VOLATILITY"), r.criterion("COST_SHARE")
+        if vol is None or cost is None:
+            assert r.price_risk is None
+        else:
+            assert r.price_risk == pytest.approx(100 * vol.score * cost.score, abs=0.05)
+    top = risk.price_ranking()[0]
+    assert enrichment.material_price(plm.product(top.plm_id).material).price_volatility == "high"
+    assert top.price_level == "high"
+
+
+def test_price_criterion_does_not_change_supply_score(plm, risk):
+    for r in risk.ranking():
+        on_axes = [c for c in r.criteria if c.axis != "price"]
+        p = sum(c.weight * c.score for c in on_axes if c.axis == "probability") / sum(
+            c.weight for c in on_axes if c.axis == "probability"
+        )
+        assert r.probability == pytest.approx(p)

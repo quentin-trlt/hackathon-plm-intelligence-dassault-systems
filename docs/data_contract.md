@@ -92,6 +92,7 @@ Pre-filled with the 14 materials of the leaves, spelled exactly as in the XML.
 | `material` | str | Key. Must match the XML string exactly, do not edit it |
 | `price_eur_per_kg` | float | > 0 |
 | `source_note` | str | Mandatory |
+| `price_volatility` | `low` \| `medium` \| `high`, optional | Case-insensitive. Used by the risk module (see [risk_rules.md](risk_rules.md)) |
 
 ### `suppliers.csv`
 

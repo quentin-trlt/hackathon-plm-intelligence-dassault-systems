@@ -123,6 +123,7 @@ class MaterialPrice:
     price_eur_per_kg: float
     source_note: str
     source: SourceRef
+    price_volatility: str | None = None  # optional: "low" | "medium" | "high"
 
 
 @dataclass(frozen=True, slots=True)

@@ -15,6 +15,11 @@ Impact: how much a disruption would hurt.
 
 A criterion without data (e.g. no lead time) is left out and its axis is
 re-weighted over the remaining criteria; it is never scored as 0.
+
+Price exposure is scored apart from supply disruption, because it is a different
+risk (the part is delivered, but costs more):
+    PRICE_VOLATILITY  volatility class of the material      (material_prices.csv)
+    price_risk = 100 x volatility score x COST_SHARE score
 """
 
 from __future__ import annotations
@@ -26,7 +31,7 @@ from typing import Literal
 from plm.contract import CostService, EnrichmentRepository, PlmRepository
 from plm.model import PartSourcing, SourceRef
 
-Axis = Literal["probability", "impact"]
+Axis = Literal["probability", "impact", "price"]
 Level = Literal["low", "medium", "high"]
 
 # Single stator tooth and single stator coil, modelled for meshing only
@@ -57,6 +62,11 @@ class RiskConfig:
     frozen_states: frozenset[str] = frozenset({"FROZEN"})
     band_low: float = 0.33  # axis value below: low
     band_high: float = 0.66  # axis value at or above: high
+    volatility_scores: dict[str, float] = field(
+        default_factory=lambda: {"low": 0.2, "medium": 0.5, "high": 1.0}
+    )
+    price_risk_high: float = 50.0  # price_risk at or above: high
+    price_risk_medium: float = 20.0  # price_risk at or above: medium
 
 
 @dataclass(frozen=True)
@@ -79,6 +89,8 @@ class PartRisk:
     criticality: float  # 0..100 = 100 x probability x impact, used for ranking
     level: Level
     criteria: tuple[Criterion, ...]
+    price_risk: float | None = None  # 0..100, None when volatility or cost is unknown
+    price_level: Level | None = None
 
     @property
     def sources(self) -> tuple[SourceRef, ...]:
@@ -105,6 +117,21 @@ class SupplierExposure:
     parts: tuple[str, ...]  # plm_ids delivered by this supplier
     single_sourced_parts: tuple[str, ...]  # plm_ids that only this supplier delivers
     single_sourced_cost_share: float  # share of root material cost that stops if it fails
+    sources: tuple[SourceRef, ...]
+
+
+@dataclass(frozen=True)
+class MaterialExposure:
+    material: str
+    parts: tuple[str, ...]  # plm_ids of the leaf parts made of this material
+    units: int  # number of physical units in the root product
+    mass_kg: float  # total mass in the root product
+    mass_share: float  # share of the root mass
+    cost_eur: float | None  # total material cost in the root product
+    cost_share: float | None  # share of the root material cost
+    suppliers: tuple[str, ...]  # supplier_ids delivering at least one of these parts
+    single_sourced_parts: tuple[str, ...]
+    price_volatility: str | None
     sources: tuple[SourceRef, ...]
 
 
@@ -140,8 +167,14 @@ class RiskService:
         for plm_id, rows in self._sourcing.items():
             if len(rows) == 1:
                 self._single_by_supplier[rows[0].supplier_id].append(plm_id)
-        root_cost = cost.unit_cost(plm.root().plm_id) if cost else None
-        self._root_cost = root_cost.value if root_cost else None
+        # Reference cost = sum over the scored leaves (excluded parts left out), so shares add up to 100 %.
+        self._root_cost: float | None = None
+        if cost is not None:
+            unit_costs = [cost.unit_cost(p.plm_id) for p in self._leaves]
+            if all(u is not None for u in unit_costs):
+                self._root_cost = sum(
+                    u.value * plm.total_quantity(p.plm_id).value for u, p in zip(unit_costs, self._leaves)
+                )
         self._cache: dict[str, PartRisk] = {}
 
     # ---- public API -------------------------------------------------------
@@ -202,6 +235,47 @@ class RiskService:
             )
         return sorted(result, key=lambda s: (-s.single_sourced_cost_share, -len(s.single_sourced_parts)))
 
+    def material_exposure(self) -> list[MaterialExposure]:
+        """Per material: parts, mass and cost shares, suppliers. Highest cost share first."""
+        root_mass = sum(p.mass_kg * self._plm.total_quantity(p.plm_id).value for p in self._leaves)
+        groups: dict[str, list[str]] = defaultdict(list)
+        for p in self._leaves:
+            if p.material:
+                groups[p.material].append(p.plm_id)
+        result = []
+        for material, plm_ids in groups.items():
+            units, mass, refs = 0, 0.0, []
+            for plm_id in plm_ids:
+                quantity = self._plm.total_quantity(plm_id)
+                units += quantity.value
+                mass += self._plm.product(plm_id).mass_kg * quantity.value
+                refs.append(self._plm.product(plm_id).source)
+            shares = [self._cost_share(p) for p in plm_ids]
+            cost_share = sum(s for s, _ in shares) if all(s is not None for s, _ in shares) else None
+            price = self._enrichment.material_price(material)
+            suppliers = sorted({r.supplier_id for p in plm_ids for r in self._sourcing[p]})
+            result.append(
+                MaterialExposure(
+                    material=material,
+                    parts=tuple(plm_ids),
+                    units=units,
+                    mass_kg=mass,
+                    mass_share=mass / root_mass if root_mass else 0.0,
+                    cost_eur=cost_share * self._root_cost if cost_share is not None and self._root_cost else None,
+                    cost_share=cost_share,
+                    suppliers=tuple(suppliers),
+                    single_sourced_parts=tuple(p for p in plm_ids if len(self._sourcing[p]) == 1),
+                    price_volatility=price.price_volatility if price else None,
+                    sources=_merge(tuple(refs), (price.source,) if price else (), *(r for _, r in shares)),
+                )
+            )
+        return sorted(result, key=lambda m: -(m.cost_share or 0.0))
+
+    def price_ranking(self) -> list[PartRisk]:
+        """Parts with a known price risk, highest first."""
+        scored = [r for r in self.ranking() if r.price_risk is not None]
+        return sorted(scored, key=lambda r: -r.price_risk)
+
     # ---- scoring ----------------------------------------------------------
 
     def _score(self, plm_id: str) -> PartRisk:
@@ -219,6 +293,20 @@ class RiskService:
         ]
         probability = self._axis(criteria, "probability")
         impact = self._axis(criteria, "impact")
+        price_risk, price_level = None, None
+        volatility = self._volatility(plm_id)
+        cost = next((c for c in criteria if c.code == "COST_SHARE"), None)
+        if volatility is not None:
+            criteria.append(volatility)
+            if cost is not None:
+                price_risk = round(100 * volatility.score * cost.score, 1)
+                price_level = (
+                    "high"
+                    if price_risk >= self._cfg.price_risk_high
+                    else "medium"
+                    if price_risk >= self._cfg.price_risk_medium
+                    else "low"
+                )
         return PartRisk(
             plm_id=plm_id,
             name=self._plm.product(plm_id).name,
@@ -227,6 +315,8 @@ class RiskService:
             criticality=round(100 * probability * impact, 1),
             level=self._level(probability, impact),
             criteria=tuple(criteria),
+            price_risk=price_risk,
+            price_level=price_level,
         )
 
     @staticmethod
@@ -335,3 +425,13 @@ class RiskService:
                          f"The part appears in {n} place(s) of the product structure: "
                          "a problem spreads to every one of them.",
                          _merge(*(o.sources for o in occurrences)))
+
+    def _volatility(self, plm_id: str) -> Criterion | None:
+        material = self._plm.product(plm_id).material
+        price = self._enrichment.material_price(material) if material else None
+        if price is None or price.price_volatility is None:
+            return None
+        score = self._cfg.volatility_scores[price.price_volatility]
+        return Criterion("PRICE_VOLATILITY", "price", 0.0, score, f"{price.price_volatility} ({material})",
+                         f"The price of {material} has a {price.price_volatility} volatility: "
+                         "a rise directly increases the cost of this part.", (price.source,))

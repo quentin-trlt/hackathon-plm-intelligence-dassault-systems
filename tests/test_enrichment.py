@@ -130,3 +130,17 @@ def test_missing_directory(plm, tmp_path):
     repo = CsvEnrichmentRepository.from_dir(tmp_path / "absent", plm)
     assert repo.suppliers() == []
     assert len(repo.coverage(plm).leaves_without_sourcing) == 36
+
+
+def test_price_volatility_is_optional_and_validated(plm, tmp_path):
+    header = "material,price_eur_per_kg,source_note,price_volatility\n"
+    (tmp_path / "material_prices.csv").write_text(header + f"{BEARING},1.6,note,MEDIUM\n", encoding="utf-8")
+    repo = CsvEnrichmentRepository.from_dir(tmp_path, plm)
+    assert repo.material_price(BEARING).price_volatility == "medium"
+
+    _write(tmp_path, prices=f"{BEARING},1.6,note\n")
+    assert CsvEnrichmentRepository.from_dir(tmp_path, plm).material_price(BEARING).price_volatility is None
+
+    (tmp_path / "material_prices.csv").write_text(header + f"{BEARING},1.6,note,extreme\n", encoding="utf-8")
+    problems = _problems(tmp_path, plm)
+    assert len(problems) == 1 and "price_volatility" in problems[0]

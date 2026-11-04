@@ -20,6 +20,7 @@ PART_SOURCING_FILE = "part_sourcing.csv"
 
 _SUPPLIER_ID = re.compile(r"^SUP-\d{3}$")
 _COUNTRY = re.compile(r"^[A-Z]{2}$")
+VOLATILITY_LEVELS = ("low", "medium", "high")
 
 
 class EnrichmentError(ValueError):
@@ -179,8 +180,15 @@ class _Loader:
                 if material in seen:
                     self.problems.append(f"{row.where()}: material {material!r} already priced at {seen[material]}")
                 seen.setdefault(material, row.where())
+            volatility = row["price_volatility"].lower() or None
+            if volatility is not None and volatility not in VOLATILITY_LEVELS:
+                self.problems.append(
+                    f"{row.where()}: price_volatility must be one of {VOLATILITY_LEVELS} or empty, "
+                    f"got {row['price_volatility']!r}"
+                )
+                volatility = None
             if material and price is not None and note:
-                result.append(MaterialPrice(material, price, note, row.source))
+                result.append(MaterialPrice(material, price, note, row.source, volatility))
         return result
 
     def _suppliers(self) -> list[Supplier]:
