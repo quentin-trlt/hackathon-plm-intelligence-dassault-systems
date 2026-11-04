@@ -9,10 +9,9 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from plm.agent.evidence import describe
 from plm.analysis.cost import MaterialCostService
 from plm.analysis.risk import MESHING_ARTEFACTS, Criterion, PartRisk, RiskService
-from plm.model import Product, SourceRef
+from plm.model import Product
 from plm.parser import CsvEnrichmentRepository, PlmData, XmlPlmRepository, load
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -44,7 +43,7 @@ def get_services() -> Services:
 
 
 def label(product: Product) -> str:
-    return f"{product.name} · {product.plm_id}"
+    return f"{product.name} ({product.plm_id.rsplit('-', 1)[-1]})"
 
 
 def part_risk(s: Services, plm_id: str) -> PartRisk | None:
@@ -128,11 +127,3 @@ def criteria_frame(criteria: Iterable[Criterion]) -> pd.DataFrame:
             for c in criteria
         ]
     )
-
-
-def show_sources(refs: Iterable[SourceRef], title: str = "Sources") -> None:
-    unique = list(dict.fromkeys(refs))
-    if not unique:
-        return
-    with st.expander(f"{title} ({len(unique)})"):
-        st.markdown("\n".join(f"- {describe(ref)}" for ref in unique))

@@ -7,11 +7,13 @@ from __future__ import annotations
 
 import streamlit as st
 
+import ui
 from views.assistant import agent_status, chat, example_buttons, load_agent, new_conversation
 
 
 def main() -> None:
     st.set_page_config(page_title="PLM assistant", layout="centered")
+    ui.inject_style()
     st.title("PLM assistant")
 
     agent = load_agent()

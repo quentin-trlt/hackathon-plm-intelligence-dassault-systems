@@ -91,7 +91,7 @@ pytest
 ruff check src tests app && ruff format --check src tests app
 ```
 
-Launch the main interface (Dashboard, Product Explorer, Change Impact, Assistant):
+Launch the main interface (Overview, Product structure, Change impact, Assistant):
 
 ```bash
 streamlit run app/app.py

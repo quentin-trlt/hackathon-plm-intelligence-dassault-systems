@@ -1,114 +1,101 @@
-"""Dashboard: mass, material cost and risk of the leaf parts, with material and maturity slicers."""
+"""Overview: where the material cost, the mass and the risk of the motor sit, across its leaf parts."""
 
 from __future__ import annotations
 
 import pandas as pd
-import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
+import ui
 from services import NON_PLM, Services, leaf_frame
 
-LEVEL_COLORS = {"high": "#DC2626", "medium": "#F59E0B", "low": "#16A34A"}
+
+def _filters(parts: pd.DataFrame) -> pd.DataFrame:
+    with st.popover("Filter parts", icon=":material/filter_list:"):
+        materials = st.multiselect("Material", sorted(parts["Material"].unique()), placeholder="All materials")
+        maturities = st.multiselect("Maturity", sorted(parts["Maturity"].unique()), placeholder="All states")
+    if materials:
+        parts = parts[parts["Material"].isin(materials)]
+    if maturities:
+        parts = parts[parts["Maturity"].isin(maturities)]
+    return parts
 
 
-def _short_id(plm_id: str) -> str:
-    return plm_id.rsplit("-", 1)[-1]
-
-
-def _kpis(s: Services, parts: pd.DataFrame) -> None:
+def _figures(s: Services, parts: pd.DataFrame) -> None:
     root = s.plm.root()
-    root_cost = s.cost.unit_cost(root.plm_id)
     cost_complete = parts["Cost in motor (EUR)"].notna().all()
-    cost_help = f"Mass x material price ({NON_PLM}). Material only, not the purchase price."
-    if root_cost is not None:
-        cost_help += f" Whole motor: {root_cost.value:.2f} EUR."
-    k1, k2, k3, k4, k5 = st.columns(5)
-    k1.metric(
-        "Mass in motor",
-        f"{parts['Mass in motor (kg)'].sum():.2f} kg",
-        help=f"Unit mass x quantity of the selected leaf parts. Declared root mass: {root.mass_kg} kg.",
+    single = int((parts["Suppliers"] == 1).sum())
+    high = int((parts["Risk level"] == "high").sum())
+    ui.figures(
+        [
+            ui.Figure(
+                "Mass of the leaf parts",
+                f"{parts['Mass in motor (kg)'].sum():.2f} kg",
+                f"Unit mass x quantity. Declared root mass {root.mass_kg} kg.",
+            ),
+            ui.Figure(
+                "Leaf parts", str(len(parts)), f"{int(parts['Qty in motor'].sum())} physical units in the motor."
+            ),
+            ui.Figure(
+                "Material cost",
+                f"{parts['Cost in motor (EUR)'].sum():.2f} EUR" if cost_complete else "Incomplete",
+                "Mass x material price. Raw material only, not the purchase price.",
+                team_data=True,
+            ),
+            ui.Figure(
+                "High-risk parts", str(high), "High probability or impact, the other at least medium.", alert=high > 0
+            ),
+            ui.Figure("Single-sourced parts", str(single), "One supplier recorded.", team_data=True, alert=single > 0),
+        ]
     )
-    k2.metric("Leaf parts", len(parts), help=f"{int(parts['Qty in motor'].sum())} physical units in the motor.")
-    k3.metric(
-        "Material cost",
-        f"{parts['Cost in motor (EUR)'].sum():.2f} EUR" if cost_complete else "incomplete",
-        help=cost_help,
-    )
-    k4.metric("High-risk parts", int((parts["Risk level"] == "high").sum()))
-    k5.metric("Single-sourced parts", int((parts["Suppliers"] == 1).sum()), help=NON_PLM)
+    ui.key()
 
 
-def _charts(parts: pd.DataFrame) -> None:
-    visual = parts.assign(Label=parts["Part"] + " · " + parts["PLM ID"].map(_short_id))
-    left, right = st.columns(2)
-    with left:
-        st.subheader("Mass by material")
-        fig = px.treemap(
-            visual,
-            path=["Material", "Label"],
-            values="Mass in motor (kg)",
-            hover_data={"PLM ID": True, "Qty in motor": True},
-        )
-        fig.update_layout(margin=dict(t=10, l=0, r=0, b=0), height=420)
-        st.plotly_chart(fig, width="stretch")
-    with right:
-        st.subheader("Material cost by material")
-        by_material = (
-            visual.groupby("Material", as_index=False)["Cost in motor (EUR)"]
-            .sum()
-            .sort_values("Cost in motor (EUR)", ascending=False)
-        )
-        fig = px.bar(by_material, x="Cost in motor (EUR)", y="Material", orientation="h", text_auto=".1f")
-        fig.update_layout(margin=dict(t=10, l=0, r=0, b=0), height=420, yaxis=dict(autorange="reversed", title=None))
-        st.plotly_chart(fig, width="stretch")
-        st.caption(f"Prices: {NON_PLM} (data/enrichment/material_prices.csv).")
-
-
-def _risk(s: Services, plm_ids: set[str]) -> None:
-    st.subheader("Critical parts")
+def _critical_parts(s: Services, plm_ids: set[str]) -> None:
+    st.subheader("Critical parts", anchor=False)
     ranking = [r for r in s.risk.ranking() if r.plm_id in plm_ids]
     if not ranking:
-        st.info("No scored part in the selection.")
+        st.info("None of the filtered parts is scored. Clear the filters to see the ranking.")
         return
     table = pd.DataFrame(
         [
             {
                 "Part": r.name,
-                "PLM ID": r.plm_id,
                 "Level": r.level,
                 "Criticality": r.criticality,
                 "Probability": r.probability,
                 "Impact": r.impact,
-                "Price risk": r.price_risk,
             }
             for r in ranking
         ]
     )
     st.dataframe(
-        table.style.map(lambda v: f"color: {LEVEL_COLORS.get(v, 'inherit')}; font-weight: 600", subset=["Level"]),
+        table.style.map(lambda v: f"color: {ui.RISK_COLORS.get(v, 'inherit')}; font-weight: 600", subset=["Level"]),
         hide_index=True,
         width="stretch",
+        height=388,
         column_config={
-            "Criticality": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%.1f"),
+            "Criticality": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%.0f"),
             "Probability": st.column_config.NumberColumn(format="%.2f"),
             "Impact": st.column_config.NumberColumn(format="%.2f"),
         },
     )
     st.caption(
-        "Criticality = 100 x probability x impact, rules in docs/risk_rules.md. Supplier, lead time and price data "
-        f"are {NON_PLM} team assumptions. Open a part in the Product Explorer to see why it is critical."
+        "Criticality = 100 x probability x impact, rules in docs/risk_rules.md. Open a part in Product structure "
+        "to see the criteria behind its score."
     )
 
-    st.subheader("Supplier exposure")
+
+def _suppliers(s: Services) -> None:
+    st.subheader("Supplier exposure", anchor=False)
     exposure = pd.DataFrame(
         [
             {
                 "Supplier": e.name,
-                "ID": e.supplier_id,
                 "Country": e.country,
-                "Parts delivered": len(e.parts),
-                "Single-sourced parts": len(e.single_sourced_parts),
-                "Material cost at stake": e.single_sourced_cost_share,
+                "Parts": len(e.parts),
+                "Single-sourced": len(e.single_sourced_parts),
+                "Cost at stake": e.single_sourced_cost_share,
             }
             for e in s.risk.supplier_exposure()
             if e.parts
@@ -118,40 +105,89 @@ def _risk(s: Services, plm_ids: set[str]) -> None:
         exposure,
         hide_index=True,
         width="stretch",
-        column_config={"Material cost at stake": st.column_config.NumberColumn(format="percent")},
+        height=388,
+        column_config={"Cost at stake": st.column_config.ProgressColumn(min_value=0, max_value=1, format="percent")},
     )
-    st.caption(f"Share of the material cost that stops if the supplier fails ({NON_PLM}).")
+    st.caption(f"Share of the material cost that stops if the supplier fails. All columns are {NON_PLM}.")
+
+
+def _materials(parts: pd.DataFrame) -> None:
+    st.subheader("Mass and cost by material", anchor=False)
+    by_material = parts.groupby("Material", as_index=False)[["Mass in motor (kg)", "Cost in motor (EUR)"]].sum()
+    by_material["Mass share"] = by_material["Mass in motor (kg)"] / by_material["Mass in motor (kg)"].sum()
+    cost_total = by_material["Cost in motor (EUR)"].sum()
+    by_material["Cost share"] = by_material["Cost in motor (EUR)"] / cost_total if cost_total else 0.0
+    by_material = by_material.sort_values("Cost share", ascending=True)
+
+    gap = by_material.assign(Gap=by_material["Cost share"] - by_material["Mass share"]).sort_values("Gap").iloc[-1]
+    if len(by_material) > 1 and gap["Gap"] > 0.05:
+        ui.insight(
+            f"{gap['Material']} is {gap['Mass share']:.0%} of the mass but {gap['Cost share']:.0%} of the material "
+            "cost: a price move on this material weighs the most on the motor."
+        )
+
+    fig = go.Figure()
+    fig.add_bar(
+        y=by_material["Material"],
+        x=by_material["Mass share"],
+        name="Share of mass (OEM extract)",
+        orientation="h",
+        marker_color=ui.PLM_BLUE,
+        customdata=by_material["Mass in motor (kg)"],
+        hovertemplate="%{y}<br>%{x:.1%} of the mass, %{customdata:.2f} kg<extra></extra>",
+    )
+    fig.add_bar(
+        y=by_material["Material"],
+        x=by_material["Cost share"],
+        name="Share of material cost (team prices)",
+        orientation="h",
+        marker=dict(
+            color="rgba(105, 65, 198, 0.18)",
+            line=dict(color=ui.TEAM_VIOLET, width=1),
+            pattern=dict(shape="/", fgcolor=ui.TEAM_VIOLET, size=6, solidity=0.25),
+        ),
+        customdata=by_material["Cost in motor (EUR)"],
+        hovertemplate="%{y}<br>%{x:.1%} of the material cost, %{customdata:.2f} EUR<extra></extra>",
+    )
+    ui.plotly_layout(fig, height=max(320, 46 * len(by_material) + 60))
+    fig.update_layout(barmode="group", bargap=0.28, bargroupgap=0.08)
+    fig.update_xaxes(tickformat=".0%", gridcolor=ui.RULE, zeroline=False)
+    fig.update_yaxes(title=None, automargin=True)
+    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+    st.caption("Prices from data/enrichment/material_prices.csv.")
 
 
 def render(s: Services) -> None:
-    st.header("Dashboard")
-    st.caption("Leaf parts of the motor: physical parts carrying the material, the suppliers and the prices.")
-
-    parts = leaf_frame(s)
-    c1, c2 = st.columns(2)
-    materials = c1.multiselect("Material", sorted(parts["Material"].unique()), placeholder="All materials")
-    maturities = c2.multiselect("Maturity", sorted(parts["Maturity"].unique()), placeholder="All states")
-    if materials:
-        parts = parts[parts["Material"].isin(materials)]
-    if maturities:
-        parts = parts[parts["Maturity"].isin(maturities)]
+    head, action = st.columns([5, 1], vertical_alignment="bottom")
+    with head:
+        ui.page_header(
+            "Overview",
+            "The leaf parts of the motor, the physical parts that carry the material, the suppliers and the prices.",
+        )
+    with action:
+        parts = _filters(leaf_frame(s))
     if parts.empty:
-        st.warning("No part matches the selected filters.")
+        st.warning("No part matches the selected filters. Remove a material or a maturity state.")
         return
 
-    _kpis(s, parts)
-    _charts(parts)
-    _risk(s, set(parts["PLM ID"]))
+    _figures(s, parts)
+    left, right = st.columns([1, 1], gap="large")
+    with left:
+        _critical_parts(s, set(parts["PLM ID"]))
+    with right:
+        _suppliers(s)
+    _materials(parts)
 
-    st.subheader("Leaf parts")
-    st.dataframe(
-        parts,
-        hide_index=True,
-        width="stretch",
-        column_config={
-            "Unit mass (kg)": st.column_config.NumberColumn(format="%.3f"),
-            "Mass in motor (kg)": st.column_config.NumberColumn(format="%.3f"),
-            "Unit cost (EUR)": st.column_config.NumberColumn(format="%.2f"),
-            "Cost in motor (EUR)": st.column_config.NumberColumn(format="%.2f"),
-        },
-    )
+    with st.expander(f"All leaf parts ({len(parts)})"):
+        st.dataframe(
+            parts,
+            hide_index=True,
+            width="stretch",
+            column_config={
+                "Unit mass (kg)": st.column_config.NumberColumn(format="%.3f"),
+                "Mass in motor (kg)": st.column_config.NumberColumn(format="%.3f"),
+                "Unit cost (EUR)": st.column_config.NumberColumn(format="%.2f"),
+                "Cost in motor (EUR)": st.column_config.NumberColumn(format="%.2f"),
+                "Criticality": st.column_config.NumberColumn(format="%.1f"),
+            },
+        )
