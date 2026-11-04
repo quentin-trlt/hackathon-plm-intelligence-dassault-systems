@@ -23,8 +23,8 @@ The command prints the root, the object counts and how complete the enrichment C
 ## What the parser does
 
 ```
-data/raw/XPDMXML_ECAR_PLM.xml ──► XmlPlmRepository ──┐
-                                                     ├──► load() ──► data.plm, data.enrichment
+data/raw/XPDMXML_ECAR_PLM.xml ──► XmlPlmRepository     ──┐
+                                                         ├──► load() ──► data.plm, data.enrichment
 data/enrichment/*.csv ─────────► CsvEnrichmentRepository ┘
 ```
 
