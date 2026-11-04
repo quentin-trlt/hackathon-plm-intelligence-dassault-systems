@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 
-from plm.agent.agent import SCOPE_MESSAGES, AgentAnswer, ToolTrace
+from plm.agent.agent import SCOPE_MESSAGES, AgentAnswer, Conversation, PlmAgent, ToolTrace
+from plm.agent.config import AgentConfig
 from plm.agent.eval import (
     DEMO_QUESTIONS,
     QUESTIONS,
@@ -18,7 +21,7 @@ from plm.agent.eval import (
     used_tool,
 )
 from plm.agent.evidence import Evidence
-from plm.agent.llm import Usage
+from plm.agent.llm import LlmMessage, ToolCall, Usage
 from plm.model import SourceRef
 from plm.parser import PlmData
 
@@ -84,3 +87,39 @@ def test_off_topic_cases_require_the_scope_message(plm_data: PlmData, case_id: s
     case = next(c for c in golden_cases(plm_data) if c.id == case_id)
     assert evaluate(case, answer(SCOPE_MESSAGES["en"], cited=False)) == []
     assert evaluate(case, answer("Paris.", cited=False)) == ["off-topic request was answered"]
+
+
+ZWSP = chr(0x200B)
+NB_HYPHEN = chr(0x2011)
+REJECTED_ON_4_NOV = (
+    (
+        "The motor's major subassemblies are:\n\n"
+        "| Subassembly (plm_id) | Mass (kg) |\n|---|---|\n"
+        "| ECAR-EI EMOTOR FRONT (prd-12535825-00000048) | 39.73 kg |\n"
+        "| ECAR-EI REDUCER FRONT (prd-12535825-00000049) | 29.85 kg |\n"
+        "| ECAR-EI HOUSING FRONT EDRIVE (prd-12535825-00000050) | 30.52 kg |\n\n"
+        "These three assemblies are the direct children of the root product ECAR-EI_410KW_EDRIVE_FRONT "
+        "[@E7][@E1][@E3][@E5]."
+    )
+    .replace("-", NB_HYPHEN)
+    .replace("@", ZWSP)
+)
+
+
+def test_answer_rejected_during_the_eval_is_now_kept_and_passes(plm_data: PlmData) -> None:
+    class Scripted:
+        def __init__(self) -> None:
+            self.step = 0
+
+        def complete(self, messages, tools=None, tool_choice="auto") -> LlmMessage:
+            self.step += 1
+            if self.step == 1:
+                root = plm_data.plm.root().plm_id
+                return LlmMessage(None, (ToolCall("c1", "get_children", json.dumps({"plm_id": root})),))
+            return LlmMessage(REJECTED_ON_4_NOV, ())
+
+    agent = PlmAgent(plm_data.plm, plm_data.enrichment, AgentConfig(api_key="k"), client=Scripted())
+    answer = agent.ask(Conversation(), QUESTIONS["subassemblies"])
+    case = next(c for c in golden_cases(plm_data) if c.id == "subassemblies")
+    assert answer.rejected_text is None and [e.id for e in answer.evidence] == ["E7", "E1", "E3", "E5"]
+    assert evaluate(case, answer) == []

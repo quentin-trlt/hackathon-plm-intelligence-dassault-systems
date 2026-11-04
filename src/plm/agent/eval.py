@@ -22,7 +22,7 @@ from typing import Any
 
 from plm.agent.agent import SCOPE_MESSAGES, AgentAnswer, PlmAgent
 from plm.agent.config import AgentConfig, AgentConfigError
-from plm.agent.llm import LlmError
+from plm.agent.llm import LlmError, LlmRateLimitError
 from plm.agent.replay import ReplayStore, data_fingerprint
 from plm.agent.tools import ToolContext, execute
 from plm.parser import DEFAULT_ENRICHMENT_DIR, DEFAULT_XML_PATH, PlmData, load
@@ -208,7 +208,7 @@ def golden_cases(data: PlmData) -> list[Case]:
         ),
         Case("gear_wheel", (grounded, mentions(*gear_ids))),
         Case("rotor_magnet", (not_refused, used_tool("search_products"))),
-        Case("stator_cost_share", (grounded, has_numbers(stator["value"], stator["share_of_total_pct"]))),
+        Case("stator_cost_share", (grounded, has_numbers(stator["share_of_total_pct"]))),
         Case("reducer_mass", (grounded, has_numbers(reducer.mass_kg))),
         Case("off_topic_fr", (refused,)),
         Case("off_topic_en", (refused,)),
@@ -221,10 +221,11 @@ class CaseResult:
     answer: AgentAnswer | None
     seconds: float
     failures: list[str] = field(default_factory=list)
+    skipped: str | None = None
 
     @property
     def passed(self) -> bool:
-        return not self.failures
+        return not self.failures and self.skipped is None
 
 
 def evaluate(case: Case, answer: AgentAnswer) -> list[str]:
@@ -235,6 +236,8 @@ def run_case(agent: PlmAgent, case: Case) -> CaseResult:
     started = time.perf_counter()
     try:
         answer = agent.ask(agent.new_conversation(), case.question)
+    except LlmRateLimitError as exc:
+        return CaseResult(case, None, time.perf_counter() - started, skipped=str(exc))
     except LlmError as exc:
         return CaseResult(case, None, time.perf_counter() - started, [f"LLM error: {exc}"])
     return CaseResult(case, answer, time.perf_counter() - started, evaluate(case, answer))
@@ -266,7 +269,10 @@ def main(argv: list[str] | None = None) -> int:
         tokens = (
             f"{result.answer.usage.prompt_tokens}+{result.answer.usage.completion_tokens}" if result.answer else "-"
         )
-        print(f"{'PASS' if result.passed else 'FAIL'}  {case.id:<20} {result.seconds:5.1f}s  {tokens:>11} tokens")
+        status = "SKIP" if result.skipped else "PASS" if result.passed else "FAIL"
+        print(f"{status}  {case.id:<20} {result.seconds:5.1f}s  {tokens:>11} tokens")
+        if result.skipped:
+            print(f"      - not asked: {result.skipped}")
         for failure in result.failures:
             print(f"      - {failure}")
         if result.answer and (args.verbose or not result.passed):
@@ -278,7 +284,10 @@ def main(argv: list[str] | None = None) -> int:
                 )
 
     passed = sum(r.passed for r in results)
-    print(f"\n{passed}/{len(results)} passed ({passed / len(results):.0%})")
+    asked = [r for r in results if r.skipped is None]
+    skipped = len(results) - len(asked)
+    rate = passed / len(asked) if asked else 0.0
+    print(f"\n{passed}/{len(asked)} passed ({rate:.0%})" + (f", {skipped} skipped (rate limit)" if skipped else ""))
 
     if args.record:
         fingerprint = data_fingerprint(DEFAULT_XML_PATH, DEFAULT_ENRICHMENT_DIR)
@@ -290,7 +299,7 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"Recorded {passed} answer(s) in {store.path} ({len(store)} in total, {store.stale_count(fingerprint)} stale)"
         )
-    return 0 if passed / len(results) >= PASS_THRESHOLD else 1
+    return 0 if asked and rate >= PASS_THRESHOLD else 1
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ _NUMBER = re.compile(r"(?<![\w.\-])\d+(?:[.,]\d+)?(?![\w\-]|[.,]\d)")
 _LIST_MARKER = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
 _SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 _TABLE_RULE = re.compile(r"^\s*\|?\s*:?-{3,}")
+_INVISIBLE = re.compile("[\u200b\u200c\u200d\u2060\ufeff]")
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +32,8 @@ class CheckedAnswer:
 
 
 def check_citations(text: str, registry: EvidenceRegistry) -> CheckedAnswer:
+    """Zero-width characters are removed first: gpt-oss sometimes writes `[\u200bE7]`."""
+    text = _INVISIBLE.sub("", text)
     cited: dict[str, None] = {}
     unknown: dict[str, None] = {}
 

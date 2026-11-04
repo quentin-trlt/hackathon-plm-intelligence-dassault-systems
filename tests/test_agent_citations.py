@@ -60,3 +60,10 @@ def test_ranges_are_expanded(registry: EvidenceRegistry, text: str) -> None:
 def test_range_with_an_unknown_id_is_rejected(registry: EvidenceRegistry) -> None:
     checked = check_citations("Values 1 [E2–E9].", registry)
     assert checked.cited == () and any("E2–E9" in w for w in checked.warnings)
+
+
+def test_zero_width_spaces_inside_brackets_are_ignored(registry: EvidenceRegistry) -> None:
+    zwsp = chr(0x200B)
+    checked = check_citations(f"Mass 2 kg [{zwsp}E1][{zwsp}E2], 3 kg [E3{zwsp}].", registry)
+    assert checked.text == "Mass 2 kg [E1][E2], 3 kg [E3]." and checked.cited == ("E1", "E2", "E3")
+    assert checked.warnings == ()

@@ -257,11 +257,30 @@ Still open: on table answers the model often cites only the root instead of each
 
 **Scope guard.** Testing the page showed the model answering off-topic requests from general knowledge (an apple pie recipe). There are now two layers. A scope rule in the system prompt tells the model to decline. A check in `PlmAgent.ask` keeps an answer only if it cites at least one evidence, or if it used tools without stating an uncited figure. Otherwise the answer is replaced by a fixed scope message, in French or English depending on the question, and a warning is added. The check also rejects answers built only from the prompt's data overview, which carry no evidence. Limit: an off-topic answer that cites a real evidence id would pass, and the prompt rule is the only defence against that.
 
+### Phase 3 status (4 Nov.)
+
+Changes from the plan: the golden questions live in `src/plm/agent/eval.py` instead of `questions.json`, so their expected values are computed from the current data with the agent's own tools, and the evaluation survives edits of the enrichment files. Replays live in `data/agent_replays/answers.json` instead of `tests/`.
+
+**Evaluation.** `python -m plm.agent.eval` runs 14 questions: the README business questions, homonyms, a missing part, the wrapper double-count trap, two French questions and two off-topic requests. A question that hits the rate limit is reported as SKIP, not FAIL.
+
+| Run | Score | Failures |
+|---|---|---|
+| Baseline | 11/14 | D10 total and stator share: no tool returned the sum or the share, and the model rightly did not compute it. Single-source list replaced by the scope guard |
+| After tuning | 9/12, 2 skipped | Subassemblies and single-source lists replaced by the scope guard; stator share check too strict; off-topic questions not asked (daily quota) |
+
+The tuning added combined totals to `compare_products`, the share of the motor cost to `get_unit_cost`, the share of the motor mass to `get_product`, citation ranges (`[E3–E5]`), and a prompt rule to state item counts. Once the guard keeps the rejected text (`AgentAnswer.rejected_text`), the second run showed the real cause of the guard failures: gpt-oss writes a zero-width space inside citations (`[​E7]`). The two rejected answers were correct and fully cited. Zero-width characters are now stripped before the citation check, and a test replays the exact rejected answer offline and checks that it passes. The stator check now only requires the share, which is what the question asks. Expected result is 14/14, still to confirm live: `python -m plm.agent.eval --record --only subassemblies single_source stator_cost_share off_topic_fr off_topic_en` (about 35,000 tokens).
+
+**Daily quota.** Besides 8,000 tokens per minute, the free tier caps `openai/gpt-oss-120b` at 200,000 tokens per day per organisation. This limit is not shown in the response headers. A full evaluation costs about 100,000 tokens and a demo question 5,000 to 14,000, so the whole team has 15 to 40 live questions a day. Rehearsals should run with `PLM_AGENT_REPLAY=fallback`, keeping the live budget for the pitch. `PLM_AGENT_REPLAY=only` needs no key and no network.
+
+**Replay mode.** 9 answers were recorded on 4 Nov. Each record carries a fingerprint of the XML and CSV files and is ignored as soon as the data changes. Replayed answers are labelled with their recording date in the page and the CLI, and their evidence is re-registered in the live conversation so follow-up questions can cite it.
+
+`run_query` (text-to-SQL) was not built: no golden question needed it.
+
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
-| Free-tier rate limit: 8,000 tokens per minute measured on 4 Nov. | Compact tool results, history without tool messages, `compare_products` for multi-product questions, SDK retries that wait out the window, replay mode for the pitch |
+| Free-tier limits: 8,000 tokens per minute and 200,000 tokens per day, measured on 4 Nov. | Compact tool results, history without tool messages, `compare_products` for multi-product questions, SDK retries that wait out the window, replay mode for the pitch |
 | The model invents figures or cites wrong ids | Arithmetic is forbidden in the prompt, unknown ids are removed, figures without a citation are flagged, `temperature = 0` |
 | The model picks the wrong product among homonyms | Names are never accepted as keys, and the prompt asks for clarification when the search returns several matches |
 | The risk and change impact services are late or change their API | The `Traced` contract is agreed on D1, and phase 1 already answers most questions without them |
