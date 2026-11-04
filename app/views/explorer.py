@@ -181,23 +181,175 @@ def _card(s: Services, plm_id: str) -> None:
     show_sources(refs)
 
 
+def _subassembly(s: Services, plm_id: str) -> str:
+    """Name of the root child the product sits under (the root itself for the root)."""
+    occurrences = s.plm.where_used(plm_id)
+    if not occurrences or len(occurrences[0].path) < 2:
+        return s.plm.product(plm_id).name
+    return s.plm.product(occurrences[0].path[1]).name
+
+
+def _versions(s: Services) -> None:
+    products = s.plm.products()
+    revisions = sorted({p.revision for p in products})
+    maturities = sorted({p.maturity for p in products})
+    families = {p.revision_family for p in products}
+    st.info(
+        f"The extract holds a single revision per product ({len(families)} revision families for "
+        f"{len(products)} products) and every product is in state {', '.join(maturities)}. "
+        "No version history can be compared: this view compares the current revisions and states across products."
+    )
+
+    frame = pd.DataFrame(
+        [
+            {
+                "Product": p.name,
+                "PLM ID": p.plm_id,
+                "Kind": p.item_kind,
+                "Subassembly": _subassembly(s, p.plm_id),
+                "Rev": p.revision,
+                "Revision index": p.revision_index,
+                "Maturity": p.maturity,
+            }
+            for p in products
+        ]
+    )
+    left, right = st.columns(2)
+    with left:
+        st.markdown("**Revisions by kind**")
+        st.dataframe(
+            pd.crosstab(frame["Kind"], frame["Rev"]).reindex(columns=revisions, fill_value=0),
+            width="stretch",
+        )
+    with right:
+        st.markdown("**Revisions by subassembly**")
+        st.dataframe(
+            pd.crosstab(frame["Subassembly"], frame["Rev"]).reindex(columns=revisions, fill_value=0),
+            width="stretch",
+        )
+
+    st.markdown("**Most iterated designs (revision C or later)**")
+    iterated = frame[frame["Revision index"] >= 3].sort_values(["Revision index", "Kind"], ascending=[False, True])
+    st.dataframe(iterated.drop(columns="Revision index"), hide_index=True, width="stretch")
+    st.caption("A part or assembly that went through several revisions has the least stable design.")
+
+    st.markdown("**Consistency of revision and maturity: part, wrapper and 3D representation**")
+    rows = []
+    for leaf in s.plm.leaves():
+        rep = s.plm.representation(leaf.plm_id)
+        wrappers = [s.plm.product(line.parent_plm_id) for line in s.plm.parents(leaf.plm_id)]
+        wrappers = [w for w in wrappers if w.item_kind == "wrapper"]
+        states = {(leaf.revision, leaf.maturity)}
+        if rep:
+            states.add((rep.revision, rep.maturity))
+        states.update((w.revision, w.maturity) for w in wrappers)
+        rows.append(
+            {
+                "Part": leaf.name,
+                "PLM ID": leaf.plm_id,
+                "Part rev / state": f"{leaf.revision} / {leaf.maturity}",
+                "Wrapper rev / state": ", ".join(f"{w.revision} / {w.maturity}" for w in wrappers) or "no wrapper",
+                "3D rev / state": f"{rep.revision} / {rep.maturity}" if rep else "no representation",
+                "Consistent": len(states) == 1,
+            }
+        )
+    consistency = pd.DataFrame(rows)
+    st.caption(f"{int(consistency['Consistent'].sum())} / {len(consistency)} leaf parts consistent.")
+    st.dataframe(consistency, hide_index=True, width="stretch")
+
+
+def _compare(s: Services) -> None:
+    products = [p for p in s.plm.products()]
+    gears = [p for p in products if p.name == "ECAR-EI_GEAR_WHEEL"]
+    chosen = st.multiselect(
+        "Products to compare (2 to 4)",
+        products,
+        default=gears[:4],
+        format_func=lambda p: f"{p.name} · {p.plm_id}",
+        max_selections=4,
+    )
+    if len(chosen) < 2:
+        st.info("Select at least two products.")
+        return
+    columns = {}
+    refs: list[SourceRef] = []
+    for product in chosen:
+        leaves = leaves_below(s, product.plm_id)
+        cost = s.cost.unit_cost(product.plm_id)
+        quantity = s.plm.total_quantity(product.plm_id).value
+        sourcing = [row for leaf in leaves for row in s.enrichment.sourcing(leaf)]
+        risk = part_risk(s, leaves[0]) if len(leaves) == 1 else None
+        price = s.enrichment.material_price(product.material) if product.material else None
+        columns[f"{product.name} · {product.plm_id.rsplit('-', 1)[-1]}"] = {
+            "PLM ID": product.plm_id,
+            "Kind": product.item_kind,
+            "Subassembly": _subassembly(s, product.plm_id),
+            "Revision": f"{product.revision} (index {product.revision_index})",
+            "Maturity": product.maturity,
+            "Unit mass (kg)": f"{product.mass_kg:.3f}",
+            "Qty in motor": quantity,
+            "Material": product.material or "none (assembly)",
+            "Material volatility": (price.price_volatility or "unknown") if price else "n/a",
+            "Unit material cost (EUR)": f"{cost.value:.2f}" if cost else "unknown",
+            "Suppliers": ", ".join(sorted({s.enrichment.supplier(r.supplier_id).name for r in sourcing})) or "none",
+            "Shortest lead time (days)": min(
+                (r.lead_time_days for r in sourcing if r.lead_time_days is not None), default="n/a"
+            ),
+            "Risk level": risk.level if risk else "not scored",
+            "Criticality": f"{risk.criticality:.1f}" if risk else "",
+            "Price risk": f"{risk.price_risk:.1f}" if risk and risk.price_risk is not None else "",
+            "XML line": product.source.line,
+        }
+        refs.append(product.source)
+        refs += [r.source for r in sourcing]
+        if cost:
+            refs += cost.sources
+    table = pd.DataFrame(columns).astype(str)
+    st.dataframe(table, width="stretch", height=35 * (len(table) + 1) + 3)
+    st.caption(
+        "Side by side, for instance the four ECAR-EI_GEAR_WHEEL: four different gears sharing one name. "
+        f"Cost, volatility, suppliers, lead time and risk: {NON_PLM}."
+    )
+    show_sources(refs)
+
+
 def render(s: Services) -> None:
     st.header("Product Explorer")
+    structure, versions, compare = st.tabs(["Structure", "Versions and lifecycle", "Compare"])
+    with versions:
+        _versions(s)
+    with compare:
+        _compare(s)
+    with structure:
+        _structure_tab(s)
+
+
+def _structure_tab(s: Services) -> None:
     st.caption("Expanded product structure from the OEM extract. Select a row to open the component card.")
 
-    c1, c2 = st.columns([3, 1])
+    c1, c2, c3, c4 = st.columns([3, 1, 1, 1])
     query = c1.text_input("Search", placeholder="Name, PLM ID or material, e.g. bearing, 20MnCr5, 00000081").strip()
-    merge = c2.toggle(
+    products = s.plm.products()
+    revisions = c2.multiselect("Revision", sorted({p.revision for p in products}), placeholder="All")
+    maturities = c3.multiselect("Maturity", sorted({p.maturity for p in products}), placeholder="All")
+    merge = c4.toggle(
         "Merge wrappers", value=True, help="Show each ECAR-EI wrapper merged with the ECAR-3D part it holds."
     )
     matches = {p.plm_id for p in s.plm.search(query)} if query else None
+    if revisions or maturities:
+        filtered = {
+            p.plm_id
+            for p in products
+            if (not revisions or p.revision in revisions) and (not maturities or p.maturity in maturities)
+        }
+        matches = filtered if matches is None else matches & filtered
 
     tree = _tree_frame(s, merge, matches)
     if tree.empty:
-        st.warning(f"No product matches '{query}'.")
+        st.warning("No product matches the search and filters.")
         return
     if matches is not None:
-        st.caption(f"{len(tree)} occurrence(s) match '{query}'.")
+        st.caption(f"{len(tree)} occurrence(s) match the search and filters.")
     event = st.dataframe(
         tree,
         hide_index=True,
@@ -205,7 +357,7 @@ def render(s: Services) -> None:
         height=420 if matches is None else "auto",
         on_select="rerun",
         selection_mode="single-row",
-        key=f"tree-{merge}-{query}",
+        key=f"tree-{merge}-{query}-{revisions}-{maturities}",
         column_config={"Unit mass (kg)": st.column_config.NumberColumn(format="%.3f")},
     )
     rows = event.selection.rows

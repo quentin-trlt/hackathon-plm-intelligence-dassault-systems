@@ -72,7 +72,7 @@ All objects are immutable dataclasses defined in `src/plm/model.py`. Units are f
 | `Traced[T]` | A computed value (`.value`) and all its sources (`.sources`) | – | – |
 | `MaterialPrice` | Price of a material in EUR/kg | `material` | 14 |
 | `Supplier` | A supplier | `supplier_id` | 15 |
-| `PartSourcing` | Link from a part to a supplier, with make/buy and lead time | (`plm_id`, `supplier_id`) | 52 |
+| `PartSourcing` | Link from a part to a supplier, with make/buy and lead time | (`plm_id`, `supplier_id`) | 53 |
 
 ### Useful `Product` fields
 
@@ -197,7 +197,7 @@ Search copes with naming inconsistencies. Case does not matter, and underscores 
 from collections import Counter
 
 single_source = [leaf for leaf in plm.leaves() if len(enrichment.sourcing(leaf.plm_id)) == 1]
-len(single_source)   # 20 single-source parts out of 36
+len(single_source)   # 19 single-source parts out of 36
 
 dependency = Counter(s.supplier_id for leaf in plm.leaves() for s in enrichment.sourcing(leaf.plm_id))
 for supplier_id, count in dependency.most_common(3):

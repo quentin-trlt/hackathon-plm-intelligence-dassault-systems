@@ -20,6 +20,8 @@ from typing import Any
 
 from plm.agent.evidence import EvidenceRegistry
 from plm.analysis.cost import MaterialCostService
+from plm.analysis.impact import ChangeImpactService
+from plm.analysis.risk import PartRisk, RiskService
 from plm.contract import (
     CostService,
     EnrichmentRepository,
@@ -34,6 +36,10 @@ MAX_LIMIT = 30
 MAX_RESULT_CHARS = 12_000
 COST_CAVEAT = "Material cost only (mass x material price). The purchase price of bought parts is not included."
 ENRICHMENT_ORIGIN = "enrichment"
+RISK_CAVEAT = (
+    "Official risk score of the application (docs/risk_rules.md). Supplier, lead time and volatility data are "
+    "team assumptions from the enrichment files."
+)
 
 Result = dict[str, Any]
 
@@ -47,6 +53,8 @@ class ToolContext:
     plm: PlmRepository
     enrichment: EnrichmentRepository
     costs: CostService
+    risk: RiskService
+    impact: ChangeImpactService
     registry: EvidenceRegistry
     wrapper_to_part: dict[str, str] = field(repr=False)
     part_to_wrappers: dict[str, tuple[str, ...]] = field(repr=False)
@@ -65,10 +73,14 @@ class ToolContext:
         part_to_wrappers: dict[str, list[str]] = defaultdict(list)
         for wrapper_id, part_id in wrapper_to_part.items():
             part_to_wrappers[part_id].append(wrapper_id)
+        costs = costs or MaterialCostService(plm, enrichment)
+        risk = RiskService(plm, enrichment, costs)
         return cls(
             plm=plm,
             enrichment=enrichment,
-            costs=costs or MaterialCostService(plm, enrichment),
+            costs=costs,
+            risk=risk,
+            impact=ChangeImpactService(plm, enrichment, costs, risk),
             registry=registry or EvidenceRegistry(),
             wrapper_to_part=wrapper_to_part,
             part_to_wrappers={k: tuple(v) for k, v in part_to_wrappers.items()},
@@ -670,6 +682,197 @@ def _group_keys(
     return [(key, key_id, extra) for key, (key_id, extra) in keys.items()]
 
 
+def _risk_entry(ctx: ToolContext, risk: PartRisk, details: bool = False) -> Result:
+    product = ctx.plm.product(risk.plm_id)
+    entry: Result = {
+        "part": ctx.summary(product),
+        "level": risk.level,
+        "criticality": risk.criticality,
+        "probability": round(risk.probability, 2),
+        "impact": round(risk.impact, 2),
+        "price_risk": risk.price_risk,
+        "price_level": risk.price_level,
+        "evidence": ctx.cite(f"Risk score of {product.name}", risk.sources, product.plm_id, RISK_CAVEAT),
+    }
+    if not details:
+        entry["main_drivers"] = [f"{c.code}: {c.value}" for c in risk.criteria if c.score >= 0.5]
+        return entry
+    entry["criteria"] = [
+        {
+            "code": c.code,
+            "axis": c.axis,
+            "value": c.value,
+            "score": round(c.score, 2),
+            "explanation": c.explanation,
+            "evidence": ctx.cite(f"{c.code} of {product.name}", c.sources, product.plm_id, RISK_CAVEAT),
+        }
+        for c in risk.criteria
+    ]
+    return entry
+
+
+def get_risk_ranking(
+    ctx: ToolContext, view: str = "supply", level: str | None = None, limit: int | None = None
+) -> Result:
+    if view not in ("supply", "price"):
+        raise ToolInputError("view must be 'supply' or 'price'")
+    if level is not None and level not in ("high", "medium", "low"):
+        raise ToolInputError("level must be 'high', 'medium' or 'low'")
+    ranking = ctx.risk.ranking() if view == "supply" else ctx.risk.price_ranking()
+    if level is not None:
+        ranking = [r for r in ranking if (r.level if view == "supply" else r.price_level) == level]
+    n = _limit(limit)
+    counts = {lvl: sum(1 for r in ctx.risk.ranking() if r.level == lvl) for lvl in ("high", "medium", "low")}
+    return {
+        "view": view,
+        "origin": ENRICHMENT_ORIGIN,
+        "caveat": RISK_CAVEAT,
+        "scored_part_count": len(ctx.risk.ranking()),
+        "supply_risk_count_by_level": counts,
+        "total": len(ranking),
+        "truncated": len(ranking) > n,
+        "parts": [_risk_entry(ctx, r) for r in ranking[:n]],
+    }
+
+
+def get_part_risk(ctx: ToolContext, plm_id: str) -> Result:
+    product = ctx.physical(plm_id)
+    if not product.is_leaf:
+        assembly = ctx.risk.assembly_risk(product.plm_id)
+        return {
+            "assembly": ctx.summary(product),
+            "origin": ENRICHMENT_ORIGIN,
+            "caveat": RISK_CAVEAT,
+            "scored_parts_below": len(assembly.parts),
+            "count_by_level": assembly.count_by_level,
+            "most_critical": [_risk_entry(ctx, r) for r in assembly.parts[:5]],
+        }
+    try:
+        risk = ctx.risk.part_risk(product.plm_id)
+    except ValueError:
+        raise ToolInputError(
+            f"{product.name} is not scored: it is a stator meshing artefact, not a physical part"
+        ) from None
+    return {"origin": ENRICHMENT_ORIGIN, "caveat": RISK_CAVEAT, **_risk_entry(ctx, risk, details=True)}
+
+
+def get_risk_exposure(ctx: ToolContext, by: str, top: int | None = None) -> Result:
+    n = _limit(top)
+    if by == "supplier":
+        exposure = [e for e in ctx.risk.supplier_exposure() if e.parts]
+        groups = [
+            {
+                "supplier_id": e.supplier_id,
+                "name": e.name,
+                "country": e.country,
+                "parts_delivered": len(e.parts),
+                "single_sourced_parts": [ctx.summary(ctx.plm.product(p)) for p in e.single_sourced_parts],
+                "share_of_material_cost_stopped_if_it_fails_pct": round(100 * e.single_sourced_cost_share, 1),
+                "evidence": ctx.cite(f"Exposure to supplier {e.name}", e.sources, note=RISK_CAVEAT),
+            }
+            for e in exposure[:n]
+        ]
+    elif by == "material":
+        exposure = ctx.risk.material_exposure()
+        groups = [
+            {
+                "material": m.material,
+                "distinct_parts": len(m.parts),
+                "units_in_motor": m.units,
+                "mass_kg": round(m.mass_kg, 2),
+                "share_of_mass_pct": round(100 * m.mass_share, 1),
+                "material_cost_eur": round(m.cost_eur, 2) if m.cost_eur is not None else None,
+                "share_of_material_cost_pct": round(100 * m.cost_share, 1) if m.cost_share is not None else None,
+                "supplier_count": len(m.suppliers),
+                "single_sourced_part_count": len(m.single_sourced_parts),
+                "price_volatility": m.price_volatility,
+                "evidence": ctx.cite(f"Exposure to material {m.material}", m.sources, note=RISK_CAVEAT),
+            }
+            for m in exposure[:n]
+        ]
+    else:
+        raise ToolInputError("by must be 'supplier' or 'material'")
+    return {
+        "by": by,
+        "origin": ENRICHMENT_ORIGIN,
+        "caveat": RISK_CAVEAT + " Stator meshing artefacts are excluded.",
+        "total": len(exposure),
+        "truncated": len(exposure) > n,
+        "groups": groups,
+    }
+
+
+def assess_change(
+    ctx: ToolContext,
+    plm_id: str,
+    new_mass_kg: float | None = None,
+    new_material: str | None = None,
+    replacement_plm_id: str | None = None,
+) -> Result:
+    target = ctx.physical(plm_id)
+    replacement = ctx.physical(replacement_plm_id).plm_id if replacement_plm_id else None
+    if new_material is not None and ctx.enrichment.material_price(new_material) is None:
+        known = [p.material for p in ctx.enrichment.material_prices()]
+        raise ToolInputError(f"Unknown or unpriced material {new_material!r}. Priced materials: {known}")
+    try:
+        result = ctx.impact.assess(target.plm_id, new_mass_kg, new_material, replacement)
+    except ValueError as exc:
+        raise ToolInputError(str(exc)) from None
+
+    def suppliers(rows: Iterable[Any]) -> list[Result]:
+        return [
+            {
+                "part": ctx.plm.product(r.plm_id).name,
+                "supplier": ctx.enrichment.supplier(r.supplier_id).name,
+                "make_or_buy": r.make_or_buy,
+                "lead_time_days": r.lead_time_days,
+            }
+            for r in rows
+        ]
+
+    return {
+        "component": ctx.summary(target),
+        "replacement": ctx.summary(result.replacement) if result.replacement else None,
+        "origin": ENRICHMENT_ORIGIN,
+        "caveat": COST_CAVEAT + " No purchase, tooling or requalification cost.",
+        "units_in_motor": result.quantity_in_root,
+        "unit_mass_kg": {"current": result.current_unit_mass_kg, "proposed": result.proposed_unit_mass_kg},
+        "material": {"current": target.material, "proposed": result.proposed_material},
+        "price_volatility": {"current": result.current_volatility, "proposed": result.proposed_volatility},
+        "unit_material_cost_eur": {
+            "current": round(result.current_unit_cost_eur, 2) if result.current_unit_cost_eur is not None else None,
+            "proposed": round(result.proposed_unit_cost_eur, 2) if result.proposed_unit_cost_eur is not None else None,
+        },
+        "motor_mass_change_kg": round(result.root_mass_delta_kg, 3),
+        "motor_material_cost_change_eur": (
+            round(result.root_cost_delta_eur, 2) if result.root_cost_delta_eur is not None else None
+        ),
+        "impacted_assemblies": [
+            {
+                "plm_id": a.plm_id,
+                "name": a.name,
+                "kind": a.item_kind,
+                "units_of_component": a.units,
+                "projected_mass_kg": round(a.projected_mass_kg, 3),
+                "projected_material_cost_eur": (
+                    round(a.projected_cost_eur, 2) if a.projected_cost_eur is not None else None
+                ),
+            }
+            for a in result.impacted
+            if a.item_kind != "wrapper"
+        ],
+        "current_suppliers": suppliers(result.current_suppliers),
+        "proposed_suppliers": suppliers(result.proposed_suppliers),
+        "risk": {
+            "current": result.current_risk.level if result.current_risk else None,
+            "proposed": result.proposed_risk.level if result.proposed_risk else None,
+        },
+        "evidence": ctx.cite(
+            f"Impact of changing {target.name}", result.sources, target.plm_id, COST_CAVEAT + " " + RISK_CAVEAT
+        ),
+    }
+
+
 TOOLS: tuple[Tool, ...] = (
     Tool(
         "search_products",
@@ -765,6 +968,57 @@ TOOLS: tuple[Tool, ...] = (
             ("group_by", "metric"),
         ),
         aggregate_leaves,
+    ),
+    Tool(
+        "get_risk_ranking",
+        "Official criticality ranking of the physical parts (probability x impact, 0-100, level high/medium/low) "
+        "with the main drivers of each score. view='price' ranks by price risk instead (material volatility x cost "
+        "share). Use it for any question on critical parts, risks or priorities.",
+        _params(
+            {
+                "view": {"type": "string", "enum": ["supply", "price"], "description": "Default supply"},
+                "level": {"type": "string", "enum": ["high", "medium", "low"], "description": "Optional filter"},
+                "limit": _LIMIT,
+            }
+        ),
+        get_risk_ranking,
+    ),
+    Tool(
+        "get_part_risk",
+        "Why a part is (or is not) critical: every risk criterion with its value, score and explanation. "
+        "For an assembly: risk levels of the parts below it and the most critical ones.",
+        _params({"plm_id": _PLM_ID}, ("plm_id",)),
+        get_part_risk,
+    ),
+    Tool(
+        "get_risk_exposure",
+        "Dependency exposure. by='supplier': share of the material cost that stops if each supplier fails and its "
+        "single-sourced parts. by='material': parts, units, mass and cost shares, suppliers and price volatility "
+        "per material.",
+        _params(
+            {
+                "by": {"type": "string", "enum": ["supplier", "material"]},
+                "top": {"type": "integer", "description": f"Number of groups returned (default {DEFAULT_LIMIT})"},
+            },
+            ("by",),
+        ),
+        get_risk_exposure,
+    ),
+    Tool(
+        "assess_change",
+        "Impact of changing a component: either a new unit mass and/or material (new_mass_kg, new_material), or its "
+        "replacement by another existing part (replacement_plm_id). Returns impacted assemblies with projected mass "
+        "and material cost, the motor mass and cost change, suppliers before and after, price volatility and risk.",
+        _params(
+            {
+                "plm_id": _PLM_ID,
+                "new_mass_kg": {"type": "number", "description": "Proposed unit mass in kg"},
+                "new_material": {"type": "string", "description": "Proposed material, exact name of a priced one"},
+                "replacement_plm_id": {"type": "string", "description": "plm_id of the replacing part"},
+            },
+            ("plm_id",),
+        ),
+        assess_change,
     ),
 )
 
