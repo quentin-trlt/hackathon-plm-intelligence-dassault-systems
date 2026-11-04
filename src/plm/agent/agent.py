@@ -18,6 +18,37 @@ FORCE_ANSWER = (
     "Stop calling tools: the step limit is reached. Answer now using only the tool results above, with citations. "
     "For anything you did not look up, say it was not checked; never present it as missing from the data."
 )
+SCOPE_MESSAGES = {
+    "fr": (
+        "Je réponds uniquement aux questions sur le moteur, à partir de l'extrait PLM et des données d'enrichissement : "
+        "structure et sous-ensembles, pièces, quantités, masses, matériaux, coûts matière, fournisseurs et impact "
+        "d'un changement de pièce. Je ne réponds pas aux demandes que ces données ne permettent pas de sourcer. "
+        "Exemple de question : « Quelles pièces n'ont qu'un seul fournisseur ? »"
+    ),
+    "en": (
+        "I only answer questions about the motor, based on the PLM extract and the enrichment data: structure and "
+        "subassemblies, parts, quantities, masses, materials, material costs, suppliers and the impact of a part "
+        "change. I do not answer requests that this data cannot source. "
+        'Example question: "Which parts have a single supplier?"'
+    ),
+}
+_FRENCH_WORDS = frozenset(
+    "le la les un une des du de au aux et est sont quel quelle quels quelles combien comment pourquoi "
+    "moi je tu vous nous pour sur dans avec qui que quoi donne donner fais peux".split()
+)
+_FRENCH_LETTERS = frozenset("àâçéèêëîïôûùüÿœ")
+
+
+def is_grounded(cited: tuple[str, ...], used_tools: bool, uncited_figures: int) -> bool:
+    """An answer is kept if it cites evidence, or if it relied on tools without stating unsourced figures."""
+    return bool(cited) or (used_tools and uncited_figures == 0)
+
+
+def scope_message(question: str) -> str:
+    lowered = question.casefold()
+    words = set(lowered.replace("'", " ").replace("’", " ").split())
+    french = bool(words & _FRENCH_WORDS) or any(c in _FRENCH_LETTERS for c in lowered)
+    return SCOPE_MESSAGES["fr" if french else "en"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,13 +161,17 @@ class PlmAgent:
             warnings.append("The model returned an empty answer.")
         checked = check_citations(answer, conversation.registry)
         warnings.extend(checked.warnings)
+        text, cited = checked.text, checked.cited
+        if not is_grounded(checked.cited, bool(traces), checked.uncited_figures):
+            warnings.append("Answer not grounded in the PLM data (no citation): replaced by the scope message.")
+            text, cited = scope_message(question), ()
         conversation.history += [
             {"role": "user", "content": question},
-            {"role": "assistant", "content": checked.text},
+            {"role": "assistant", "content": text},
         ]
         return AgentAnswer(
-            text=checked.text,
-            evidence=tuple(e for e in map(conversation.registry.get, checked.cited) if e is not None),
+            text=text,
+            evidence=tuple(e for e in map(conversation.registry.get, cited) if e is not None),
             tool_calls=tuple(traces),
             warnings=tuple(warnings),
             usage=Usage(prompt_tokens=usage[0], completion_tokens=usage[1]),

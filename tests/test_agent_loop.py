@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 import pytest
 
-from plm.agent.agent import FORCE_ANSWER, Conversation, PlmAgent
+from plm.agent.agent import FORCE_ANSWER, SCOPE_MESSAGES, Conversation, PlmAgent, is_grounded
 from plm.agent.config import AgentConfig
 from plm.agent.llm import LlmMessage, LlmToolCallError, Message, ToolCall, Usage
 from plm.parser import PlmData
@@ -105,9 +105,13 @@ def test_step_limit_forces_a_final_answer_without_tools(plm_data: PlmData) -> No
 
 
 def test_malformed_tool_call_is_retried_once(plm_data: PlmData) -> None:
-    llm = ScriptedLlm(fail(LlmToolCallError("tool 'search_results' not in request.tools")), say("Done."))
+    llm = ScriptedLlm(
+        fail(LlmToolCallError("tool 'search_results' not in request.tools")),
+        tool("search_products", query="magnet"),
+        say("The extract contains no magnet."),
+    )
     answer = make_agent(plm_data, llm).ask(Conversation(), "?")
-    assert answer.text == "Done."
+    assert answer.text == "The extract contains no magnet."
     assert "search_products" in llm.calls[1]["messages"][-1]["content"]
     assert any("malformed tool call" in w for w in answer.warnings)
 
@@ -119,10 +123,69 @@ def test_second_malformed_tool_call_propagates(plm_data: PlmData) -> None:
 
 
 def test_invented_citations_are_removed(plm_data: PlmData) -> None:
-    llm = ScriptedLlm(say("There are 14 screws [E42]."))
+    llm = ScriptedLlm(
+        tool("get_total_quantity", plm_id=SCREW_L155),
+        say("There are 14 screws [{evidence}][E42]."),
+    )
     answer = make_agent(plm_data, llm).ask(Conversation(), "?")
-    assert answer.text == "There are 14 screws ." and answer.evidence == ()
+    assert answer.text == "There are 14 screws [E2]." and [e.id for e in answer.evidence] == ["E2"]
     assert any("E42" in w for w in answer.warnings)
+
+
+def test_answer_citing_only_invented_evidence_is_replaced(plm_data: PlmData) -> None:
+    llm = ScriptedLlm(say("There are 14 screws [E42]."))
+    answer = make_agent(plm_data, llm).ask(Conversation(), "How many screws?")
+    assert answer.text == SCOPE_MESSAGES["en"] and answer.evidence == ()
+
+
+@pytest.mark.parametrize(
+    ("question", "language"),
+    [
+        ("Donne moi une recette de tarte aux pommes", "fr"),
+        ("Écris un poème", "fr"),
+        ("Give me an apple pie recipe", "en"),
+        ("What is the capital of France?", "en"),
+    ],
+)
+def test_off_topic_answer_without_data_is_replaced(plm_data: PlmData, question: str, language: str) -> None:
+    llm = ScriptedLlm(say("Ingredients: 80 g of sugar, 4 apples, 30 g of butter. Bake 35 minutes at 180 C."))
+    conversation = Conversation()
+    answer = make_agent(plm_data, llm).ask(conversation, question)
+    assert answer.text == SCOPE_MESSAGES[language] and answer.evidence == () and answer.tool_calls == ()
+    assert any("not grounded" in w for w in answer.warnings)
+    assert conversation.history[-1]["content"] == SCOPE_MESSAGES[language]
+
+
+def test_off_topic_answer_after_a_tool_call_is_replaced(plm_data: PlmData) -> None:
+    llm = ScriptedLlm(tool("search_products", query="apple"), say("Use 4 apples and 80 g of sugar."))
+    answer = make_agent(plm_data, llm).ask(Conversation(), "Apple pie?")
+    assert answer.text == SCOPE_MESSAGES["en"]
+
+
+def test_follow_up_citing_earlier_evidence_is_kept(plm_data: PlmData) -> None:
+    llm = ScriptedLlm(
+        tool("get_total_quantity", plm_id=SCREW_L155),
+        say("14 screws [{evidence}]."),
+        say("As said, 14 screws [E2]."),
+    )
+    agent = make_agent(plm_data, llm)
+    conversation = agent.new_conversation()
+    agent.ask(conversation, "How many screws?")
+    answer = agent.ask(conversation, "Can you repeat?")
+    assert answer.text == "As said, 14 screws [E2]." and answer.tool_calls == ()
+
+
+@pytest.mark.parametrize(
+    ("cited", "used_tools", "uncited_figures", "expected"),
+    [
+        (("E1",), False, 3, True),
+        ((), True, 0, True),
+        ((), True, 1, False),
+        ((), False, 0, False),
+    ],
+)
+def test_is_grounded(cited: tuple[str, ...], used_tools: bool, uncited_figures: int, expected: bool) -> None:
+    assert is_grounded(cited, used_tools, uncited_figures) is expected
 
 
 def test_evidence_ids_are_stable_across_turns(plm_data: PlmData) -> None:

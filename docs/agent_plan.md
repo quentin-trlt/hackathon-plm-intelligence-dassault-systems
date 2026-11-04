@@ -255,6 +255,8 @@ The scope was reduced by team decision. `get_risk` and `simulate_change` wait un
 
 Still open: on table answers the model often cites only the root instead of each row (rule 2), and the uncited-figure warning shows it. This goes to the phase 3 prompt tuning.
 
+**Scope guard.** Testing the page showed the model answering off-topic requests from general knowledge (an apple pie recipe). There are now two layers. A scope rule in the system prompt tells the model to decline. A check in `PlmAgent.ask` keeps an answer only if it cites at least one evidence, or if it used tools without stating an uncited figure. Otherwise the answer is replaced by a fixed scope message, in French or English depending on the question, and a warning is added. The check also rejects answers built only from the prompt's data overview, which carry no evidence. Limit: an off-topic answer that cites a real evidence id would pass, and the prompt rule is the only defence against that.
+
 ## Risks
 
 | Risk | Mitigation |

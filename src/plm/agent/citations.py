@@ -24,6 +24,7 @@ class CheckedAnswer:
     text: str
     cited: tuple[str, ...]
     warnings: tuple[str, ...]
+    uncited_figures: int = 0
 
 
 def check_citations(text: str, registry: EvidenceRegistry) -> CheckedAnswer:
@@ -43,7 +44,7 @@ def check_citations(text: str, registry: EvidenceRegistry) -> CheckedAnswer:
         warnings.append(f"Removed citation(s) to unknown evidence: {', '.join(unknown)}")
     if uncited := _uncited_segments(rewritten):
         warnings.append(f"{uncited} sentence(s) state a figure without a citation")
-    return CheckedAnswer(text=rewritten, cited=tuple(cited), warnings=tuple(warnings))
+    return CheckedAnswer(text=rewritten, cited=tuple(cited), warnings=tuple(warnings), uncited_figures=uncited)
 
 
 def _uncited_segments(text: str) -> int:
