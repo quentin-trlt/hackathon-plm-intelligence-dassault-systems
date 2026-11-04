@@ -121,3 +121,4 @@ TODO: command to launch the interface, once the framework is chosen.
 - Shubham BOLLU
 - Téo MAHIEU
 - Kishan Kumar MANTHRI
+- Saad ZAINOU
