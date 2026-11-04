@@ -80,6 +80,5 @@ Brief: query the data in natural language, retrieving and displaying the PLM sou
 Brief: web application, dashboard or comparable interface.
 
 - [x] Streamlit web application on the real parser and backend (`streamlit run app/app.py`)
-- [ ] **P1** Decide what to do with the public Netlify mockup: it publishes real PLM IDs, which the README forbids for partner data
 - [x] **P2** Fix the lint issues already on `main`: import order in `tests/test_risk.py`, formatting of `src/plm/analysis/risk.py`
 - [x] **P3** Smoke tests of the app views with Streamlit `AppTest`

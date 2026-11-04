@@ -7,13 +7,15 @@ from __future__ import annotations
 
 import dataclasses
 import re
+from html import escape
 
 import streamlit as st
 
-from plm.agent import AgentAnswer, AgentConfig, AgentConfigError, LlmError, PlmAgent, describe
+import ui
+from plm.agent import AgentAnswer, AgentConfig, AgentConfigError, LlmError, PlmAgent
 from plm.agent.eval import DEMO_QUESTIONS
 from plm.agent.replay import ReplayingAgent, build_assistant
-from services import ENRICHMENT_DIR, NON_PLM, REPO_ROOT, XML_PATH, Services
+from services import ENRICHMENT_DIR, REPO_ROOT, XML_PATH, Services
 
 MAX_REFS_SHOWN = 5
 _CITATION = re.compile(r"\[(E\d+)\]")
@@ -37,9 +39,9 @@ def load_agent() -> PlmAgent | ReplayingAgent | None:
 
 
 def agent_status(agent: PlmAgent | ReplayingAgent) -> str:
-    status = f"Model: {agent.config.model}"
+    status = f"Model {agent.config.model}"
     if isinstance(agent, ReplayingAgent):
-        status += f" · replay mode: {agent.mode}, {len(agent.store)} recorded answer(s)"
+        status += f", replay mode {agent.mode} with {len(agent.store)} recorded answer(s)"
         stale = agent.store.stale_count(agent.fingerprint)
         if stale:
             status += f", {stale} recorded on older data and ignored"
@@ -52,24 +54,28 @@ def numbered_text(answer: AgentAnswer) -> str:
     return _CITATION.sub(lambda m: f"[{numbers[m[1]]}]" if m[1] in numbers else "", answer.text)
 
 
+def _evidence_html(rank: int, evidence) -> str:
+    refs = list(evidence.refs[:MAX_REFS_SHOWN])
+    more = len(evidence.refs) - len(refs)
+    origin = "Team data" if evidence.is_enrichment else "OEM extract"
+    note = f" {escape(evidence.note)}." if evidence.note else ""
+    extra = f", {more} more not shown" if more > 0 else ""
+    return (
+        f'<div class="plm-chips-heading"><strong>[{rank}]</strong> {escape(evidence.label)} '
+        f"({origin}{extra}).{note}</div>{ui.chip_row(refs)}"
+    )
+
+
 def render_answer(answer: AgentAnswer, show_tool_calls: bool) -> None:
     if answer.replayed_at:
-        st.caption(f"Recorded answer, replayed (recorded {answer.replayed_at} on the same data)")
+        st.caption(f"Recorded answer, replayed. Recorded {answer.replayed_at} on the same data.")
     st.markdown(numbered_text(answer))
     for warning in answer.warnings:
         st.caption(f"Warning: {warning}")
 
     if answer.evidence:
         with st.expander(f"Sources ({len(answer.evidence)})"):
-            for rank, evidence in enumerate(answer.evidence, start=1):
-                badge = f" · `{NON_PLM}`" if evidence.is_enrichment else ""
-                lines = [f"**[{rank}]** {evidence.label}{badge}"]
-                lines += [f"- {describe(ref)}" for ref in evidence.refs[:MAX_REFS_SHOWN]]
-                if len(evidence.refs) > MAX_REFS_SHOWN:
-                    lines.append(f"- ... and {len(evidence.refs) - MAX_REFS_SHOWN} more")
-                if evidence.note:
-                    lines.append(f"- note: {evidence.note}")
-                st.markdown("\n".join(lines))
+            st.html("".join(_evidence_html(rank, ev) for rank, ev in enumerate(answer.evidence, start=1)))
 
     if show_tool_calls and answer.tool_calls:
         with st.expander(f"Tool calls ({len(answer.tool_calls)})"):
@@ -82,7 +88,8 @@ def render_answer(answer: AgentAnswer, show_tool_calls: bool) -> None:
     if show_tool_calls and answer.rejected_text:
         with st.expander("Rejected model answer (not grounded in the data)"):
             st.text(answer.rejected_text)
-    st.caption(f"{answer.usage.prompt_tokens} + {answer.usage.completion_tokens} tokens")
+    if show_tool_calls:
+        st.caption(f"{answer.usage.prompt_tokens} + {answer.usage.completion_tokens} tokens")
 
 
 def new_conversation(agent: PlmAgent | ReplayingAgent) -> None:
@@ -100,6 +107,17 @@ def example_buttons(columns: int = 1) -> str | None:
     return clicked
 
 
+def _queue_example() -> None:
+    st.session_state.assistant_pending = st.session_state.assistant_example
+    st.session_state.assistant_example = None
+
+
+def example_pills() -> str | None:
+    """Demo questions as pills; returns the question picked in this run, if any."""
+    st.pills("Try a question", DEMO_QUESTIONS, key="assistant_example", on_change=_queue_example)
+    return st.session_state.pop("assistant_pending", None)
+
+
 def chat(agent: PlmAgent | ReplayingAgent, pending: str | None, show_tool_calls: bool) -> None:
     if "assistant_conversation" not in st.session_state:
         new_conversation(agent)
@@ -110,7 +128,7 @@ def chat(agent: PlmAgent | ReplayingAgent, pending: str | None, show_tool_calls:
         with st.chat_message("assistant"):
             render_answer(answer, show_tool_calls)
 
-    question = st.chat_input("Ask a question about the motor") or pending
+    question = st.chat_input("Ask about the motor, in English or French") or pending
     if not question:
         return
     with st.chat_message("user"):
@@ -120,28 +138,28 @@ def chat(agent: PlmAgent | ReplayingAgent, pending: str | None, show_tool_calls:
             with st.spinner("Querying the PLM data..."):
                 answer = agent.ask(st.session_state.assistant_conversation, question)
         except LlmError as exc:
-            st.error(str(exc))
+            st.error(f"The model could not answer. {exc}")
             return
         st.session_state.assistant_turns.append((question, answer))
         render_answer(answer, show_tool_calls)
 
 
 def render(s: Services) -> None:
-    st.header("Assistant")
-    st.caption(
-        "Questions in English or French. Figures are computed by the analysis code, never by the model, and every "
-        "answer lists the XML elements and CSV rows it comes from."
-    )
+    head, tools = st.columns([3, 2], vertical_alignment="bottom")
+    with head:
+        ui.page_header(
+            "Assistant",
+            "Figures are computed by the analysis code, never by the model. Every answer lists the XML elements and "
+            "CSV rows it comes from.",
+        )
     agent = load_agent()
     if agent is None:
         return
+    with tools, st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center"):
+        show_tool_calls = st.toggle("Show tool calls", value=False)
+        if st.button("New conversation", icon=":material/add_comment:"):
+            new_conversation(agent)
+    st.caption(agent_status(agent))
 
-    c1, c2, c3 = st.columns([3, 1, 1], vertical_alignment="center")
-    c1.caption(agent_status(agent))
-    show_tool_calls = c2.toggle("Show tool calls", value=False)
-    if c3.button("New conversation", width="stretch"):
-        new_conversation(agent)
-    with st.expander("Example questions"):
-        pending = example_buttons(columns=2)
-
+    pending = example_pills()
     chat(agent, pending, show_tool_calls)
