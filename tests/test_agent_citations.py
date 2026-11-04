@@ -1,0 +1,69 @@
+from __future__ import annotations
+
+import pytest
+
+from plm.agent.citations import check_citations
+from plm.agent.evidence import EvidenceRegistry
+from plm.model import SourceRef
+
+
+@pytest.fixture
+def registry() -> EvidenceRegistry:
+    registry = EvidenceRegistry()
+    for line in (10, 20, 30):
+        registry.register(f"fact {line}", (SourceRef("plm_xml", "x.xml", line, "Product", f"ID_{line}"),))
+    return registry
+
+
+def test_known_citations_are_kept_in_order_of_appearance(registry: EvidenceRegistry) -> None:
+    checked = check_citations("Mass 2 kg [E2]. Quantity 14 [E1].", registry)
+    assert checked.cited == ("E2", "E1") and checked.warnings == ()
+
+
+@pytest.mark.parametrize("text", ["14 screws 【E1】.", "14 screws [E1, E3].", "14 screws [ E1 ; E3 ]."])
+def test_alternative_forms_are_normalised(registry: EvidenceRegistry, text: str) -> None:
+    checked = check_citations(text, registry)
+    assert "[E1]" in checked.text and "【" not in checked.text and "," not in checked.text.split("screws")[1]
+
+
+def test_unknown_ids_are_removed(registry: EvidenceRegistry) -> None:
+    checked = check_citations("14 screws [E1][E9]. Cost 3 EUR [E8].", registry)
+    assert checked.cited == ("E1",)
+    assert "[E9]" not in checked.text and "[E8]" not in checked.text
+    assert any("E9" in w and "E8" in w for w in checked.warnings)
+
+
+def test_uncited_figures_are_flagged(registry: EvidenceRegistry) -> None:
+    checked = check_citations("There are 14 screws [E1]. The housing weighs 30.52 kg.", registry)
+    assert checked.warnings == ("1 sentence(s) state a figure without a citation",)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "The ECAR-3D Screw D10 L155 sits in the 410KW_EDRIVE_FRONT.",
+        "See prd-12535825-00000081 for details.",
+        "1. First item\n2. Second item",
+        "| Material | Mass |\n|---|---|\n| Steel | 21.62 [E1] |",
+    ],
+)
+def test_identifiers_and_list_markers_are_not_figures(registry: EvidenceRegistry, text: str) -> None:
+    assert check_citations(text, registry).warnings == ()
+
+
+@pytest.mark.parametrize("text", ["Values 1 [E1–E3].", "Values 1 [E1-E3].", "Values 1 [E1‑E3]."])
+def test_ranges_are_expanded(registry: EvidenceRegistry, text: str) -> None:
+    checked = check_citations(text, registry)
+    assert checked.text == "Values 1 [E1][E2][E3]." and checked.cited == ("E1", "E2", "E3")
+
+
+def test_range_with_an_unknown_id_is_rejected(registry: EvidenceRegistry) -> None:
+    checked = check_citations("Values 1 [E2–E9].", registry)
+    assert checked.cited == () and any("E2–E9" in w for w in checked.warnings)
+
+
+def test_zero_width_spaces_inside_brackets_are_ignored(registry: EvidenceRegistry) -> None:
+    zwsp = chr(0x200B)
+    checked = check_citations(f"Mass 2 kg [{zwsp}E1][{zwsp}E2], 3 kg [E3{zwsp}].", registry)
+    assert checked.text == "Mass 2 kg [E1][E2], 3 kg [E3]." and checked.cited == ("E1", "E2", "E3")
+    assert checked.warnings == ()

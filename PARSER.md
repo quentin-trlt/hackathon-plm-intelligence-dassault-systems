@@ -189,7 +189,7 @@ part.source.line                       # 78, line of the <Product> in the XML
 aluminium = [p for p in plm.leaves() if p.material and "Aluminium" in p.material]
 ```
 
-Search copes with naming inconsistencies: `plm.search("machine cooling")` finds `ECAR-EI_ MACHINE COOLING` despite the stray space.
+Search copes with naming inconsistencies. Case does not matter, and underscores and runs of spaces are treated as a single space, both in the query and in the names. `plm.search("machine cooling")` finds `ECAR-EI_ MACHINE COOLING` despite the stray space, and `plm.search("ECAR-3D Screw D10 L155")` finds the part under the name exactly as written in the XML.
 
 ### Risk: supplier dependencies
 

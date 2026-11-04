@@ -24,6 +24,7 @@ dist/
 # Secrets
 .env
 .env.*
+!.env.example
 
 
 # Aucun XML hors de docs/ et data/raw/

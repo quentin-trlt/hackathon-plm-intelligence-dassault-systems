@@ -1,0 +1,3283 @@
+{
+  "version": 1,
+  "records": {
+    "how many d10 l155 screws are in the motor": {
+      "question": "How many D10 L155 screws are in the motor?",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "a9435fd30af79222",
+      "recorded_at": "2026-11-04T14:12:08+00:00",
+      "answer": {
+        "text": "There are 14 ECAR‑3D Screw D10 L155 units in the motor [E2].",
+        "evidence": [
+          {
+            "id": "E2",
+            "label": "Total quantity of ECAR-3D Screw D10 L155 in the motor",
+            "plm_id": "prd-12535825-00000117",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2868,
+                "element": "ProductInst",
+                "xml_id": "ID_148",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C14"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4002,
+                "element": "ProductInst",
+                "xml_id": "ID_206",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E24"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4022,
+                "element": "ProductInst",
+                "xml_id": "ID_207",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E2E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4042,
+                "element": "ProductInst",
+                "xml_id": "ID_208",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E38"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4062,
+                "element": "ProductInst",
+                "xml_id": "ID_209",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E42"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4082,
+                "element": "ProductInst",
+                "xml_id": "ID_210",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E4C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4102,
+                "element": "ProductInst",
+                "xml_id": "ID_211",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E56"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4122,
+                "element": "ProductInst",
+                "xml_id": "ID_212",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E60"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4142,
+                "element": "ProductInst",
+                "xml_id": "ID_213",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E6A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4162,
+                "element": "ProductInst",
+                "xml_id": "ID_214",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E74"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4182,
+                "element": "ProductInst",
+                "xml_id": "ID_215",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E7E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4202,
+                "element": "ProductInst",
+                "xml_id": "ID_216",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E88"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4222,
+                "element": "ProductInst",
+                "xml_id": "ID_217",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E92"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4242,
+                "element": "ProductInst",
+                "xml_id": "ID_218",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E9C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4262,
+                "element": "ProductInst",
+                "xml_id": "ID_219",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EA6"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4282,
+                "element": "ProductInst",
+                "xml_id": "ID_220",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022046"
+              }
+            ]
+          }
+        ],
+        "tool_calls": [
+          {
+            "name": "search_products",
+            "arguments": "{\"kind\":\"part\",\"limit\":10,\"query\":\"D10 L155\"}",
+            "seconds": 0.000469750004413072,
+            "error": null
+          },
+          {
+            "name": "get_total_quantity",
+            "arguments": "{\"plm_id\":\"prd-12535825-00000117\"}",
+            "seconds": 0.0002082919963868335,
+            "error": null
+          }
+        ],
+        "warnings": [],
+        "usage": {
+          "prompt_tokens": 7266,
+          "completion_tokens": 229
+        },
+        "rejected_text": null
+      }
+    },
+    "how many d10 screws are there in the motor, all lengths combined": {
+      "question": "How many D10 screws are there in the motor, all lengths combined?",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "a9435fd30af79222",
+      "recorded_at": "2026-11-04T14:12:08+00:00",
+      "answer": {
+        "text": "There are **18 D10 screws** in the motor (4 × L115 + 14 × L155) [E3][E4].",
+        "evidence": [
+          {
+            "id": "E3",
+            "label": "Total quantity of ECAR-3D_Screw D10 L115 in the motor",
+            "plm_id": "prd-12535825-00000113",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2868,
+                "element": "ProductInst",
+                "xml_id": "ID_148",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C14"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3372,
+                "element": "ProductInst",
+                "xml_id": "ID_174",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D32"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3392,
+                "element": "ProductInst",
+                "xml_id": "ID_175",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D3D"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3412,
+                "element": "ProductInst",
+                "xml_id": "ID_176",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D48"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3432,
+                "element": "ProductInst",
+                "xml_id": "ID_177",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D53"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3452,
+                "element": "ProductInst",
+                "xml_id": "ID_178",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102201A"
+              }
+            ]
+          },
+          {
+            "id": "E4",
+            "label": "Total quantity of ECAR-3D Screw D10 L155 in the motor",
+            "plm_id": "prd-12535825-00000117",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2868,
+                "element": "ProductInst",
+                "xml_id": "ID_148",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C14"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4002,
+                "element": "ProductInst",
+                "xml_id": "ID_206",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E24"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4022,
+                "element": "ProductInst",
+                "xml_id": "ID_207",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E2E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4042,
+                "element": "ProductInst",
+                "xml_id": "ID_208",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E38"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4062,
+                "element": "ProductInst",
+                "xml_id": "ID_209",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E42"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4082,
+                "element": "ProductInst",
+                "xml_id": "ID_210",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E4C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4102,
+                "element": "ProductInst",
+                "xml_id": "ID_211",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E56"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4122,
+                "element": "ProductInst",
+                "xml_id": "ID_212",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E60"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4142,
+                "element": "ProductInst",
+                "xml_id": "ID_213",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E6A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4162,
+                "element": "ProductInst",
+                "xml_id": "ID_214",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E74"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4182,
+                "element": "ProductInst",
+                "xml_id": "ID_215",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E7E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4202,
+                "element": "ProductInst",
+                "xml_id": "ID_216",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E88"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4222,
+                "element": "ProductInst",
+                "xml_id": "ID_217",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E92"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4242,
+                "element": "ProductInst",
+                "xml_id": "ID_218",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E9C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4262,
+                "element": "ProductInst",
+                "xml_id": "ID_219",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EA6"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4282,
+                "element": "ProductInst",
+                "xml_id": "ID_220",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022046"
+              }
+            ]
+          }
+        ],
+        "tool_calls": [
+          {
+            "name": "search_products",
+            "arguments": "{\"limit\":20,\"query\":\"D10\"}",
+            "seconds": 0.0005187080023461021,
+            "error": null
+          },
+          {
+            "name": "get_total_quantity",
+            "arguments": "{\"plm_id\":\"prd-12535825-00000113\"}",
+            "seconds": 0.00015729199367342517,
+            "error": null
+          },
+          {
+            "name": "get_total_quantity",
+            "arguments": "{\"plm_id\":\"prd-12535825-00000117\"}",
+            "seconds": 0.0002164170000469312,
+            "error": null
+          },
+          {
+            "name": "compare_products",
+            "arguments": "{\"plm_ids\":[\"prd-12535825-00000113\",\"prd-12535825-00000117\"]}",
+            "seconds": 0.0005926250014454126,
+            "error": null
+          }
+        ],
+        "warnings": [],
+        "usage": {
+          "prompt_tokens": 13455,
+          "completion_tokens": 416
+        },
+        "rejected_text": null
+      }
+    },
+    "how many rotor magnets are in the motor": {
+      "question": "How many rotor magnets are in the motor?",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "a9435fd30af79222",
+      "recorded_at": "2026-11-04T14:12:08+00:00",
+      "answer": {
+        "text": "The extract does not contain any rotor magnet parts.",
+        "evidence": [],
+        "tool_calls": [
+          {
+            "name": "search_products",
+            "arguments": "{\"limit\":10,\"query\":\"magnet\"}",
+            "seconds": 0.001036374997056555,
+            "error": null
+          }
+        ],
+        "warnings": [],
+        "usage": {
+          "prompt_tokens": 4652,
+          "completion_tokens": 117
+        },
+        "rejected_text": null
+      }
+    },
+    "if the differential side shaft is replaced, what is impacted": {
+      "question": "If the differential side shaft is replaced, what is impacted?",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "a9435fd30af79222",
+      "recorded_at": "2026-11-04T14:12:08+00:00",
+      "answer": {
+        "text": "**Impacted assemblies**\n\n| Assembly (plm_id) | Evidence |\n|-------------------|----------|\n| ECAR‑EI 410KW EDRIVE FRONT (prd-12535825-00000047) | [E4] |\n| ECAR‑EI REDUCER FRONT (prd-12535825-00000049) | [E5] |\n| ECAR‑EI DIFFERENTIAL ASSEMBLY (prd-12535825-00000055) | [E6] |\n\n**Suppliers and lead times (material‑cost data from enrichment)**  \n\n| Supplier | Country | Lead time (days) | Material cost per unit (EUR) | Evidence |\n|----------|---------|------------------|------------------------------|----------|\n| Dana Incorporated (SUP‑004) | US | 84 | 1.17 EUR | [E8][E10] |\n| GKN Driveline (Dowlais) (SUP‑003) | GB | 98 | 1.17 EUR | [E9][E10] |\n\n**Material cost impact**\n\n* Unit material cost: 1.17 EUR per shaft (mass 0.9 kg, steel price 1.3 EUR/kg) – [E10]  \n* Total quantity in the motor: 2 shafts – [E7]  \n* Material cost in the motor: 2 × 1.17 = 2.34 EUR – [E11]  \n\nThus, replacing the **ECAR‑3D DifferentialSideShaft** affects the three assemblies listed above, involves two possible suppliers with lead times of 84 days (Dana) or 98 days (GKN), and adds a material‑cost impact of 2.34 EUR for the two shafts used in the motor.",
+        "evidence": [
+          {
+            "id": "E4",
+            "label": "PLM element of ECAR-EI_410KW_EDRIVE_FRONT (prd-12535825-00000047)",
+            "plm_id": "prd-12535825-00000047",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              }
+            ]
+          },
+          {
+            "id": "E5",
+            "label": "PLM element of ECAR-EI_REDUCER FRONT (prd-12535825-00000049)",
+            "plm_id": "prd-12535825-00000049",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 344,
+                "element": "Product",
+                "xml_id": "ID_17",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102171E"
+              }
+            ]
+          },
+          {
+            "id": "E6",
+            "label": "PLM element of ECAR-EI_DIFFERENTIAL_ASSEMBLY (prd-12535825-00000055)",
+            "plm_id": "prd-12535825-00000055",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 363,
+                "element": "Product",
+                "xml_id": "ID_18",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102175A"
+              }
+            ]
+          },
+          {
+            "id": "E8",
+            "label": "Sourcing of ECAR-3D_DifferentialSideShaft from Dana Incorporated",
+            "plm_id": "prd-12535825-00000125",
+            "note": "Dana Differential Side Output Shaft 20MnCr5",
+            "refs": [
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 14,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "suppliers.csv",
+                "line": 5,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E10",
+            "label": "Material cost of one ECAR-3D_DifferentialSideShaft",
+            "plm_id": "prd-12535825-00000125",
+            "note": "Material cost only (mass x material price). The purchase price of bought parts is not included.",
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 515,
+                "element": "Product",
+                "xml_id": "ID_26",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021A16"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 8,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E9",
+            "label": "Sourcing of ECAR-3D_DifferentialSideShaft from GKN Driveline (Dowlais)",
+            "plm_id": "prd-12535825-00000125",
+            "note": "GKN Driveline Differential Side Output Shaft (Dual Source)",
+            "refs": [
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 15,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "suppliers.csv",
+                "line": 4,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E7",
+            "label": "Total quantity of ECAR-3D_DifferentialSideShaft in the motor",
+            "plm_id": "prd-12535825-00000125",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1950,
+                "element": "ProductInst",
+                "xml_id": "ID_101",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C09"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1970,
+                "element": "ProductInst",
+                "xml_id": "ID_102",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C4B"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2164,
+                "element": "ProductInst",
+                "xml_id": "ID_112",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F28"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2184,
+                "element": "ProductInst",
+                "xml_id": "ID_113",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102209E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2222,
+                "element": "ProductInst",
+                "xml_id": "ID_115",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F33"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2242,
+                "element": "ProductInst",
+                "xml_id": "ID_116",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010220A9"
+              }
+            ]
+          },
+          {
+            "id": "E11",
+            "label": "Material cost of all ECAR-3D_DifferentialSideShaft in the motor",
+            "plm_id": "prd-12535825-00000125",
+            "note": "Material cost only (mass x material price). The purchase price of bought parts is not included.",
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 515,
+                "element": "Product",
+                "xml_id": "ID_26",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021A16"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 8,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1950,
+                "element": "ProductInst",
+                "xml_id": "ID_101",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C09"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1970,
+                "element": "ProductInst",
+                "xml_id": "ID_102",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C4B"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2164,
+                "element": "ProductInst",
+                "xml_id": "ID_112",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F28"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2184,
+                "element": "ProductInst",
+                "xml_id": "ID_113",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102209E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2222,
+                "element": "ProductInst",
+                "xml_id": "ID_115",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F33"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2242,
+                "element": "ProductInst",
+                "xml_id": "ID_116",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010220A9"
+              }
+            ]
+          }
+        ],
+        "tool_calls": [
+          {
+            "name": "search_products",
+            "arguments": "{\"kind\":\"part\",\"limit\":5,\"query\":\"DifferentialSideShaft\"}",
+            "seconds": 0.00035045800177613273,
+            "error": null
+          },
+          {
+            "name": "get_where_used",
+            "arguments": "{\"plm_id\":\"prd-12535825-00000125\"}",
+            "seconds": 0.00022737499966751784,
+            "error": null
+          },
+          {
+            "name": "get_sourcing",
+            "arguments": "{\"plm_id\":\"prd-12535825-00000125\"}",
+            "seconds": 0.00021141699835425243,
+            "error": null
+          },
+          {
+            "name": "get_unit_cost",
+            "arguments": "{\"plm_id\":\"prd-12535825-00000125\"}",
+            "seconds": 0.001675542000157293,
+            "error": null
+          }
+        ],
+        "warnings": [
+          "1 sentence(s) state a figure without a citation"
+        ],
+        "usage": {
+          "prompt_tokens": 13961,
+          "completion_tokens": 1038
+        },
+        "rejected_text": null
+      }
+    },
+    "quelle est la masse du sous-ensemble reducer front": {
+      "question": "Quelle est la masse du sous-ensemble REDUCER FRONT ?",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "a9435fd30af79222",
+      "recorded_at": "2026-11-04T14:12:08+00:00",
+      "answer": {
+        "text": "La masse du sous‑ensemble **REDUCER FRONT** est de **29,85 kg**[E1].",
+        "evidence": [
+          {
+            "id": "E1",
+            "label": "PLM element of ECAR-EI_REDUCER FRONT (prd-12535825-00000049)",
+            "plm_id": "prd-12535825-00000049",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 344,
+                "element": "Product",
+                "xml_id": "ID_17",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102171E"
+              }
+            ]
+          }
+        ],
+        "tool_calls": [
+          {
+            "name": "get_product",
+            "arguments": "{\"plm_id\":\"prd-12535825-00000049\"}",
+            "seconds": 0.00027904199669137597,
+            "error": null
+          }
+        ],
+        "warnings": [],
+        "usage": {
+          "prompt_tokens": 4808,
+          "completion_tokens": 129
+        },
+        "rejected_text": null
+      }
+    },
+    "tell me about the gear wheel": {
+      "question": "Tell me about the gear wheel",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "a9435fd30af79222",
+      "recorded_at": "2026-11-04T14:12:08+00:00",
+      "answer": {
+        "text": "**Gear wheels in the ECAR‑EI 410 kW e‑Drive front motor**\n\n| PLM ID | Mass (kg) | Material | Quantity in motor | Unit material cost (EUR) | Supplier (lead‑time days) |\n|--------|-----------|----------|-------------------|--------------------------|---------------------------|\n| prd‑12535825‑00000100 | 1.3 kg | Case‑hardening steel 20MnCr5 | 1 unit[E5] | 1.69 EUR[E6] | GKN Driveline (Dowlais) – 98 d[E7] |\n| prd‑12535825‑00000101 | 3.9 kg | Case‑hardening steel 20MnCr5 | 1 unit[E8] | 5.07 EUR[E9] | GKN Driveline (Dowlais) – 98 d[E10] |\n| prd‑12535825‑00000102 | 1.6 kg | Case‑hardening steel 20MnCr5 | 1 unit[E11] | 2.08 EUR[E12] | GKN Driveline (Dowlais) – 98 d[E13] |\n| prd‑12535825‑00000103 | 7.4 kg | Case‑hardening steel 20MnCr5 | 1 unit[E14] | 9.62 EUR[E15] | GKN Driveline (Dowlais) – 105 d[E16] |\n\n**Overall totals (material‑cost view only, from enrichment data)**  \n- Total gear wheels: **4** units[E17]  \n- Total mass: **14.2 kg**[E17]  \n- Total material cost: **18.46 EUR**[E17]\n\n*All material‑cost figures are derived from the enrichment files (mass × material price) and do not include purchase price.*",
+        "evidence": [
+          {
+            "id": "E5",
+            "label": "Total quantity of ECAR-3D_GearWheel in the motor",
+            "plm_id": "prd-12535825-00000100",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1950,
+                "element": "ProductInst",
+                "xml_id": "ID_101",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C09"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2578,
+                "element": "ProductInst",
+                "xml_id": "ID_133",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C98"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2598,
+                "element": "ProductInst",
+                "xml_id": "ID_134",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F8B"
+              }
+            ]
+          },
+          {
+            "id": "E6",
+            "label": "Material cost of one ECAR-3D_GearWheel",
+            "plm_id": "prd-12535825-00000100",
+            "note": "Material cost only (mass x material price). The purchase price of bought parts is not included.",
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 819,
+                "element": "Product",
+                "xml_id": "ID_42",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102191C"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 8,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E7",
+            "label": "Sourcing of ECAR-3D_GearWheel from GKN Driveline (Dowlais)",
+            "plm_id": "prd-12535825-00000100",
+            "note": "GKN Helical Gear Stage 1 Rev A (Single Source)",
+            "refs": [
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 28,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "suppliers.csv",
+                "line": 4,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E8",
+            "label": "Total quantity of ECAR-3D_GearWheel in the motor",
+            "plm_id": "prd-12535825-00000101",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1950,
+                "element": "ProductInst",
+                "xml_id": "ID_101",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C09"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2636,
+                "element": "ProductInst",
+                "xml_id": "ID_136",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CA3"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2656,
+                "element": "ProductInst",
+                "xml_id": "ID_137",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F96"
+              }
+            ]
+          },
+          {
+            "id": "E9",
+            "label": "Material cost of one ECAR-3D_GearWheel",
+            "plm_id": "prd-12535825-00000101",
+            "note": "Material cost only (mass x material price). The purchase price of bought parts is not included.",
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 857,
+                "element": "Product",
+                "xml_id": "ID_44",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021926"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 8,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E10",
+            "label": "Sourcing of ECAR-3D_GearWheel from GKN Driveline (Dowlais)",
+            "plm_id": "prd-12535825-00000101",
+            "note": "GKN Intermediate Reduction Gear Rev C (Single Source)",
+            "refs": [
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 29,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "suppliers.csv",
+                "line": 4,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E11",
+            "label": "Total quantity of ECAR-3D_GearWheel in the motor",
+            "plm_id": "prd-12535825-00000102",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1950,
+                "element": "ProductInst",
+                "xml_id": "ID_101",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C09"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2694,
+                "element": "ProductInst",
+                "xml_id": "ID_139",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CAE"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2714,
+                "element": "ProductInst",
+                "xml_id": "ID_140",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FA1"
+              }
+            ]
+          },
+          {
+            "id": "E12",
+            "label": "Material cost of one ECAR-3D_GearWheel",
+            "plm_id": "prd-12535825-00000102",
+            "note": "Material cost only (mass x material price). The purchase price of bought parts is not included.",
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 895,
+                "element": "Product",
+                "xml_id": "ID_46",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021930"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 8,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E13",
+            "label": "Sourcing of ECAR-3D_GearWheel from GKN Driveline (Dowlais)",
+            "plm_id": "prd-12535825-00000102",
+            "note": "GKN Helical Pinion Stage 2 Rev B (Single Source)",
+            "refs": [
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 30,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "suppliers.csv",
+                "line": 4,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E14",
+            "label": "Total quantity of ECAR-3D_GearWheel in the motor",
+            "plm_id": "prd-12535825-00000103",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1950,
+                "element": "ProductInst",
+                "xml_id": "ID_101",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C09"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2752,
+                "element": "ProductInst",
+                "xml_id": "ID_142",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CB9"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2772,
+                "element": "ProductInst",
+                "xml_id": "ID_143",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FAC"
+              }
+            ]
+          },
+          {
+            "id": "E15",
+            "label": "Material cost of one ECAR-3D_GearWheel",
+            "plm_id": "prd-12535825-00000103",
+            "note": "Material cost only (mass x material price). The purchase price of bought parts is not included.",
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 933,
+                "element": "Product",
+                "xml_id": "ID_48",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102193A"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 8,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E16",
+            "label": "Sourcing of ECAR-3D_GearWheel from GKN Driveline (Dowlais)",
+            "plm_id": "prd-12535825-00000103",
+            "note": "GKN Final Drive Ring Gear Rev D (Single Source)",
+            "refs": [
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 31,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "suppliers.csv",
+                "line": 4,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          },
+          {
+            "id": "E17",
+            "label": "Combined totals of ECAR-3D_GearWheel, ECAR-3D_GearWheel, ECAR-3D_GearWheel, ECAR-3D_GearWheel in the motor",
+            "plm_id": null,
+            "note": "Material cost only (mass x material price). The purchase price of bought parts is not included.",
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 819,
+                "element": "Product",
+                "xml_id": "ID_42",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102191C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1950,
+                "element": "ProductInst",
+                "xml_id": "ID_101",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C09"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2578,
+                "element": "ProductInst",
+                "xml_id": "ID_133",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C98"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2598,
+                "element": "ProductInst",
+                "xml_id": "ID_134",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F8B"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 8,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 857,
+                "element": "Product",
+                "xml_id": "ID_44",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021926"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2636,
+                "element": "ProductInst",
+                "xml_id": "ID_136",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CA3"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2656,
+                "element": "ProductInst",
+                "xml_id": "ID_137",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F96"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 895,
+                "element": "Product",
+                "xml_id": "ID_46",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021930"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2694,
+                "element": "ProductInst",
+                "xml_id": "ID_139",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CAE"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2714,
+                "element": "ProductInst",
+                "xml_id": "ID_140",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FA1"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 933,
+                "element": "Product",
+                "xml_id": "ID_48",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102193A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2752,
+                "element": "ProductInst",
+                "xml_id": "ID_142",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CB9"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2772,
+                "element": "ProductInst",
+                "xml_id": "ID_143",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FAC"
+              }
+            ]
+          }
+        ],
+        "tool_calls": [
+          {
+            "name": "search_products",
+            "arguments": "{\"kind\":\"part\",\"limit\":10,\"query\":\"GearWheel\"}",
+            "seconds": 0.0005110829952172935,
+            "error": null
+          },
+          {
+            "name": "compare_products",
+            "arguments": "{\"plm_ids\":[\"prd-12535825-00000100\",\"prd-12535825-00000101\",\"prd-12535825-00000102\",\"prd-12535825-00000103\"]}",
+            "seconds": 0.0005632089960272424,
+            "error": null
+          }
+        ],
+        "warnings": [
+          "1 sentence(s) state a figure without a citation"
+        ],
+        "usage": {
+          "prompt_tokens": 8339,
+          "completion_tokens": 775
+        },
+        "rejected_text": null
+      }
+    },
+    "what is the material cost of the motor": {
+      "question": "What is the material cost of the motor?",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "a9435fd30af79222",
+      "recorded_at": "2026-11-04T14:12:08+00:00",
+      "answer": {
+        "text": "The motor’s total material cost is 266.68 EUR [E1][E2][E3].",
+        "evidence": [
+          {
+            "id": "E1",
+            "label": "material_cost_eur of the parts grouped under subassembly = ECAR-EI_EMOTOR FRONT",
+            "plm_id": "prd-12535825-00000048",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 78,
+                "element": "Product",
+                "xml_id": "ID_3",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102185E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1522,
+                "element": "ProductInst",
+                "xml_id": "ID_79",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021BFE"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1542,
+                "element": "ProductInst",
+                "xml_id": "ID_80",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C1F"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1562,
+                "element": "ProductInst",
+                "xml_id": "ID_81",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EBA"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 6,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 40,
+                "element": "Product",
+                "xml_id": "ID_1",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7901021714"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 116,
+                "element": "Product",
+                "xml_id": "ID_5",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021868"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1582,
+                "element": "ProductInst",
+                "xml_id": "ID_82",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C2A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1602,
+                "element": "ProductInst",
+                "xml_id": "ID_83",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EC5"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 2,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 154,
+                "element": "Product",
+                "xml_id": "ID_7",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021872"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1640,
+                "element": "ProductInst",
+                "xml_id": "ID_85",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C35"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1660,
+                "element": "ProductInst",
+                "xml_id": "ID_86",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021ED0"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 5,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 211,
+                "element": "Product",
+                "xml_id": "ID_10",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219D0"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1698,
+                "element": "ProductInst",
+                "xml_id": "ID_88",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C40"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1718,
+                "element": "ProductInst",
+                "xml_id": "ID_89",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EDB"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1738,
+                "element": "ProductInst",
+                "xml_id": "ID_90",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022051"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 11,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 249,
+                "element": "Product",
+                "xml_id": "ID_12",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219DA"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1776,
+                "element": "ProductInst",
+                "xml_id": "ID_92",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EE6"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1796,
+                "element": "ProductInst",
+                "xml_id": "ID_93",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102205C"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 9,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 287,
+                "element": "Product",
+                "xml_id": "ID_14",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219E4"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1834,
+                "element": "ProductInst",
+                "xml_id": "ID_95",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EF1"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1854,
+                "element": "ProductInst",
+                "xml_id": "ID_96",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022067"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 325,
+                "element": "Product",
+                "xml_id": "ID_16",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219EE"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1892,
+                "element": "ProductInst",
+                "xml_id": "ID_98",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EFC"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1912,
+                "element": "ProductInst",
+                "xml_id": "ID_99",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022072"
+              }
+            ]
+          },
+          {
+            "id": "E2",
+            "label": "material_cost_eur of the parts grouped under subassembly = ECAR-EI_HOUSING FRONT EDRIVE",
+            "plm_id": "prd-12535825-00000050",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1028,
+                "element": "Product",
+                "xml_id": "ID_53",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102194E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2868,
+                "element": "ProductInst",
+                "xml_id": "ID_148",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C14"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2888,
+                "element": "ProductInst",
+                "xml_id": "ID_149",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CCF"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2908,
+                "element": "ProductInst",
+                "xml_id": "ID_150",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FC2"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 12,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 990,
+                "element": "Product",
+                "xml_id": "ID_51",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7901021728"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1066,
+                "element": "Product",
+                "xml_id": "ID_55",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021958"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2946,
+                "element": "ProductInst",
+                "xml_id": "ID_152",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CDA"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2966,
+                "element": "ProductInst",
+                "xml_id": "ID_153",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FCD"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 4,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1104,
+                "element": "Product",
+                "xml_id": "ID_57",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021962"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3004,
+                "element": "ProductInst",
+                "xml_id": "ID_155",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CE5"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3024,
+                "element": "ProductInst",
+                "xml_id": "ID_156",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FD8"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1142,
+                "element": "Product",
+                "xml_id": "ID_59",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102196C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3062,
+                "element": "ProductInst",
+                "xml_id": "ID_158",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CF0"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3082,
+                "element": "ProductInst",
+                "xml_id": "ID_159",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FE3"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1180,
+                "element": "Product",
+                "xml_id": "ID_61",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021976"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3120,
+                "element": "ProductInst",
+                "xml_id": "ID_161",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CFB"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3140,
+                "element": "ProductInst",
+                "xml_id": "ID_162",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FEE"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 3,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1218,
+                "element": "Product",
+                "xml_id": "ID_63",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021980"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3178,
+                "element": "ProductInst",
+                "xml_id": "ID_164",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D06"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3198,
+                "element": "ProductInst",
+                "xml_id": "ID_165",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FF9"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 15,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1256,
+                "element": "Product",
+                "xml_id": "ID_65",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102198A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3236,
+                "element": "ProductInst",
+                "xml_id": "ID_167",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D11"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3256,
+                "element": "ProductInst",
+                "xml_id": "ID_168",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022004"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1294,
+                "element": "Product",
+                "xml_id": "ID_67",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021994"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3294,
+                "element": "ProductInst",
+                "xml_id": "ID_170",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D1C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3314,
+                "element": "ProductInst",
+                "xml_id": "ID_171",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D27"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3334,
+                "element": "ProductInst",
+                "xml_id": "ID_172",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102200F"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 13,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1332,
+                "element": "Product",
+                "xml_id": "ID_69",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102199E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3372,
+                "element": "ProductInst",
+                "xml_id": "ID_174",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D32"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3392,
+                "element": "ProductInst",
+                "xml_id": "ID_175",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D3D"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3412,
+                "element": "ProductInst",
+                "xml_id": "ID_176",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D48"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3432,
+                "element": "ProductInst",
+                "xml_id": "ID_177",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D53"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3452,
+                "element": "ProductInst",
+                "xml_id": "ID_178",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102201A"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 14,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1370,
+                "element": "Product",
+                "xml_id": "ID_71",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219A8"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3490,
+                "element": "ProductInst",
+                "xml_id": "ID_180",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D5E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3510,
+                "element": "ProductInst",
+                "xml_id": "ID_181",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D69"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3530,
+                "element": "ProductInst",
+                "xml_id": "ID_182",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D74"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3550,
+                "element": "ProductInst",
+                "xml_id": "ID_183",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D7F"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3570,
+                "element": "ProductInst",
+                "xml_id": "ID_184",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D8A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3590,
+                "element": "ProductInst",
+                "xml_id": "ID_185",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D95"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3610,
+                "element": "ProductInst",
+                "xml_id": "ID_186",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021DA0"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3630,
+                "element": "ProductInst",
+                "xml_id": "ID_187",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021DAB"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3650,
+                "element": "ProductInst",
+                "xml_id": "ID_188",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021DB6"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3670,
+                "element": "ProductInst",
+                "xml_id": "ID_189",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021DC1"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3690,
+                "element": "ProductInst",
+                "xml_id": "ID_190",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021DCC"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3710,
+                "element": "ProductInst",
+                "xml_id": "ID_191",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E19"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3730,
+                "element": "ProductInst",
+                "xml_id": "ID_192",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EB0"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3750,
+                "element": "ProductInst",
+                "xml_id": "ID_193",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022025"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1408,
+                "element": "Product",
+                "xml_id": "ID_73",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219B2"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3788,
+                "element": "ProductInst",
+                "xml_id": "ID_195",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021DD7"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3808,
+                "element": "ProductInst",
+                "xml_id": "ID_196",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021DF8"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3828,
+                "element": "ProductInst",
+                "xml_id": "ID_197",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E03"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3848,
+                "element": "ProductInst",
+                "xml_id": "ID_198",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022030"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1427,
+                "element": "Product",
+                "xml_id": "ID_74",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021840"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3886,
+                "element": "ProductInst",
+                "xml_id": "ID_200",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021DE2"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3924,
+                "element": "ProductInst",
+                "xml_id": "ID_202",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021DED"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1465,
+                "element": "Product",
+                "xml_id": "ID_76",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219BC"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3944,
+                "element": "ProductInst",
+                "xml_id": "ID_203",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E0E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3964,
+                "element": "ProductInst",
+                "xml_id": "ID_204",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102203B"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1503,
+                "element": "Product",
+                "xml_id": "ID_78",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219C6"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4002,
+                "element": "ProductInst",
+                "xml_id": "ID_206",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E24"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4022,
+                "element": "ProductInst",
+                "xml_id": "ID_207",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E2E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4042,
+                "element": "ProductInst",
+                "xml_id": "ID_208",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E38"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4062,
+                "element": "ProductInst",
+                "xml_id": "ID_209",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E42"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4082,
+                "element": "ProductInst",
+                "xml_id": "ID_210",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E4C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4102,
+                "element": "ProductInst",
+                "xml_id": "ID_211",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E56"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4122,
+                "element": "ProductInst",
+                "xml_id": "ID_212",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E60"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4142,
+                "element": "ProductInst",
+                "xml_id": "ID_213",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E6A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4162,
+                "element": "ProductInst",
+                "xml_id": "ID_214",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E74"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4182,
+                "element": "ProductInst",
+                "xml_id": "ID_215",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E7E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4202,
+                "element": "ProductInst",
+                "xml_id": "ID_216",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E88"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4222,
+                "element": "ProductInst",
+                "xml_id": "ID_217",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E92"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4242,
+                "element": "ProductInst",
+                "xml_id": "ID_218",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021E9C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4262,
+                "element": "ProductInst",
+                "xml_id": "ID_219",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EA6"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 4282,
+                "element": "ProductInst",
+                "xml_id": "ID_220",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022046"
+              }
+            ]
+          },
+          {
+            "id": "E3",
+            "label": "material_cost_eur of the parts grouped under subassembly = ECAR-EI_REDUCER FRONT",
+            "plm_id": "prd-12535825-00000049",
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 401,
+                "element": "Product",
+                "xml_id": "ID_20",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219F8"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1950,
+                "element": "ProductInst",
+                "xml_id": "ID_101",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C09"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1970,
+                "element": "ProductInst",
+                "xml_id": "ID_102",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C4B"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1990,
+                "element": "ProductInst",
+                "xml_id": "ID_103",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F07"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2010,
+                "element": "ProductInst",
+                "xml_id": "ID_104",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102207D"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 10,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 344,
+                "element": "Product",
+                "xml_id": "ID_17",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102171E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 439,
+                "element": "Product",
+                "xml_id": "ID_22",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021A02"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2048,
+                "element": "ProductInst",
+                "xml_id": "ID_106",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F12"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2068,
+                "element": "ProductInst",
+                "xml_id": "ID_107",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022088"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 7,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 477,
+                "element": "Product",
+                "xml_id": "ID_24",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021A0C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2106,
+                "element": "ProductInst",
+                "xml_id": "ID_109",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F1D"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2126,
+                "element": "ProductInst",
+                "xml_id": "ID_110",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022093"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 8,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 515,
+                "element": "Product",
+                "xml_id": "ID_26",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021A16"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2164,
+                "element": "ProductInst",
+                "xml_id": "ID_112",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F28"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2184,
+                "element": "ProductInst",
+                "xml_id": "ID_113",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102209E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2222,
+                "element": "ProductInst",
+                "xml_id": "ID_115",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F33"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2242,
+                "element": "ProductInst",
+                "xml_id": "ID_116",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010220A9"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2262,
+                "element": "ProductInst",
+                "xml_id": "ID_117",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F3E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2282,
+                "element": "ProductInst",
+                "xml_id": "ID_118",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010220B4"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 591,
+                "element": "Product",
+                "xml_id": "ID_30",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010218E0"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2302,
+                "element": "ProductInst",
+                "xml_id": "ID_119",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C56"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2322,
+                "element": "ProductInst",
+                "xml_id": "ID_120",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F49"
+              },
+              {
+                "origin": "enrichment",
+                "file": "material_prices.csv",
+                "line": 6,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 629,
+                "element": "Product",
+                "xml_id": "ID_32",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010218EA"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2360,
+                "element": "ProductInst",
+                "xml_id": "ID_122",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C61"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2380,
+                "element": "ProductInst",
+                "xml_id": "ID_123",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F54"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 667,
+                "element": "Product",
+                "xml_id": "ID_34",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010218F4"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2418,
+                "element": "ProductInst",
+                "xml_id": "ID_125",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C6C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2438,
+                "element": "ProductInst",
+                "xml_id": "ID_126",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F5F"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 705,
+                "element": "Product",
+                "xml_id": "ID_36",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010218FE"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2458,
+                "element": "ProductInst",
+                "xml_id": "ID_127",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C77"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2478,
+                "element": "ProductInst",
+                "xml_id": "ID_128",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F6A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 743,
+                "element": "Product",
+                "xml_id": "ID_38",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021908"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2498,
+                "element": "ProductInst",
+                "xml_id": "ID_129",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C82"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2518,
+                "element": "ProductInst",
+                "xml_id": "ID_130",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F75"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 781,
+                "element": "Product",
+                "xml_id": "ID_40",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021912"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2538,
+                "element": "ProductInst",
+                "xml_id": "ID_131",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C8D"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2558,
+                "element": "ProductInst",
+                "xml_id": "ID_132",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F80"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 819,
+                "element": "Product",
+                "xml_id": "ID_42",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102191C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2578,
+                "element": "ProductInst",
+                "xml_id": "ID_133",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C98"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2598,
+                "element": "ProductInst",
+                "xml_id": "ID_134",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F8B"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 857,
+                "element": "Product",
+                "xml_id": "ID_44",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021926"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2636,
+                "element": "ProductInst",
+                "xml_id": "ID_136",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CA3"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2656,
+                "element": "ProductInst",
+                "xml_id": "ID_137",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F96"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 895,
+                "element": "Product",
+                "xml_id": "ID_46",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021930"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2694,
+                "element": "ProductInst",
+                "xml_id": "ID_139",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CAE"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2714,
+                "element": "ProductInst",
+                "xml_id": "ID_140",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FA1"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 933,
+                "element": "Product",
+                "xml_id": "ID_48",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102193A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2752,
+                "element": "ProductInst",
+                "xml_id": "ID_142",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CB9"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2772,
+                "element": "ProductInst",
+                "xml_id": "ID_143",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FAC"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 971,
+                "element": "Product",
+                "xml_id": "ID_50",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021944"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2810,
+                "element": "ProductInst",
+                "xml_id": "ID_145",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CC4"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2830,
+                "element": "ProductInst",
+                "xml_id": "ID_146",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FB7"
+              }
+            ]
+          }
+        ],
+        "tool_calls": [
+          {
+            "name": "aggregate_leaves",
+            "arguments": "{\"group_by\":\"subassembly\",\"metric\":\"material_cost_eur\"}",
+            "seconds": 0.0011296249940642156,
+            "error": null
+          }
+        ],
+        "warnings": [],
+        "usage": {
+          "prompt_tokens": 4845,
+          "completion_tokens": 276
+        },
+        "rejected_text": null
+      }
+    },
+    "which supplier do we depend on the most": {
+      "question": "Which supplier do we depend on the most?",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "a9435fd30af79222",
+      "recorded_at": "2026-11-04T14:12:08+00:00",
+      "answer": {
+        "text": "We depend most on GKN Driveline (Dowlais) – supplier SUP‑003, which provides 8 of the motor’s parts [E3].",
+        "evidence": [
+          {
+            "id": "E3",
+            "label": "Parts sourced from GKN Driveline (Dowlais)",
+            "plm_id": null,
+            "note": null,
+            "refs": [
+              {
+                "origin": "enrichment",
+                "file": "suppliers.csv",
+                "line": 4,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 4,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 13,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 15,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 28,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 29,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 30,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 31,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              },
+              {
+                "origin": "enrichment",
+                "file": "part_sourcing.csv",
+                "line": 32,
+                "element": null,
+                "xml_id": null,
+                "xid": null
+              }
+            ]
+          }
+        ],
+        "tool_calls": [
+          {
+            "name": "get_supplier_dependencies",
+            "arguments": "{\"single_source_only\":false}",
+            "seconds": 0.0006357919992296956,
+            "error": null
+          }
+        ],
+        "warnings": [],
+        "usage": {
+          "prompt_tokens": 5010,
+          "completion_tokens": 185
+        },
+        "rejected_text": null
+      }
+    },
+    "which three materials weigh the most in the motor": {
+      "question": "Which three materials weigh the most in the motor?",
+      "model": "openai/gpt-oss-120b",
+      "fingerprint": "a9435fd30af79222",
+      "recorded_at": "2026-11-04T14:12:08+00:00",
+      "answer": {
+        "text": "**Top 3 materials by mass in the motor**\n\n| Rank | Material | Mass (kg) |\n|------|----------|----------|\n| 1 | Electrical steel M235‑35A (laminated) | 21.62 kg [E1] |\n| 2 | Case‑hardening steel 20MnCr5 | 20.5 kg [E2] |\n| 3 | Aluminium alloy EN AC‑AlSi9Cu3(Fe) (HPDC) | 19.6 kg [E3] |\n\nThese are the three heaviest materials, based on the motor’s BOM mass aggregation.",
+        "evidence": [
+          {
+            "id": "E1",
+            "label": "mass_kg of the parts grouped under material = Electrical steel M235-35A (laminated)",
+            "plm_id": null,
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 211,
+                "element": "Product",
+                "xml_id": "ID_10",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219D0"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1522,
+                "element": "ProductInst",
+                "xml_id": "ID_79",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021BFE"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1698,
+                "element": "ProductInst",
+                "xml_id": "ID_88",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C40"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1718,
+                "element": "ProductInst",
+                "xml_id": "ID_89",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EDB"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1738,
+                "element": "ProductInst",
+                "xml_id": "ID_90",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022051"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 287,
+                "element": "Product",
+                "xml_id": "ID_14",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010219E4"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1834,
+                "element": "ProductInst",
+                "xml_id": "ID_95",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021EF1"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1854,
+                "element": "ProductInst",
+                "xml_id": "ID_96",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022067"
+              }
+            ]
+          },
+          {
+            "id": "E2",
+            "label": "mass_kg of the parts grouped under material = Case-hardening steel 20MnCr5",
+            "plm_id": null,
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 477,
+                "element": "Product",
+                "xml_id": "ID_24",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021A0C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1950,
+                "element": "ProductInst",
+                "xml_id": "ID_101",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C09"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1970,
+                "element": "ProductInst",
+                "xml_id": "ID_102",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C4B"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2106,
+                "element": "ProductInst",
+                "xml_id": "ID_109",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F1D"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2126,
+                "element": "ProductInst",
+                "xml_id": "ID_110",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022093"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 515,
+                "element": "Product",
+                "xml_id": "ID_26",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021A16"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2164,
+                "element": "ProductInst",
+                "xml_id": "ID_112",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F28"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2184,
+                "element": "ProductInst",
+                "xml_id": "ID_113",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102209E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2222,
+                "element": "ProductInst",
+                "xml_id": "ID_115",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F33"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2242,
+                "element": "ProductInst",
+                "xml_id": "ID_116",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010220A9"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2262,
+                "element": "ProductInst",
+                "xml_id": "ID_117",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F3E"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2282,
+                "element": "ProductInst",
+                "xml_id": "ID_118",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A010220B4"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 819,
+                "element": "Product",
+                "xml_id": "ID_42",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102191C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2578,
+                "element": "ProductInst",
+                "xml_id": "ID_133",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C98"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2598,
+                "element": "ProductInst",
+                "xml_id": "ID_134",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F8B"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 857,
+                "element": "Product",
+                "xml_id": "ID_44",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021926"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2636,
+                "element": "ProductInst",
+                "xml_id": "ID_136",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CA3"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2656,
+                "element": "ProductInst",
+                "xml_id": "ID_137",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021F96"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 895,
+                "element": "Product",
+                "xml_id": "ID_46",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021930"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2694,
+                "element": "ProductInst",
+                "xml_id": "ID_139",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CAE"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2714,
+                "element": "ProductInst",
+                "xml_id": "ID_140",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FA1"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 933,
+                "element": "Product",
+                "xml_id": "ID_48",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102193A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2752,
+                "element": "ProductInst",
+                "xml_id": "ID_142",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CB9"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2772,
+                "element": "ProductInst",
+                "xml_id": "ID_143",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FAC"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 971,
+                "element": "Product",
+                "xml_id": "ID_50",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021944"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2810,
+                "element": "ProductInst",
+                "xml_id": "ID_145",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CC4"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2830,
+                "element": "ProductInst",
+                "xml_id": "ID_146",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FB7"
+              }
+            ]
+          },
+          {
+            "id": "E3",
+            "label": "mass_kg of the parts grouped under material = Aluminium alloy EN AC-AlSi9Cu3(Fe) (HPDC)",
+            "plm_id": null,
+            "note": null,
+            "refs": [
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1066,
+                "element": "Product",
+                "xml_id": "ID_55",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021958"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 21,
+                "element": "Product",
+                "xml_id": "ID_0",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE790102170A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2868,
+                "element": "ProductInst",
+                "xml_id": "ID_148",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021C14"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2946,
+                "element": "ProductInst",
+                "xml_id": "ID_152",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CDA"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 2966,
+                "element": "ProductInst",
+                "xml_id": "ID_153",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FCD"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1104,
+                "element": "Product",
+                "xml_id": "ID_57",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021962"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3004,
+                "element": "ProductInst",
+                "xml_id": "ID_155",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CE5"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3024,
+                "element": "ProductInst",
+                "xml_id": "ID_156",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FD8"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1142,
+                "element": "Product",
+                "xml_id": "ID_59",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102196C"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3062,
+                "element": "ProductInst",
+                "xml_id": "ID_158",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021CF0"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3082,
+                "element": "ProductInst",
+                "xml_id": "ID_159",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021FE3"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 1256,
+                "element": "Product",
+                "xml_id": "ID_65",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A0102198A"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3236,
+                "element": "ProductInst",
+                "xml_id": "ID_167",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01021D11"
+              },
+              {
+                "origin": "plm_xml",
+                "file": "XPDMXML_ECAR_PLM.xml",
+                "line": 3256,
+                "element": "ProductInst",
+                "xml_id": "ID_168",
+                "xid": "05C78E12D8C63ED9010179C96BD0AE7A01022004"
+              }
+            ]
+          }
+        ],
+        "tool_calls": [
+          {
+            "name": "aggregate_leaves",
+            "arguments": "{\"group_by\":\"material\",\"metric\":\"mass_kg\",\"top\":3}",
+            "seconds": 0.0006125410000095144,
+            "error": null
+          }
+        ],
+        "warnings": [
+          "1 sentence(s) state a figure without a citation"
+        ],
+        "usage": {
+          "prompt_tokens": 4789,
+          "completion_tokens": 318
+        },
+        "rejected_text": null
+      }
+    }
+  }
+}

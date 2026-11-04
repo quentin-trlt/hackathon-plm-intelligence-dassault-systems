@@ -18,11 +18,26 @@ def ref(name: str) -> SourceRef:
 
 def product(plm_id: str, mass: float, material: str | None, leaf: bool) -> Product:
     return Product(
-        plm_id=plm_id, xid=plm_id, name=plm_id, name_normalized=plm_id, description=None,
-        revision="A", revision_index=1, revision_family=plm_id, maturity="IN_WORK",
-        lifecycle="x", created_at=NOW, modified_at=NOW, owner="o", organization="o",
-        project="p", mass_kg=mass, material=material,
-        item_kind="part" if leaf else "assembly", is_root=False, is_leaf=leaf,
+        plm_id=plm_id,
+        xid=plm_id,
+        name=plm_id,
+        name_normalized=plm_id,
+        description=None,
+        revision="A",
+        revision_index=1,
+        revision_family=plm_id,
+        maturity="IN_WORK",
+        lifecycle="x",
+        created_at=NOW,
+        modified_at=NOW,
+        owner="o",
+        organization="o",
+        project="p",
+        mass_kg=mass,
+        material=material,
+        item_kind="part" if leaf else "assembly",
+        is_root=False,
+        is_leaf=leaf,
         source=ref(plm_id),
     )
 
@@ -39,7 +54,7 @@ class FakePlm:
         return [p for p in self._p.values() if p.is_leaf]
 
     def children(self, plm_id: str) -> list[BomLine]:
-        return [l for l in self._lines if l.parent_plm_id == plm_id]
+        return [bom_line for bom_line in self._lines if bom_line.parent_plm_id == plm_id]
 
 
 class FakeEnrichment:
@@ -50,7 +65,9 @@ class FakeEnrichment:
         if material not in self._prices:
             return None
         return MaterialPrice(
-            material=material, price_eur_per_kg=self._prices[material], source_note="test",
+            material=material,
+            price_eur_per_kg=self._prices[material],
+            source_note="test",
             source=SourceRef(origin="enrichment", file="material_prices.csv", line=2),
         )
 
@@ -98,9 +115,7 @@ def test_missing_price_gives_none_not_zero(plm: FakePlm) -> None:
 
 
 def test_excluded_parts_are_left_out(plm: FakePlm) -> None:
-    service = MaterialCostService(
-        plm, FakeEnrichment({"Steel": 1.0}), excluded_plm_ids=frozenset({"casing"})
-    )
+    service = MaterialCostService(plm, FakeEnrichment({"Steel": 1.0}), excluded_plm_ids=frozenset({"casing"}))
     cost = service.unit_cost("root")
     assert cost is not None and cost.value == pytest.approx(1.4)
     assert service.missing_prices() == []

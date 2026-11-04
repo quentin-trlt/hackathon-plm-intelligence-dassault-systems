@@ -102,6 +102,16 @@ def test_search(plm):
     assert len(plm.search("100Cr6")) == 14
 
 
+@pytest.mark.parametrize("query", ["ECAR-3D Screw D10 L155", "ecar-3d screw d10 l155", "ECAR-3D_Screw  D10 L155"])
+def test_search_finds_the_name_as_written_in_the_xml(plm, query):
+    assert [p.name for p in plm.search(query)] == ["ECAR-3D Screw D10 L155"]
+
+
+def test_search_treats_underscores_and_spaces_alike(plm):
+    parts = {p.name for p in plm.search("3D Screw D10") if p.is_leaf}
+    assert parts == {"ECAR-3D_Screw D10 L115", "ECAR-3D Screw D10 L155"}
+
+
 def test_unknown_product(plm):
     with pytest.raises(UnknownProductError):
         plm.product("prd-unknown")
