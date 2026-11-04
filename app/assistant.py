@@ -5,31 +5,28 @@ streamlit run app/assistant.py
 
 from __future__ import annotations
 
+import dataclasses
 import re
 from pathlib import Path
 
 import streamlit as st
 
 from plm.agent import AgentAnswer, AgentConfig, AgentConfigError, LlmError, PlmAgent, describe
-from plm.parser import load
+from plm.agent.eval import DEMO_QUESTIONS
+from plm.agent.replay import ReplayingAgent, build_assistant
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MAX_REFS_SHOWN = 5
-EXAMPLES = (
-    "What are the major subassemblies of the motor?",
-    "Which supplier do we depend on the most?",
-    "If the differential side shaft is replaced, what is impacted?",
-    "Quelle part du coût matière vient du stator ?",
-    "Tell me about the gear wheel",
-)
 _CITATION = re.compile(r"\[(E\d+)\]")
 
 
 @st.cache_resource
-def get_agent() -> PlmAgent:
+def get_agent() -> PlmAgent | ReplayingAgent:
     config = AgentConfig.from_env(dotenv_path=REPO_ROOT / ".env")
-    data = load(REPO_ROOT / "data" / "raw" / "XPDMXML_ECAR_PLM.xml", REPO_ROOT / "data" / "enrichment")
-    return PlmAgent(data.plm, data.enrichment, config)
+    config = dataclasses.replace(config, replay_path=REPO_ROOT / config.replay_path)
+    return build_assistant(
+        config, REPO_ROOT / "data" / "raw" / "XPDMXML_ECAR_PLM.xml", REPO_ROOT / "data" / "enrichment"
+    )
 
 
 def numbered_text(answer: AgentAnswer) -> str:
@@ -39,6 +36,8 @@ def numbered_text(answer: AgentAnswer) -> str:
 
 
 def render_answer(answer: AgentAnswer, show_tool_calls: bool) -> None:
+    if answer.replayed_at:
+        st.caption(f"Recorded answer, replayed (recorded {answer.replayed_at} on the same data)")
     st.markdown(numbered_text(answer))
     for warning in answer.warnings:
         st.caption(f"Warning: {warning}")
@@ -63,6 +62,9 @@ def render_answer(answer: AgentAnswer, show_tool_calls: bool) -> None:
                 ),
                 language=None,
             )
+    if show_tool_calls and answer.rejected_text:
+        with st.expander("Rejected model answer (not grounded in the data)"):
+            st.text(answer.rejected_text)
     st.caption(f"{answer.usage.prompt_tokens} + {answer.usage.completion_tokens} tokens")
 
 
@@ -83,12 +85,14 @@ def main() -> None:
     pending = None
     with st.sidebar:
         st.caption(f"Model: {agent.config.model}")
+        if isinstance(agent, ReplayingAgent):
+            st.caption(f"Replay mode: {agent.mode}, {len(agent.store)} recorded answer(s)")
         show_tool_calls = st.toggle("Show tool calls", value=True)
         if st.button("New conversation", width="stretch"):
             st.session_state.conversation = agent.new_conversation()
             st.session_state.turns = []
         st.subheader("Examples")
-        for index, example in enumerate(EXAMPLES):
+        for index, example in enumerate(DEMO_QUESTIONS):
             if st.button(example, key=f"example-{index}", width="stretch"):
                 pending = example
 

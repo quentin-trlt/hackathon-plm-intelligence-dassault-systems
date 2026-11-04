@@ -66,6 +66,8 @@ class AgentAnswer:
     tool_calls: tuple[ToolTrace, ...]
     warnings: tuple[str, ...]
     usage: Usage
+    replayed_at: str | None = None
+    rejected_text: str | None = None
 
 
 @dataclass(slots=True)
@@ -161,10 +163,10 @@ class PlmAgent:
             warnings.append("The model returned an empty answer.")
         checked = check_citations(answer, conversation.registry)
         warnings.extend(checked.warnings)
-        text, cited = checked.text, checked.cited
+        text, cited, rejected = checked.text, checked.cited, None
         if not is_grounded(checked.cited, bool(traces), checked.uncited_figures):
             warnings.append("Answer not grounded in the PLM data (no citation): replaced by the scope message.")
-            text, cited = scope_message(question), ()
+            text, cited, rejected = scope_message(question), (), answer
         conversation.history += [
             {"role": "user", "content": question},
             {"role": "assistant", "content": text},
@@ -175,4 +177,5 @@ class PlmAgent:
             tool_calls=tuple(traces),
             warnings=tuple(warnings),
             usage=Usage(prompt_tokens=usage[0], completion_tokens=usage[1]),
+            rejected_text=rejected,
         )

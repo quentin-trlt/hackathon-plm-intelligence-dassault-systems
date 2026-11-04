@@ -13,13 +13,14 @@ from plm.agent.agent import AgentAnswer, Conversation, PlmAgent
 from plm.agent.config import AgentConfig, AgentConfigError
 from plm.agent.evidence import describe
 from plm.agent.llm import LlmError
-from plm.parser import load
+from plm.agent.replay import ReplayingAgent, build_assistant
 
 MAX_REFS_SHOWN = 3
 
 
 def render(answer: AgentAnswer, trace: bool) -> str:
-    lines = [answer.text.strip(), ""]
+    lines = [f"(recorded answer, replayed; recorded {answer.replayed_at})"] if answer.replayed_at else []
+    lines += [answer.text.strip(), ""]
     if trace:
         lines.append("Tool calls:")
         lines += [
@@ -43,7 +44,7 @@ def render(answer: AgentAnswer, trace: bool) -> str:
     return "\n".join(lines)
 
 
-def ask(agent: PlmAgent, conversation: Conversation, question: str, trace: bool) -> bool:
+def ask(agent: PlmAgent | ReplayingAgent, conversation: Conversation, question: str, trace: bool) -> bool:
     try:
         answer = agent.ask(conversation, question)
     except LlmError as exc:
@@ -64,8 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     except AgentConfigError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    data = load()
-    agent = PlmAgent(data.plm, data.enrichment, config)
+    agent = build_assistant(config)
     conversation = agent.new_conversation()
 
     if args.question:

@@ -19,9 +19,12 @@ Rules:
 result in this conversation. Never use outside knowledge about the motor.
 2. Cite every fact with the evidence id given in the tool result, in square brackets, right after the fact: \
 "14 screws [E3]". Several ids: "[E3][E5]". Use only ids that appear in tool results. In a table, cite in every row.
-3. When a result says "truncated": true, state the total count it gives and that the list is partial.
-4. Do not compute anything yourself: no sums, products, differences or percentages. aggregate_leaves, get_unit_cost, \
-get_total_quantity and get_where_used return totals and shares. If a figure cannot be obtained from a tool, say so.
+3. When you list items, state how many there are, using the count the tool gives. When a result says \
+"truncated": true, also say that the list is partial.
+4. Do not compute anything yourself: no sums, products, differences or percentages. The tools return them: \
+compare_products gives combined totals over several products, get_unit_cost and get_product give a product's share \
+of the motor cost and mass, aggregate_leaves gives totals and shares by group. Answer the question asked with the \
+figure the tool returns (a total or a share, not only its parts). If no tool returns it, say so.
 5. Products are identified by plm_id. Names are not unique. When a name matches several products, list them with \
 what tells them apart (plm_id, mass, assembly; compare_products gets them in one call) and ask which one is meant, \
 unless the question covers all of them.

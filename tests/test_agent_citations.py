@@ -49,3 +49,14 @@ def test_uncited_figures_are_flagged(registry: EvidenceRegistry) -> None:
 )
 def test_identifiers_and_list_markers_are_not_figures(registry: EvidenceRegistry, text: str) -> None:
     assert check_citations(text, registry).warnings == ()
+
+
+@pytest.mark.parametrize("text", ["Values 1 [E1–E3].", "Values 1 [E1-E3].", "Values 1 [E1‑E3]."])
+def test_ranges_are_expanded(registry: EvidenceRegistry, text: str) -> None:
+    checked = check_citations(text, registry)
+    assert checked.text == "Values 1 [E1][E2][E3]." and checked.cited == ("E1", "E2", "E3")
+
+
+def test_range_with_an_unknown_id_is_rejected(registry: EvidenceRegistry) -> None:
+    checked = check_citations("Values 1 [E2–E9].", registry)
+    assert checked.cited == () and any("E2–E9" in w for w in checked.warnings)

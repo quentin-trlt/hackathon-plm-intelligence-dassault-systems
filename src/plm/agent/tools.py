@@ -206,6 +206,16 @@ def get_product(ctx: ToolContext, plm_id: str) -> Result:
     }
     if product.plm_id != plm_id:
         card["resolved_from_wrapper"] = plm_id
+    if not product.is_root:
+        root = ctx.plm.root()
+        mass_in_motor = product.mass_kg * quantity.value
+        card["mass_in_motor_kg"] = round(mass_in_motor, 3)
+        card["share_of_motor_mass_pct"] = round(100 * mass_in_motor / root.mass_kg, 1) if root.mass_kg else None
+        card["mass_in_motor_evidence"] = ctx.cite(
+            f"Mass of all {product.name} in the motor and share of the motor mass",
+            (product.source, *quantity.sources, root.source),
+            product.plm_id,
+        )
     if product.is_leaf:
         representation = ctx.plm.representation(product.plm_id)
         if representation is not None:
@@ -328,6 +338,15 @@ def get_unit_cost(ctx: ToolContext, plm_id: str) -> Result:
             product.plm_id,
             COST_CAVEAT,
         )
+        motor_cost = ctx.costs.unit_cost(ctx.plm.root().plm_id)
+        if motor_cost is not None and motor_cost.value:
+            result["share_of_motor_material_cost_pct"] = round(100 * cost.value * quantity.value / motor_cost.value, 1)
+            result["share_evidence"] = ctx.cite(
+                f"Share of {product.name} in the material cost of the motor",
+                (*cost.sources, *quantity.sources, *motor_cost.sources),
+                product.plm_id,
+                COST_CAVEAT,
+            )
     return result
 
 
@@ -342,6 +361,10 @@ def compare_products(ctx: ToolContext, plm_ids: list[str]) -> Result:
 
     cards: dict[str, Result] = {}
     unknown = []
+    total_quantity, total_mass, total_cost = 0, 0.0, 0.0
+    cost_complete = True
+    total_refs: list[SourceRef] = []
+    ancestors: set[str] = set()
     for plm_id in dict.fromkeys(plm_ids):
         try:
             product = ctx.physical(plm_id)
@@ -352,8 +375,18 @@ def compare_products(ctx: ToolContext, plm_ids: list[str]) -> Result:
             continue
         quantity = ctx.plm.total_quantity(product.plm_id)
         cost = ctx.costs.unit_cost(product.plm_id)
+        above = _assemblies_above(ctx, product)
+        ancestors.update(a.plm_id for a in above)
+        total_quantity += quantity.value
+        total_mass += product.mass_kg * quantity.value
+        total_refs += [product.source, *quantity.sources]
+        if cost is None:
+            cost_complete = False
+        else:
+            total_cost += cost.value * quantity.value
+            total_refs += cost.sources
         card = ctx.summary(product) | {
-            "assemblies": [a.name for a in _assemblies_above(ctx, product)],
+            "assemblies": [a.name for a in above],
             "total_quantity_in_motor": quantity.value,
             "total_quantity_evidence": ctx.cite(
                 f"Total quantity of {product.name} in the motor", quantity.sources, product.plm_id
@@ -382,8 +415,24 @@ def compare_products(ctx: ToolContext, plm_ids: list[str]) -> Result:
                     }
                 )
         cards[product.plm_id] = card
+    totals: Result = {}
+    if cards:
+        totals = {
+            "product_count": len(cards),
+            "total_quantity_in_motor": total_quantity,
+            "mass_in_motor_kg": round(total_mass, 3),
+            "material_cost_in_motor_eur": round(total_cost, 2) if cost_complete else None,
+            "evidence": ctx.cite(
+                f"Combined totals of {', '.join(c['name'] for c in cards.values())} in the motor",
+                total_refs,
+                note=COST_CAVEAT,
+            ),
+        }
+        if ancestors & set(cards):
+            totals["warning"] = "One compared product contains another: these totals count the shared parts twice."
     return {
         "products": list(cards.values()),
+        "totals": totals,
         "unknown_plm_ids": unknown,
         "origin_of_costs_and_suppliers": ENRICHMENT_ORIGIN,
         "caveat": COST_CAVEAT,
@@ -638,8 +687,8 @@ TOOLS: tuple[Tool, ...] = (
     ),
     Tool(
         "get_product",
-        "Full card of one product: revision, maturity, material, mass, total quantity in the motor, "
-        "assemblies it belongs to, 3D representation, number of suppliers.",
+        "Full card of one product: revision, maturity, material, mass, total quantity and mass in the motor, "
+        "share of the motor mass, assemblies it belongs to, 3D representation, number of suppliers.",
         _params({"plm_id": _PLM_ID}, ("plm_id",)),
         get_product,
     ),
@@ -664,16 +713,16 @@ TOOLS: tuple[Tool, ...] = (
     ),
     Tool(
         "get_unit_cost",
-        "Material cost in EUR of one unit of a product (mass x material price, rolled up through the BOM) "
-        "and of all its units in the motor.",
+        "Material cost in EUR of one unit of a product (mass x material price, rolled up through the BOM), "
+        "of all its units in the motor, and its share of the motor's material cost.",
         _params({"plm_id": _PLM_ID}, ("plm_id",)),
         get_unit_cost,
     ),
     Tool(
         "compare_products",
         f"Side-by-side summary of up to {MAX_COMPARED} products in one call: mass, material, assemblies, quantity "
-        "in the motor, material cost and suppliers with lead times. Use it for homonyms (several products with the "
-        "same name) and for any question about several products, instead of one call per product.",
+        "in the motor, material cost and suppliers with lead times, plus their combined totals (units, mass, cost). "
+        "Use it for homonyms, for any question about several products, and whenever a sum over products is needed.",
         _params(
             {"plm_ids": {"type": "array", "items": {"type": "string"}, "maxItems": MAX_COMPARED}},
             ("plm_ids",),

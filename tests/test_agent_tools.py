@@ -266,3 +266,30 @@ def test_bad_calls_return_an_error(ctx: ToolContext, name: str, arguments: str, 
 def test_null_optional_arguments_are_ignored(ctx: ToolContext) -> None:
     result = execute(ctx, "search_products", '{"query": "screw", "kind": null, "limit": null}')
     assert result["total"] > 0
+
+
+def test_compare_totals_answer_sums_without_model_arithmetic(ctx: ToolContext, plm_data: PlmData) -> None:
+    d10 = [p["plm_id"] for p in call(ctx, "search_products", query="screw d10", kind="part")["products"]]
+    totals = call(ctx, "compare_products", plm_ids=d10)["totals"]
+    assert totals["total_quantity_in_motor"] == sum(plm_data.plm.total_quantity(i).value for i in d10)
+    assert totals["product_count"] == 2 and "warning" not in totals
+    assert totals["evidence"] in ctx.registry
+
+
+def test_compare_totals_warn_when_one_product_contains_another(ctx: ToolContext, plm_data: PlmData) -> None:
+    totals = call(ctx, "compare_products", plm_ids=[REDUCER, SIDE_SHAFT])["totals"]
+    assert "twice" in totals["warning"]
+
+
+def test_cost_share_matches_the_aggregate(ctx: ToolContext, plm_data: PlmData) -> None:
+    stator = next(p for p in plm_data.plm.products() if p.name == "ECAR-EI_STATOR")
+    share = call(ctx, "get_unit_cost", plm_id=stator.plm_id)["share_of_motor_material_cost_pct"]
+    groups = call(ctx, "aggregate_leaves", group_by="assembly", metric="material_cost_eur", top=30)["groups"]
+    assert share == next(g["share_of_total_pct"] for g in groups if g["id"] == stator.plm_id)
+
+
+def test_mass_share_of_a_subassembly(ctx: ToolContext, plm_data: PlmData) -> None:
+    card = call(ctx, "get_product", plm_id=REDUCER)
+    expected = 100 * plm_data.plm.product(REDUCER).mass_kg / plm_data.plm.root().mass_kg
+    assert card["share_of_motor_mass_pct"] == pytest.approx(expected, abs=0.05)
+    assert "share_of_motor_mass_pct" not in call(ctx, "get_product", plm_id=plm_data.plm.root().plm_id)

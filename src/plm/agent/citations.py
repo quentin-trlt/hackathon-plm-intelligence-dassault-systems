@@ -1,6 +1,7 @@
 """Citation check on the model's final answer.
 
-Accepts `[E3]`, `【E3】` and grouped forms such as `[E3, E5]`, and rewrites them as `[E3][E5]`.
+Accepts `[E3]`, `【E3】`, grouped forms such as `[E3, E5]` and ranges such as `[E3–E5]`, and rewrites them as
+`[E3][E4][E5]`. A range is only expanded when every id in it exists.
 """
 
 from __future__ import annotations
@@ -10,8 +11,10 @@ from dataclasses import dataclass
 
 from plm.agent.evidence import EvidenceRegistry
 
-_GROUP = re.compile(r"[\[【]\s*(E\d+(?:\s*[,;]\s*E\d+)*)\s*[\]】]")
+_ITEM = r"E\d+(?:\s*[-\u2010-\u2014]\s*E?\d+)?"
+_GROUP = re.compile(rf"[\[【]\s*({_ITEM}(?:\s*[,;]\s*{_ITEM})*)\s*[\]】]")
 _SEPARATOR = re.compile(r"\s*[,;]\s*")
+_RANGE = re.compile(r"E(\d+)\s*[-\u2010-\u2014]\s*E?(\d+)")
 _CITATION = re.compile(r"\[E\d+\]")
 _NUMBER = re.compile(r"(?<![\w.\-])\d+(?:[.,]\d+)?(?![\w\-]|[.,]\d)")
 _LIST_MARKER = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
@@ -32,7 +35,7 @@ def check_citations(text: str, registry: EvidenceRegistry) -> CheckedAnswer:
     unknown: dict[str, None] = {}
 
     def rewrite(match: re.Match[str]) -> str:
-        ids = _SEPARATOR.split(match.group(1))
+        ids = [i for item in _SEPARATOR.split(match.group(1)) for i in _expand(item, registry)]
         known = [i for i in ids if i in registry]
         unknown.update(dict.fromkeys(i for i in ids if i not in registry))
         cited.update(dict.fromkeys(known))
@@ -57,3 +60,12 @@ def _uncited_segments(text: str) -> int:
             if _NUMBER.search(_CITATION.sub("", segment)) and not _CITATION.search(segment):
                 count += 1
     return count
+
+
+def _expand(item: str, registry: EvidenceRegistry) -> list[str]:
+    bounds = _RANGE.fullmatch(item)
+    if bounds is None:
+        return [item]
+    first, last = int(bounds[1]), int(bounds[2])
+    ids = [f"E{n}" for n in range(first, last + 1)]
+    return ids if first <= last and all(i in registry for i in ids) else [item]

@@ -206,3 +206,10 @@ def test_evidence_ids_are_stable_across_turns(plm_data: PlmData) -> None:
     assert len(conversation.history) == 4
     second_turn = llm.calls[2]["messages"]
     assert [m["role"] for m in second_turn] == ["system", "user", "assistant", "user"]
+
+
+def test_rejected_answer_is_kept_for_diagnosis(plm_data: PlmData) -> None:
+    llm = ScriptedLlm(say("Paris is the capital of France, 2.1 million people."))
+    answer = make_agent(plm_data, llm).ask(Conversation(), "Capital of France?")
+    assert answer.text == SCOPE_MESSAGES["en"]
+    assert answer.rejected_text == "Paris is the capital of France, 2.1 million people."
