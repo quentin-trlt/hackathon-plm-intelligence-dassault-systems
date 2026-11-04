@@ -249,6 +249,12 @@ Still open: the model sometimes writes simple arithmetic itself (for example "2 
 
 **Rate limit.** The free tier caps `openai/gpt-oss-120b` at 8,000 tokens per minute. A question costs 4,000 to 12,000 tokens, because about 2,000 tokens of schemas and prompt are resent at every step. That allows one or two questions per minute. `PLM_LLM_MAX_RETRIES` (default 5) makes the SDK wait out the window instead of failing, so 5 questions took about 4 minutes in a row. For the pitch, the replay mode (phase 3) is no longer optional.
 
+### Phase 2 status (4 Nov.)
+
+The scope was reduced by team decision. `get_risk` and `simulate_change` wait until the Risk and Change Impact services exist, and `open_view` waits for the main app's tabs. What was delivered instead is a standalone test page, `streamlit run app/assistant.py`. It has the chat, citations renumbered `[1]`, `[2]` with a sources panel (file, line, XML element, non-PLM label, `source_note`), the tool calls, the warnings, the token usage, example questions and a reset. It was checked headlessly with `streamlit.testing` on one example question and a follow-up in the same conversation.
+
+Still open: on table answers the model often cites only the root instead of each row (rule 2), and the uncited-figure warning shows it. This goes to the phase 3 prompt tuning.
+
 ## Risks
 
 | Risk | Mitigation |

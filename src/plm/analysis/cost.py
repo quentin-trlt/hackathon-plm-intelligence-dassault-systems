@@ -50,9 +50,7 @@ class MaterialCostService:
     def missing_prices(self) -> list[Product]:
         """Leaves whose cost cannot be computed (no material, or material without price)."""
         return [
-            leaf
-            for leaf in self._plm.leaves()
-            if leaf.plm_id not in self._excluded and self._leaf_cost(leaf) is None
+            leaf for leaf in self._plm.leaves() if leaf.plm_id not in self._excluded and self._leaf_cost(leaf) is None
         ]
 
     def _compute(self, product: Product) -> Traced[float] | None:

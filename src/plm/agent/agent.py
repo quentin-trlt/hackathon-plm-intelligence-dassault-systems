@@ -60,6 +60,10 @@ class PlmAgent:
         self._system_prompt = system_prompt(plm, enrichment)
         self._schemas = tool_schemas()
 
+    @property
+    def config(self) -> AgentConfig:
+        return self._config
+
     def new_conversation(self) -> Conversation:
         return Conversation()
 
