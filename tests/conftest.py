@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from plm.model import Product
-from plm.parser import XmlPlmRepository
+from plm.parser import PlmData, XmlPlmRepository, load
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 XML_PATH = REPO_ROOT / "data" / "raw" / "XPDMXML_ECAR_PLM.xml"
@@ -18,6 +18,13 @@ def plm() -> XmlPlmRepository:
     if not XML_PATH.is_file():
         pytest.skip(f"OEM extract not found at {XML_PATH}")
     return XmlPlmRepository.from_file(XML_PATH)
+
+
+@pytest.fixture(scope="session")
+def plm_data() -> PlmData:
+    if not XML_PATH.is_file():
+        pytest.skip(f"OEM extract not found at {XML_PATH}")
+    return load(XML_PATH, ENRICHMENT_DIR)
 
 
 @pytest.fixture(scope="session")

@@ -50,6 +50,11 @@ def normalize_name(name: str) -> str:
     return _NAME_PREFIX.sub(r"\1_", " ".join(name.split()))
 
 
+def _search_key(text: str) -> str:
+    """Case-insensitive form where underscores and runs of whitespace are all one space, applied to query and fields."""
+    return " ".join(text.replace("_", " ").split()).casefold()
+
+
 def _q(tag: str) -> str:
     return f"{{{NS}}}{tag}"
 
@@ -200,13 +205,13 @@ class XmlPlmRepository:
         return [p for p in self._products.values() if p.is_leaf]
 
     def search(self, text: str) -> list[Product]:
-        needle = " ".join(text.split()).casefold()
+        needle = _search_key(text)
         return [
             p
             for p in self._products.values()
-            if needle in p.name_normalized.casefold()
+            if needle in _search_key(p.name_normalized)
             or needle in p.plm_id.casefold()
-            or needle in (p.material or "").casefold()
+            or needle in _search_key(p.material or "")
         ]
 
     def instances(self, parent_plm_id: str, child_plm_id: str) -> list[Instance]:

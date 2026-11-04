@@ -29,6 +29,7 @@ class AgentConfig:
     max_steps: int = 6
     temperature: float = 0.0
     timeout_s: float = 30.0
+    max_retries: int = 5
 
     @classmethod
     def from_env(
@@ -54,6 +55,7 @@ class AgentConfig:
             max_steps=_parse(env, "PLM_AGENT_MAX_STEPS", int, 6, minimum=1),
             temperature=_parse(env, "PLM_AGENT_TEMPERATURE", float, 0.0, minimum=0),
             timeout_s=_parse(env, "PLM_LLM_TIMEOUT_S", float, 30.0, minimum=1),
+            max_retries=_parse(env, "PLM_LLM_MAX_RETRIES", int, 5, minimum=0),
         )
 
 

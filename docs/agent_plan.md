@@ -34,7 +34,7 @@ Decision: `openai/gpt-oss-120b` is the default. There is no automatic fallback m
 
 ### Phase 0 findings that change phase 1
 
-- `plm.search` normalised product names but not the query, so the exact XML name `ECAR-3D Screw D10 L155` returned nothing. The fix belongs in the parser (normalise the query with `normalize_name`), on a separate branch. On top of that, `search_products` falls back to an all-words match when the substring search finds nothing (for example "differential side shaft" against `DifferentialSideShaft`).
+- `plm.search` normalised product names but not the query, so the exact XML name `ECAR-3D Screw D10 L155` returned nothing. Fixed in the parser: query and fields are compared case-insensitively, with underscores and runs of spaces treated as one space. On top of that, `search_products` falls back to an all-words match when the substring search finds nothing (for example "differential side shaft" against `DifferentialSideShaft`).
 - In Q3, gpt-oss-120b counted wrappers instead of parts, despite the prompt. The total was right only because a wrapper has the same quantity as its part. Tools return one entry per physical part, carrying the `wrapper_plm_id`, so the model never sees the pair.
 - Q4 burned all 6 steps on searches. The data overview lists the 36 part names (about 400 tokens), the prompt says to conclude "not in the extract" after two empty searches, and the loop's last call without tools guarantees an answer.
 - gpt-oss writes citations as `【E3】` as well as `[E3]`. `citations.py` accepts both and normalises them.
@@ -115,15 +115,16 @@ Every handler takes a `ToolContext` (`plm`, `enrichment`, `costs`, `registry`) a
 
 | Tool | Arguments | Returns | Built on |
 |---|---|---|---|
-| `search_products` | `query`, `kind?` (`part`, `assembly`, `wrapper`), `limit?` | `plm_id`, name, kind, material, mass, evidence | `plm.search` |
+| `search_products` | `query`, `kind?` (`part`, `assembly`), `limit?` | `plm_id`, name, kind, material, mass, evidence | `plm.search` |
 | `get_product` | `plm_id` | Full card: revision, maturity, material, mass, kind, representation, number of suppliers | `plm.product`, `plm.representation`, `enrichment.sourcing` |
 | `get_children` | `plm_id` | Direct BOM lines: child, quantity, kind | `plm.children` |
 | `get_where_used` | `plm_id` | Paths from the root (names), cumulative quantity, set of impacted assemblies | `plm.where_used` |
 | `get_total_quantity` | `plm_id` | Units in the whole motor | `plm.total_quantity` |
 | `get_unit_cost` | `plm_id` | Material cost in EUR, or `null` with the leaves lacking a price | `MaterialCostService` |
+| `compare_products` | `plm_ids` (max 10) | One compact card per product: mass, material, assemblies, quantity, cost, suppliers | All of the above. Added in phase 1 for homonyms, see below |
 | `get_sourcing` | `plm_id` | Suppliers, country, make/buy, lead time, `source_note` | `enrichment.sourcing`, `enrichment.supplier` |
 | `get_supplier_dependencies` | `supplier_id?`, `single_source_only?` | Parts per supplier, single-source parts | `enrichment.sourcing` over the leaves |
-| `aggregate_leaves` | `group_by` (`material`, `supplier`, `country`, `assembly`), `metric` (`mass_kg`, `material_cost_eur`, `count`), `top?` | Sorted groups with value and evidence | Leaves × `total_quantity` × cost |
+| `aggregate_leaves` | `group_by` (`material`, `supplier`, `country`, `subassembly`, `assembly`), `metric` (`mass_kg`, `material_cost_eur`, `count`), `top?` | Sorted groups with value and evidence | Leaves × `total_quantity` × cost |
 
 `aggregate_leaves` answers most of the "advanced" questions (mass per material, cost per subassembly, dependency on a country) without text-to-SQL. It always works on leaves weighted by `total_quantity`, the rule from PARSER.md that avoids counting wrappers twice. The test checks that the mass groups add up to the 100.1 kg of the root.
 
@@ -232,14 +233,27 @@ The eval reaches about 15 questions once the risk and change impact tools exist.
 |---|---|---|---|
 | D1 evening, 1 h | 0. Spike | `config.py`, `llm.py`, a one-tool smoke script, model chosen | A Groq model calls `get_total_quantity` and answers 14 |
 | D2 morning, 3 h | 1. Core | `evidence.py`, phase 1 tools, `agent.py`, `prompts.py`, CLI, the two pytest files | `pytest tests/test_agent_tools.py tests/test_agent_loop.py` passes, the CLI answers the first 6 golden questions |
-| D2 afternoon, 3 h | 2. Integration | `citations.py`, `app/assistant.py`, `get_risk`, `simulate_change`, `open_view` | The chat tab works in the app, the evidence panel opens the Explorer |
+| D2 afternoon, 3 h | 2. Integration | `app/assistant.py`, `get_risk`, `simulate_change`, `open_view` | The chat tab works in the app, the evidence panel opens the Explorer |
 | D2 evening / D3 morning, 2 h | 3. Hardening | Golden eval, prompt tuning, recorded replays, optional `run_query` | Eval at least 80 % correct, replay mode tested offline |
+
+### Phase 1 status (4 Nov.)
+
+Done, ahead of schedule: `evidence.py`, `tools.py` (10 tools), `prompts.py`, `citations.py` (moved up from phase 2, since the loop needs it to return evidence), `agent.py` and the CLI `python -m plm.agent`. 117 offline tests pass. All 10 golden questions were run against `openai/gpt-oss-120b`, and the final answers are correct and cited. Fixes made after the live runs:
+
+- The model ranked suppliers by units with `aggregate_leaves` (screw suppliers first) instead of by distinct parts. The tool descriptions now send dependency questions to `get_supplier_dependencies`.
+- The single-source list was cut at 10 of 20 and the model presented it as complete. The part lists now default to 30 items, and the prompt requires stating the total when a result is truncated.
+- "Tell me about the gear wheel" queried the 4 homonyms one tool at a time, hit the step limit (18,500 tokens), then reported data it had not checked as missing. `compare_products` answers it in 2 calls (8,700 tokens), and the forced final answer must now say "not checked" instead.
+- The impact question omitted suppliers. A prompt rule and the `get_where_used` description now ask for suppliers, lead times and cost.
+
+Still open: the model sometimes writes simple arithmetic itself (for example "2 x 1.17 = 2.34"). The values match the tools, and the uncited-figure warning flags these sentences.
+
+**Rate limit.** The free tier caps `openai/gpt-oss-120b` at 8,000 tokens per minute. A question costs 4,000 to 12,000 tokens, because about 2,000 tokens of schemas and prompt are resent at every step. That allows one or two questions per minute. `PLM_LLM_MAX_RETRIES` (default 5) makes the SDK wait out the window instead of failing, so 5 questions took about 4 minutes in a row. For the pitch, the replay mode (phase 3) is no longer optional.
 
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
-| Free-tier rate limit (per minute and per day) during rehearsals | Compact tool results, history without tool messages, `max_steps = 6`, replay mode for the pitch |
+| Free-tier rate limit: 8,000 tokens per minute measured on 4 Nov. | Compact tool results, history without tool messages, `compare_products` for multi-product questions, SDK retries that wait out the window, replay mode for the pitch |
 | The model invents figures or cites wrong ids | Arithmetic is forbidden in the prompt, unknown ids are removed, figures without a citation are flagged, `temperature = 0` |
 | The model picks the wrong product among homonyms | Names are never accepted as keys, and the prompt asks for clarification when the search returns several matches |
 | The risk and change impact services are late or change their API | The `Traced` contract is agreed on D1, and phase 1 already answers most questions without them |
