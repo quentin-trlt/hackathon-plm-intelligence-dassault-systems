@@ -4,7 +4,7 @@ Project 7 of the ESILV A5 DPM/PLM hackathon (4 to 6 November 2026), "PLM Intelli
 
 We are the engineering and digital team of an electric motor supplier for the automotive industry. Our OEM customer runs its developments in 3DEXPERIENCE and only sends us a raw XML extract of the product structure. The application turns this extract into information that supports decisions on cost, risk, quality and sustainability: exploring the BOM, spotting critical components and assessing the impact of a component change. Every piece of information displayed links back to the XML element it comes from.
 
-Application Link : https://dassault-systemes-plm-project.netlify.app/
+Static web mockup: https://dassault-systemes-plm-project.netlify.app/ (source in `presentation/web_mockup/`; hardcoded data, not connected to the parser).
 
 ## Context
 
@@ -45,9 +45,9 @@ The parser reads the extract and translates it into an internal data model that 
 | `src/plm/parser/` | XML and enrichment loading, mapping to the data model |
 | `src/plm/analysis/` | BOM exploration, cost, risk, change impact |
 | `src/plm/agent/` | AI assistant with source citation |
-| `app/` | Web interface; `app/assistant.py` is the assistant's test page |
+| `app/` | Streamlit interface: `app.py` entry point, `services.py` data access, one module per view in `views/`; `app/assistant.py` is the assistant's standalone test page |
 | `tests/` | Automated tests |
-| `presentation/` | Pitch material |
+| `presentation/` | Pitch material; `web_mockup/` holds the first static UI mockup |
 
 ## Data
 
@@ -91,7 +91,13 @@ pytest
 ruff check src tests app && ruff format --check src tests app
 ```
 
-TODO: command to launch the main interface, once the framework is chosen. The assistant has its own test page, see below.
+Launch the main interface (Dashboard, Product Explorer, Change Impact, Assistant):
+
+```bash
+streamlit run app/app.py
+```
+
+Every figure it shows comes from `load()` and the analysis services; values from `data/enrichment/` are labelled "non-PLM source". The Assistant view needs the setup described in [AI assistant](#ai-assistant).
 
 ## AI assistant
 
@@ -129,7 +135,8 @@ cp .env.example .env    # paste the key in PLM_LLM_API_KEY; .env is never commit
 ### Usage
 
 ```bash
-streamlit run app/assistant.py                     # test page: chat, sources, tool calls
+streamlit run app/app.py                           # Assistant view of the main interface
+streamlit run app/assistant.py                     # standalone test page: chat, sources, tool calls
 python -m plm.agent "Which parts are single-sourced?" --trace
 python -m plm.agent                                # interactive session in the terminal
 python -m plm.agent.eval                           # golden-question evaluation (live model)
@@ -166,7 +173,7 @@ Each recorded answer stores a fingerprint of the XML and CSV files, and is ignor
 | Data | XML parsing and mapping, data model | `src/plm/parser`, `docs/` | |
 | Analysis | BOM graph, risks, change impact | `src/plm/analysis` | |
 | UI | Interface and demo flow | `app/` | |
-| Agent | AI assistant with sources | `src/plm/agent`, `app/assistant.py` | |
+| Agent | AI assistant with sources | `src/plm/agent`, `app/views/assistant.py`, `app/assistant.py` | |
 | Pitch | Demo scenarios, slides | `presentation/`, `docs/` | |
 
 ## Git conventions

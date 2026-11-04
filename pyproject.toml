@@ -13,7 +13,7 @@ dependencies = ["lxml>=5.0"]
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
 agent = ["openai>=1.40", "python-dotenv>=1.0"]
-app = ["plm-intelligence[agent]", "streamlit>=1.38"]
+app = ["plm-intelligence[agent]", "streamlit>=1.38", "pandas>=2.0", "plotly>=5.20"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/plm"]
@@ -25,6 +25,7 @@ pythonpath = ["src"]
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+src = [".", "src", "app"]
 
 [tool.ruff.format]
 quote-style = "double"
