@@ -184,7 +184,7 @@ These records carry a `SourceRef` pointing to the enrichment file, not to the XM
 
 ## Open questions
 
-1. **Primary key.** `@id` only exists inside one export and will change on the next one. `XID` is stable and unique. `plm_id` (`prd-...`) is stable and readable. Proposal: `xid` as internal key, `plm_id` for display and for joining enrichment data, `@id` only in `SourceRef`.
+1. **Primary key.** Settled in [data_contract.md](data_contract.md#keys): `plm_id` is the key exposed to modules and used for enrichment joins, `xid` identifies instances, `@id` only appears in `SourceRef`.
 2. **EI/3D granularity.** Show both levels in the Explorer, or merge each wrapper with its part into one component (37 pairs, plus `MOTOR SCREW 2` which has no wrapper)? The model can keep both and let the UI choose.
 3. **Units.** Mass in kg and translation in metres are assumptions consistent with the values (100.1 kg for a 410 kW e-drive, offsets under 0.5 m), not stated in the file.
 4. **Stator meshing parts.** Keep `STATOR Core Tooth` and `STATOR Coil` as normal parts, or flag them as modelling artefacts so they do not count twice in mass or carbon totals?
