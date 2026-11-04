@@ -1,1 +1,16 @@
 supplier_id,name,country,source_note
+SUP-001,SKF Automotive,SE,Tier-2 leader mondial roulements haute vitesse e-drive (100Cr6)
+SUP-002,Schaeffler Technologies (INA/FAG),DE,Tier-2 équipementier roulements coniques et boîtes de transmission
+SUP-003,GKN Driveline (Dowlais),GB,Tier-1 spécialiste mondial réducteurs et pignons de transmission taillés
+SUP-004,Dana Incorporated,US,Tier-1 leader composants différentiel et arbres de transmission
+SUP-005,EuroGroup Laminations,IT,Tier-2 découpage et empilage paquets de tôles magnétiques stator M235-35A
+SUP-006,Marelli Electric Powertrain,IT,Tier-1 bobinage statorique Hairpin cuivre haute tension 800V
+SUP-007,Nemak Casting Solutions,MX,Tier-1 fonderie HPDC aluminium sous vide pour carters e-drive étanches
+SUP-008,GF Casting Solutions,CH,Tier-1 fonderie aluminium et chemise de refroidissement moteur EN AW-6082-T6
+SUP-009,Georg Fischer Iron Casting,DE,Tier-1 fonderie fonte ductile nodulaire EN-GJS-600-3 boîtiers différentiels
+SUP-010,Bulten Fasteners,SE,Tier-2 fournisseur FSP visserie haute résistance classe 10.9 zinc-flake coated
+SUP-011,Freudenberg Sealing Technologies,DE,Tier-2 référence mondiale joints spi Simmerring FKM étanchéité arbre
+SUP-012,Hutchinson Fluid Management,FR,Tier-1 spécialiste tubulures et connecteurs polyamide PA66-GF30 e-cooling
+SUP-013,Kirchhoff Automotive,DE,Tier-2 emboutissage et découpe acier de structure S355J2 pour plaques paliers
+SUP-014,LISI Automotive,FR,Tier-2 fixations filetées automobile classe 10.9 (source secondaire)
+SUP-015,ElringKlinger AG,DE,Tier-2 joints et étanchéité dynamique transmission électrique (source secondaire)
