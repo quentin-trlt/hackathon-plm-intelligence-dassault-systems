@@ -1,15 +1,15 @@
 material,price_eur_per_kg,source_note
-Alloy steel 42CrMo4 (quenched and tempered),,
-Aluminium alloy EN AC-AlSi10Mg (cast),,
-Aluminium alloy EN AC-AlSi9Cu3(Fe) (HPDC),,
-Aluminium alloy EN AW-6082-T6,,
-Bearing steel 100Cr6 (AISI 52100),,
-Case-hardening steel 16MnCr5,,
-Case-hardening steel 20MnCr5,,
-Copper Cu-ETP (enamelled wire),,
-Ductile cast iron EN-GJS-600-3,,
-Electrical steel M235-35A (laminated),,
-FKM fluoroelastomer (steel-reinforced),,
-Polyamide PA66-GF30,,
-Steel class 10.9 (zinc-flake coated),,
-Structural steel S355J2,,
+Alloy steel 42CrMo4 (quenched and tempered),1.40,ESTIMATE: order of magnitude for European Q&T alloy steel bar. To source.
+Aluminium alloy EN AC-AlSi10Mg (cast),2.90,"ESTIMATE: based on LME aluminium ~3,000 USD/t (Trading Economics, Oct 2026) + primary foundry alloy premium. To confirm."
+Aluminium alloy EN AC-AlSi9Cu3(Fe) (HPDC),2.50,"ESTIMATE: based on LME aluminium ~3,000 USD/t (Trading Economics, Oct 2026); secondary alloy slightly below primary. To confirm."
+Aluminium alloy EN AW-6082-T6,4.50,"ESTIMATE: LME aluminium ~3,000 USD/t (Trading Economics, Oct 2026) + extrusion/rolling premium. To confirm."
+Bearing steel 100Cr6 (AISI 52100),1.60,ESTIMATE: order of magnitude for European bearing steel bar. Bearings are bought parts: real part price far above material cost.
+Case-hardening steel 16MnCr5,1.30,ESTIMATE: order of magnitude for European case-hardening steel bar. To source.
+Case-hardening steel 20MnCr5,1.30,ESTIMATE: order of magnitude for European case-hardening steel bar. To source.
+Copper Cu-ETP (enamelled wire),12.90,"SOURCE: Cochilco La Rueda, LME Grade A cash 14,850 USD/t on 2026-08-17, converted at 1 EUR = 1.15 USD (assumption). Cathode price; enamelled wire premium not included. Highly volatile."
+Ductile cast iron EN-GJS-600-3,0.70,ESTIMATE: order of magnitude for ductile iron charge (pig iron + scrap). To source.
+Electrical steel M235-35A (laminated),1.50,"SOURCE: IMARC Electrical Steel Price Index Q2 2026, Germany 1,690 USD/t, converted at 1 EUR = 1.15 USD (assumption). Generic NO grade; premium M235-35A likely higher."
+FKM fluoroelastomer (steel-reinforced),30.00,ESTIMATE: order of magnitude for FKM fluoroelastomer. Negligible mass (0.06 kg). To source.
+Polyamide PA66-GF30,3.50,ESTIMATE: order of magnitude for European PA66 30% glass-filled compound. To source.
+Steel class 10.9 (zinc-flake coated),1.00,ESTIMATE: order of magnitude for alloy steel wire rod. Screws are bought parts: real part price far above material cost.
+Structural steel S355J2,0.80,ESTIMATE: order of magnitude for European S355 plate. To source.
