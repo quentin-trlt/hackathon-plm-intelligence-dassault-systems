@@ -62,6 +62,54 @@ def test_explorer_tabs_and_filters(plm) -> None:
     assert any("match the search and filters" in c.value for c in at.caption)
 
 
+@pytest.fixture(scope="module")
+def explorer(plm):
+    import sys
+
+    sys.path.insert(0, str(APP.parent))
+    from services import get_services
+    from views import explorer
+
+    return explorer, get_services()
+
+
+def test_tree_rows_cover_the_structure(plm, explorer) -> None:
+    view, services = explorer
+    rows = view._tree_rows(services, merge=True, matches=None)
+    ids = [row["id"] for row in rows]
+    assert len(rows) == sum(1 for occ in plm.occurrences() if plm.product(occ.plm_id).item_kind != "wrapper")
+    assert len(set(ids)) == len(ids)
+    assert rows[0]["parent"] is None and rows[0]["plm_id"] == plm.root().plm_id
+    assert all(row["parent"] in ids for row in rows[1:])
+    assert {row["plm_id"] for row in rows if row["has_children"]} == {
+        p.plm_id for p in plm.products() if p.item_kind == "assembly"
+    }
+
+
+def test_tree_rows_search_keeps_the_path(explorer) -> None:
+    view, services = explorer
+    target = next(p for p in services.plm.products() if p.name == "ECAR-3D_LSH_BEA2")
+    rows = view._tree_rows(services, merge=True, matches={target.plm_id})
+    assert [row["name"] for row in rows] == ["ECAR-EI_410KW_EDRIVE_FRONT", "ECAR-EI_REDUCER FRONT", target.name]
+    assert [row["match"] for row in rows] == [False, False, True]
+
+
+def test_structure_tree_expand_and_collapse_all(plm, explorer) -> None:
+    view, services = explorer
+    root = plm.root().plm_id
+    key = f"{view.TREE_EXPANDED}-True"
+    at = _view("explorer")
+    assert at.session_state[key] == {root}
+
+    next(b for b in at.button if b.label == "Expand all").click().run()
+    assert not at.exception, [e.value for e in at.exception]
+    parents = {row["id"] for row in view._tree_rows(services, merge=True, matches=None) if row["has_children"]}
+    assert at.session_state[key] == parents
+
+    next(b for b in at.button if b.label == "Collapse all").click().run()
+    assert at.session_state[key] == {root}
+
+
 def test_change_impact_modes(plm) -> None:
     at = _view("impact")
     mode = next(r for r in at.radio if "Replace by an existing part" in r.options)

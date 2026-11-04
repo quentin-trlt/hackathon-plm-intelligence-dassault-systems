@@ -31,7 +31,7 @@ Brief: navigate BOM and assemblies; inspect components and properties; compare v
   - a plain statement in the view that the extract holds a single revision per product, all `IN_WORK`, so no history can be shown
   - Done in the "Versions and lifecycle" tab of the Explorer; revision and maturity filters in the "Structure" tab
 - [x] **P2** Side-by-side comparison of two or more products (attributes, mass, material, cost, suppliers, risk), for instance the four `ECAR-EI_GEAR_WHEEL`. The agent already has a `compare_products` tool
-- [ ] **P3** Collapsible tree instead of an indented table
+- [x] **P3** Collapsible tree instead of an indented table: a click on the chevron folds or unfolds a node (double click or arrow keys too), a click on the row opens its card, with "Expand all" and "Collapse all". A search or filter shows the matches inside the tree with the assemblies above them (`app/tree.py`, a Streamlit v2 component without build step)
 
 ## Capability 02: Product Intelligence
 

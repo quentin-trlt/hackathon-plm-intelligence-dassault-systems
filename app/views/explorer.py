@@ -2,14 +2,22 @@
 
 from __future__ import annotations
 
+from functools import partial
+from typing import Any
+
 import pandas as pd
 import streamlit as st
 
 import ui
 from plm.model import Occurrence, Product, SourceRef
 from services import Services, criteria_frame, label, leaves_below, part_risk, sourcing_frame
+from tree import structure_tree
 
-INDENT = "    "
+Node = tuple[str, ...]
+
+TREE_KEY = "structure-tree"
+TREE_EXPANDED = "tree-expanded"
+TREE_SELECTED = "tree-selected"
 KIND_BADGES = {"assembly": "blue", "part": "gray", "wrapper": "violet"}
 COMPARE_DEFAULT = "ECAR-EI_GEAR_WHEEL"
 
@@ -27,27 +35,71 @@ def _visible(s: Services, occ: Occurrence, merge: bool, matches: set[str] | None
     return occ.plm_id in matches or (merged_wrapper and occ.path[-2] in matches)
 
 
-def _tree_frame(s: Services, merge: bool, matches: set[str] | None) -> pd.DataFrame:
+def _node(s: Services, occ: Occurrence, merge: bool) -> Node:
+    return tuple(pid for pid in occ.path if not (merge and _is_wrapper(s, pid)))
+
+
+def _plm_id(row_id: str) -> str:
+    return row_id.split("#", 1)[0].rsplit("/", 1)[-1]
+
+
+def _ancestor_ids(row_id: str) -> set[str]:
+    steps = row_id.split("#", 1)[0].split("/")
+    return {"/".join(steps[:i]) for i in range(1, len(steps))}
+
+
+def _tree_rows(s: Services, merge: bool, matches: set[str] | None) -> list[dict[str, Any]]:
+    """Tree rows in BOM order. With a search or filter, only the matches and the assemblies above them.
+
+    A row id is the chain of plm_ids from the root, with `#n` appended when the same chain occurs again
+    (a part used twice in the same assembly)."""
+    entries = [(occ, _node(s, occ, merge)) for occ in s.plm.occurrences() if _visible(s, occ, merge, None)]
+    matched = None if matches is None else {node for occ, node in entries if _visible(s, occ, merge, matches)}
+    if matched is not None:
+        kept = {node[:i] for node in matched for i in range(1, len(node) + 1)}
+        entries = [(occ, node) for occ, node in entries if node in kept]
+    parents = {node[:-1] for _, node in entries}
+    seen: dict[str, int] = {}
     rows = []
-    for occ in s.plm.occurrences():
-        if not _visible(s, occ, merge, matches):
-            continue
+    for occ, node in entries:
         product = s.plm.product(occ.plm_id)
-        ancestors = [pid for pid in occ.path[:-1] if not (merge and _is_wrapper(s, pid))]
-        row = {
-            "Structure": product.name if matches is not None else INDENT * len(ancestors) + product.name,
-            "Kind": product.item_kind,
-            "Qty": occ.cumulative_quantity,
-            "Unit mass (kg)": product.mass_kg,
-            "Material": product.material,
-            "Rev": product.revision,
-            "Maturity": product.maturity,
-            "PLM ID": product.plm_id,
-        }
-        if matches is not None:
-            row["Path"] = " / ".join(s.plm.product(pid).name for pid in ancestors)
-        rows.append(row)
-    return pd.DataFrame(rows)
+        chain = "/".join(node)
+        seen[chain] = seen.get(chain, 0) + 1
+        rows.append(
+            {
+                "id": chain if seen[chain] == 1 else f"{chain}#{seen[chain]}",
+                "parent": "/".join(node[:-1]) or None,
+                "depth": len(node) - 1,
+                "name": product.name,
+                "kind": product.item_kind,
+                "qty": occ.cumulative_quantity,
+                "mass": product.mass_kg,
+                "rev": product.revision,
+                "plm_id": product.plm_id,
+                "match": matched is None or node in matched,
+                "has_children": node in parents,
+            }
+        )
+    return rows
+
+
+def _on_tree_select(expanded_key: str) -> None:
+    """Open the card of the clicked row, and unfold its assemblies so that a product picked from a search
+    stays in view once the search is cleared."""
+    row_id = st.session_state[TREE_KEY].select
+    if not row_id:
+        return
+    st.session_state[TREE_SELECTED] = row_id
+    st.session_state[expanded_key] = st.session_state[expanded_key] | _ancestor_ids(row_id)
+
+
+def _on_tree_expanded(expanded_key: str, searching: bool) -> None:
+    if not searching:
+        st.session_state[expanded_key] = set(st.session_state[TREE_KEY].expanded or [])
+
+
+def _set_expanded(key: str, row_ids: set[str]) -> None:
+    st.session_state[key] = set(row_ids)
 
 
 def _attributes(s: Services, product: Product) -> pd.DataFrame:
@@ -248,34 +300,54 @@ def _browse(s: Services) -> None:
         c1, c2 = st.columns(2)
         revisions = c1.multiselect("Revision", sorted({p.revision for p in products}), placeholder="All")
         maturities = c2.multiselect("Maturity", sorted({p.maturity for p in products}), placeholder="All")
-        merge = st.toggle(
-            "Hide wrappers",
-            value=True,
-            help="Each ECAR-EI wrapper holds exactly one ECAR-3D part. Hiding them shows the part in its place.",
-        )
         matches = _filtered(s, query, revisions, maturities)
-        tree = _tree_frame(s, merge, matches)
-        if tree.empty:
+        root = s.plm.root().plm_id
+        with st.container(horizontal=True, vertical_alignment="center"):
+            merge = st.toggle(
+                "Hide wrappers",
+                value=True,
+                help="Each ECAR-EI wrapper holds exactly one ECAR-3D part. Hiding them shows the part in its place.",
+            )
+            expanded_key = f"{TREE_EXPANDED}-{merge}"
+            rows = _tree_rows(s, merge, matches)
+            if matches is None:
+                st.space("stretch")
+                st.button(
+                    "Expand all",
+                    type="tertiary",
+                    icon=":material/unfold_more:",
+                    on_click=_set_expanded,
+                    args=(expanded_key, {row["id"] for row in rows if row["has_children"]}),
+                )
+                st.button(
+                    "Collapse all",
+                    type="tertiary",
+                    icon=":material/unfold_less:",
+                    on_click=_set_expanded,
+                    args=(expanded_key, {root}),
+                )
+        if not rows:
             st.warning("No product matches the search and filters. Try part of a name, a material or fewer filters.")
             return
-        if matches is not None:
-            st.caption(f"{len(tree)} occurrence(s) match the search and filters.")
-        columns = ["Structure", "Qty", "Unit mass (kg)", "Rev"] + (["Path"] if matches is not None else [])
-        event = st.dataframe(
-            tree,
-            hide_index=True,
-            width="stretch",
-            height=640 if matches is None else "auto",
-            on_select="rerun",
-            selection_mode="single-row",
-            key=f"tree-{merge}-{query}-{revisions}-{maturities}",
-            column_order=columns,
-            column_config={"Unit mass (kg)": st.column_config.NumberColumn(format="%.3f")},
+        expanded = st.session_state.setdefault(expanded_key, {root})
+        selected = st.session_state.get(TREE_SELECTED, root)
+        if matches is None:
+            st.caption("Click a row to open its card, click its chevron to fold or unfold it.")
+        else:
+            st.caption(f"{sum(row['match'] for row in rows)} occurrence(s) match the search and filters.")
+            if selected not in {row["id"] for row in rows}:
+                selected = next(row["id"] for row in rows if row["match"])
+        structure_tree(
+            rows,
+            selected,
+            expanded if matches is None else {row["id"] for row in rows if row["has_children"]},
+            searching=matches is not None,
+            key=TREE_KEY,
+            on_select=partial(_on_tree_select, expanded_key),
+            on_expanded=partial(_on_tree_expanded, expanded_key, matches is not None),
         )
-    rows = event.selection.rows
-    selected = tree.iloc[rows[0]]["PLM ID"] if rows else tree.iloc[0]["PLM ID"]
     with card_col:
-        _card(s, selected)
+        _card(s, _plm_id(selected))
 
 
 def _subassembly(s: Services, plm_id: str) -> str:
