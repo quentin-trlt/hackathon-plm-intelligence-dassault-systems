@@ -15,7 +15,7 @@ Everything the application computes or displays must therefore be traceable to a
 - **Product Explorer**: navigate the BOM and assemblies, search and filter, inspect a component and its properties, compare versions and lifecycle states.
 - **Product Intelligence**: identify critical components, supplier dependencies and lifecycle risks.
 - **Change Impact Analysis**: starting from a proposed component replacement, find the impacted assemblies, suppliers and costs.
-- **AI assistant (optional)**: query the data in natural language, with every answer showing the PLM sources that support it.
+- **AI assistant**: ask questions about the motor in natural language. Every figure is computed by the analysis code and every answer cites the XML elements and enrichment rows it comes from. See [AI assistant](#ai-assistant).
 
 ## Business questions
 
@@ -38,11 +38,12 @@ The parser reads the extract and translates it into an internal data model that 
 |---|---|
 | `data/raw/` | XML extract provided by the OEM (see [Data](#data)) |
 | `data/enrichment/` | Non-PLM data written by the team: material prices, suppliers, part sourcing |
+| `data/agent_replays/` | Assistant answers recorded for the demo (see [Replay mode](#replay-mode)) |
 | `docs/` | XML mapping, data contract, risk rules, demo scenarios |
 | `src/plm/parser/` | XML and enrichment loading, mapping to the data model |
 | `src/plm/analysis/` | BOM exploration, cost, risk, change impact |
 | `src/plm/agent/` | AI assistant with source citation |
-| `app/` | Web interface |
+| `app/` | Web interface; `app/assistant.py` is the assistant's test page |
 | `tests/` | Automated tests |
 | `presentation/` | Pitch material |
 
@@ -52,6 +53,8 @@ The OEM XML extract lives in `data/raw/` and is versioned in this private reposi
 
 The files in `data/enrichment/` hold data that is not in the extract (prices, suppliers, sourcing). They are written by the team, and every row states its source in a `source_note` column.
 
+The AI assistant sends tool results to the Groq API: product names, masses, quantities, suppliers. It never sends the whole extract. The team approved this use of a cloud API for the hackathon. The answers recorded in `data/agent_replays/` are derived from partner data and follow the same rules as the extract.
+
 ## Installation and usage
 
 Requirement: Python 3.11 or later.
@@ -59,7 +62,8 @@ Requirement: Python 3.11 or later.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e ".[dev]"        # parser, analysis, tests
+pip install -e ".[dev,app]"    # adds the AI assistant and its Streamlit page
 ```
 
 Load the extract and the enrichment files, then print a summary and the enrichment coverage:
@@ -82,10 +86,76 @@ Tests and lint:
 
 ```bash
 pytest
-ruff check src tests && ruff format --check src tests
+ruff check src tests app && ruff format --check src tests app
 ```
 
-TODO: command to launch the interface, once the framework is chosen.
+TODO: command to launch the main interface, once the framework is chosen. The assistant has its own test page, see below.
+
+## AI assistant
+
+The assistant answers questions such as "Which supplier do we depend on the most?" or "If the differential side shaft is replaced, what is impacted?", in English or French. The design and its test results are in [docs/agent_plan.md](docs/agent_plan.md).
+
+### How it works
+
+```
+question ─► LLM ─► tool calls ─► plm / enrichment / analysis (Traced + SourceRef)
+              ▲                              │
+              └──── compact JSON + [E1..En] ─┘
+LLM ─► answer citing [En] ─► citation check ─► answer with its sources
+```
+
+The model never reads the extract. It calls Python tools built on `load()` and on the analysis services: search, product card, BOM children, where-used, quantities, material costs, sourcing, supplier dependencies, comparisons and aggregations. Every fact a tool returns carries an evidence id, which groups the `SourceRef`s behind it: XML line and element, or CSV row. Totals, shares and costs are computed by the tools, never by the model.
+
+Before an answer is shown, three checks run:
+
+- **Citations**: ids the model invented are removed, and sentences with a figure but no citation are flagged.
+- **Grounding**: an answer that cites no evidence, and does not rest on tool results, is replaced by a scope message. This also covers off-topic requests.
+- **Data origin**: values from `data/enrichment/` are labelled "non-PLM source", and costs are material costs only.
+
+The model is `openai/gpt-oss-120b` on the Groq free tier, called through the OpenAI-compatible API. Another provider only needs `PLM_LLM_BASE_URL` and `PLM_LLM_MODEL`.
+
+### Setup
+
+Create a free key at console.groq.com/keys, then:
+
+```bash
+cp .env.example .env    # paste the key in PLM_LLM_API_KEY; .env is never committed
+```
+
+`.env.example` lists the other settings: model, step limit, retries and replay mode.
+
+### Usage
+
+```bash
+streamlit run app/assistant.py                     # test page: chat, sources, tool calls
+python -m plm.agent "Which parts are single-sourced?" --trace
+python -m plm.agent                                # interactive session in the terminal
+python -m plm.agent.eval                           # golden-question evaluation (live model)
+```
+
+`python -m plm.agent.eval` runs 14 reference questions and checks each answer automatically. The checks cover figures, names, the tools used, citations, and the refusal of off-topic requests. Expected values are computed from the current data, so the evaluation stays valid when the enrichment files change. The evaluation needs the network and is not part of `pytest`. The offline tests cover the tools, the loop (with a scripted model), the citation check, the evaluation checks and the replay mode.
+
+### Replay mode
+
+The free tier allows 8,000 tokens per minute and 200,000 tokens per day per Groq organisation. A question costs 5,000 to 14,000 tokens, so the team gets a few dozen live questions a day. Answers that pass the evaluation can be recorded and replayed:
+
+```bash
+python -m plm.agent.eval --record    # stores passing answers in data/agent_replays/answers.json
+```
+
+| `PLM_AGENT_REPLAY` | Behaviour |
+|---|---|
+| `off` (default) | Every question goes to the model |
+| `fallback` | Recorded answer if there is one, live model otherwise. Use it for rehearsals |
+| `only` | Recorded answers only. Needs no API key and no network |
+
+Each recorded answer stores a fingerprint of the XML and CSV files, and is ignored as soon as the data changes. A replayed answer is always labelled with its recording date.
+
+### Current limits
+
+- Risk scoring and change-impact simulation are not tools yet. They will wrap the analysis services once those exist.
+- The model sometimes writes a simple sum itself, or cites a table once instead of row by row. The uncited-figure warning shows both.
+- An off-topic answer that cites a real evidence id would pass the grounding check. The scope rule in the prompt is the only defence against it.
 
 ## Team organisation
 
@@ -94,7 +164,7 @@ TODO: command to launch the interface, once the framework is chosen.
 | Data | XML parsing and mapping, data model | `src/plm/parser`, `docs/` | |
 | Analysis | BOM graph, risks, change impact | `src/plm/analysis` | |
 | UI | Interface and demo flow | `app/` | |
-| Agent | AI assistant with sources (optional) | `src/plm/agent` | |
+| Agent | AI assistant with sources | `src/plm/agent`, `app/assistant.py` | |
 | Pitch | Demo scenarios, slides | `presentation/`, `docs/` | |
 
 ## Git conventions
