@@ -179,8 +179,9 @@ class XmlPlmRepository:
         path = Path(path)
         if not path.is_file():
             raise FileNotFoundError(f"PLM extract not found: {path}")
+        parser = etree.XMLParser(resolve_entities=False, no_network=True, load_dtd=False)
         try:
-            tree = etree.parse(str(path))
+            tree = etree.parse(str(path), parser)
         except etree.XMLSyntaxError as exc:
             raise PlmParseError(f"{path.name} is not well-formed XML: {exc}") from exc
         return _Builder(path.name, tree.getroot()).build()

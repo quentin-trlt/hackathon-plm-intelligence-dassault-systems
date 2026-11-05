@@ -14,7 +14,9 @@ Impact: how much a disruption would hurt.
     REUSE          number of places the part is used         (PLM XML)
 
 A criterion without data (e.g. no lead time) is left out and its axis is
-re-weighted over the remaining criteria; it is never scored as 0.
+re-weighted over the remaining criteria; it is never scored as 0. When no
+sourcing data is loaded at all (no part_sourcing.csv), SUPPLY and CONCENTRATION
+are left out too: a missing file is not the same as a part without supplier.
 
 Price exposure is scored apart from supply disruption, because it is a different
 risk (the part is delivered, but costs more):
@@ -38,6 +40,11 @@ Level = Literal["low", "medium", "high"]
 # (description: "This is only a single Tooth -> required for meshing").
 # They are not physical parts and would duplicate the full stator core and winding.
 MESHING_ARTEFACTS = frozenset({"prd-12535825-00000118", "prd-12535825-00000119"})
+
+
+def meshing_artefacts(plm: PlmRepository) -> frozenset[str]:
+    """The known meshing artefacts present as leaves in this extract; empty for another export."""
+    return MESHING_ARTEFACTS & {p.plm_id for p in plm.leaves()}
 
 
 @dataclass(frozen=True)
@@ -151,16 +158,17 @@ class RiskService:
         plm: PlmRepository,
         enrichment: EnrichmentRepository,
         cost: CostService | None = None,
-        excluded_plm_ids: frozenset[str] = MESHING_ARTEFACTS,
+        excluded_plm_ids: frozenset[str] | None = None,
         config: RiskConfig | None = None,
     ) -> None:
         self._plm = plm
         self._enrichment = enrichment
         self._cost = cost
-        self._excluded = excluded_plm_ids
+        self._excluded = meshing_artefacts(plm) if excluded_plm_ids is None else excluded_plm_ids
         self._cfg = config or RiskConfig()
         self._leaves = [p for p in plm.leaves() if p.plm_id not in self._excluded]
         self._sourcing: dict[str, list[PartSourcing]] = {p.plm_id: enrichment.sourcing(p.plm_id) for p in self._leaves}
+        self._has_sourcing = any(self._sourcing.values())
         self._single_by_supplier: dict[str, list[str]] = defaultdict(list)
         for plm_id, rows in self._sourcing.items():
             if len(rows) == 1:
@@ -176,6 +184,16 @@ class RiskService:
         self._cache: dict[str, PartRisk] = {}
 
     # ---- public API -------------------------------------------------------
+
+    @property
+    def excluded(self) -> frozenset[str]:
+        """Leaf parts left out of the scoring (meshing artefacts)."""
+        return self._excluded
+
+    @property
+    def has_sourcing(self) -> bool:
+        """False when no scored part has sourcing data: SUPPLY, CONCENTRATION and LEAD_TIME are then absent."""
+        return self._has_sourcing
 
     def part_risk(self, plm_id: str) -> PartRisk:
         """Risk of one leaf part. Raises ValueError for an assembly or an excluded part."""
@@ -277,11 +295,11 @@ class RiskService:
     # ---- scoring ----------------------------------------------------------
 
     def _score(self, plm_id: str) -> PartRisk:
+        supply = (self._supply(plm_id), self._concentration(plm_id)) if self._has_sourcing else ()
         criteria = [
             c
             for c in (
-                self._supply(plm_id),
-                self._concentration(plm_id),
+                *supply,
                 self._maturity(plm_id),
                 self._cost_share_criterion(plm_id),
                 self._lead_time(plm_id),
@@ -461,7 +479,7 @@ class RiskService:
             self._w("COST_SHARE"),
             score,
             f"{share:.1%} of material cost",
-            f"The part (all units) is {share:.1%} of the e-drive material cost.",
+            f"The part (all units) is {share:.1%} of the root product material cost.",
             refs,
         )
 

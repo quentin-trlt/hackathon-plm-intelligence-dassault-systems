@@ -28,7 +28,8 @@ figure the tool returns (a total or a share, not only its parts). If no tool ret
 5. Products are identified by plm_id. Names are not unique. When a name matches several products, list them with \
 what tells them apart (plm_id, mass, assembly; compare_products gets them in one call) and ask which one is meant, \
 unless the question covers all of them.
-6. Tools return physical parts; the logical ECAR-EI wrappers are merged into their part. Never count a wrapper.
+6. Tools return physical parts; the logical wrappers (kind "wrapper") are merged into their part. Never count a \
+wrapper.
 7. Check the part list below before searching. If two searches find nothing, answer that the extract does not \
 contain it; do not keep searching.
 8. For the impact of changing or replacing a part, call assess_change and report the impacted assemblies, the \
@@ -70,12 +71,30 @@ def data_overview(plm: PlmRepository, enrichment: EnrichmentRepository) -> str:
             f"- {len(products)} products: {kinds['assembly']} assemblies, {kinds['wrapper']} wrappers, "
             f"{kinds['part']} physical parts. {len(enrichment.suppliers())} suppliers in the enrichment files.",
             f"- {lifecycle}",
+            *_missing_enrichment(plm, enrichment),
             "- Units: mass in kg, cost in EUR, lead time in days.",
             "Assembly tree:",
             *assemblies,
             f"Physical parts: {part_names}.",
         ]
     )
+
+
+def _missing_enrichment(plm: PlmRepository, enrichment: EnrichmentRepository) -> list[str]:
+    """One line per enrichment dataset that was not provided, so the model says the data is missing."""
+    leaves = plm.leaves()
+    lines = []
+    if not any(p.material and enrichment.material_price(p.material) for p in leaves):
+        lines.append(
+            "- No material prices were provided with this extract: material costs, cost shares and price risks "
+            "cannot be computed. Say so when asked."
+        )
+    if not any(enrichment.sourcing(p.plm_id) for p in leaves):
+        lines.append(
+            "- No part sourcing data was provided with this extract: suppliers, single sourcing and lead times are "
+            "unknown, and the risk score rests on PLM criteria only. Say so when asked."
+        )
+    return lines
 
 
 def system_prompt(plm: PlmRepository, enrichment: EnrichmentRepository) -> str:

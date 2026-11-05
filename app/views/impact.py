@@ -10,6 +10,7 @@ import streamlit as st
 import ui
 from plm.analysis.impact import ChangeImpact
 from plm.analysis.risk import PartRisk
+from plm.parser import MATERIAL_PRICES_FILE, PART_SOURCING_FILE
 from services import Services, label, leaves_below, sourcing_frame
 
 DEFAULT_TARGET = "ECAR-3D_DifferentialSideShaft"
@@ -18,7 +19,10 @@ MODES = ("Change mass or material", "Replace by an existing part")
 
 def _proposal(s: Services) -> ChangeImpact:
     candidates = [p for p in s.plm.products() if not p.is_root]
-    default = next((i for i, p in enumerate(candidates) if p.name == DEFAULT_TARGET), 0)
+    default = next(
+        (i for i, p in enumerate(candidates) if p.name == DEFAULT_TARGET),
+        next((i for i, p in enumerate(candidates) if p.is_leaf), 0),
+    )
     product = st.selectbox("Component to change", candidates, index=default, format_func=label)
     mode = st.radio("Proposed change", MODES, key=f"mode-{product.plm_id}")
     if mode == MODES[1]:
@@ -85,7 +89,9 @@ def _figures(s: Services, result: ChangeImpact) -> None:
         ),
     ]
     cost_delta = result.root_cost_delta_eur
-    if cost_delta is not None and root_cost is not None:
+    if not s.has_prices:
+        items.append(ui.missing_figure("Motor material cost", MATERIAL_PRICES_FILE))
+    elif cost_delta is not None and root_cost is not None:
         items.append(
             ui.Figure(
                 "Motor material cost",
@@ -135,7 +141,7 @@ def _propagation(result: ChangeImpact) -> None:
     )
 
 
-def _impacted(result: ChangeImpact) -> None:
+def _impacted(s: Services, result: ChangeImpact) -> None:
     frame = pd.DataFrame(
         [
             {
@@ -152,6 +158,8 @@ def _impacted(result: ChangeImpact) -> None:
             for a in result.impacted
         ]
     )
+    if not s.has_prices:
+        frame = frame.drop(columns=["Material cost (EUR)", "Projected cost (EUR)"], errors="ignore")
     money = st.column_config.NumberColumn(format="%.2f")
     mass = st.column_config.NumberColumn(format="%.3f")
     with st.expander(f"Impacted assemblies in detail ({len(frame)})", icon=":material/table_rows:"):
@@ -166,14 +174,18 @@ def _impacted(result: ChangeImpact) -> None:
                 "Projected cost (EUR)": money,
             },
         )
-        st.caption("Projected cost per assembly: current material cost plus the unit cost change x units. Team prices.")
+        if s.has_prices:
+            st.caption(
+                "Projected cost per assembly: current material cost plus the unit cost change x units. Team prices."
+            )
 
 
-def _side(title: str, material: str | None, volatility: str | None) -> None:
+def _side(s: Services, title: str, material: str | None, volatility: str | None) -> None:
     st.markdown(f"**{title}**")
     with st.container(horizontal=True, gap="small"):
         st.badge(material or "No material", color="gray")
-        st.badge(f"Volatility {volatility or 'unknown'}", color="violet")
+        if s.has_prices:
+            st.badge(f"Volatility {volatility or 'unknown'}", color="violet")
 
 
 def _risk(risk: PartRisk | None) -> None:
@@ -182,9 +194,12 @@ def _risk(risk: PartRisk | None) -> None:
 
 
 def _suppliers(s: Services, plm_id: str) -> None:
+    if not s.has_sourcing:
+        ui.missing_data("the supplier list", PART_SOURCING_FILE)
+        return
     frame = sourcing_frame(s, leaves_below(s, plm_id))
     if frame.empty:
-        st.info("No supplier is recorded in data/enrichment/part_sourcing.csv.")
+        st.info(f"No supplier is recorded in {PART_SOURCING_FILE}.")
         return
     redundant = ["Part"] if frame["Part"].nunique() == 1 else []
     st.dataframe(
@@ -199,13 +214,13 @@ def _before_after(s: Services, result: ChangeImpact) -> None:
     st.subheader("Before and after", anchor=False)
     before, after = st.columns(2, gap="large")
     with before:
-        _side(f"Current: {result.target.name}", result.target.material, result.current_volatility)
+        _side(s, f"Current: {result.target.name}", result.target.material, result.current_volatility)
         _risk(result.current_risk)
         _suppliers(s, result.target.plm_id)
     with after:
         proposed = result.replacement or result.target
         title = label(result.replacement) if result.replacement else f"{result.target.name}, modified"
-        _side(f"Proposed: {title}", result.proposed_material, result.proposed_volatility)
+        _side(s, f"Proposed: {title}", result.proposed_material, result.proposed_volatility)
         _risk(result.proposed_risk)
         if result.replacement is None:
             st.caption("Same suppliers as today: a mass or material change does not model a supplier change.")
@@ -239,6 +254,6 @@ def render(s: Services) -> None:
             "requalification or validation cost: the real cost of a change is higher."
         )
         _propagation(result)
-        _impacted(result)
+        _impacted(s, result)
         _before_after(s, result)
         ui.show_sources(result.sources)

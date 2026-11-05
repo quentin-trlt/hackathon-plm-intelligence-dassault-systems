@@ -7,43 +7,51 @@ from __future__ import annotations
 
 import dataclasses
 import re
+from collections.abc import Sequence
 from html import escape
+from pathlib import Path
 
 import streamlit as st
 
 import ui
 from plm.agent import AgentAnswer, AgentConfig, AgentConfigError, LlmError, PlmAgent
-from plm.agent.eval import DEMO_QUESTIONS
+from plm.agent.eval import DEMO_QUESTIONS, QUESTIONS
 from plm.agent.replay import ReplayingAgent, build_assistant
-from services import ENRICHMENT_DIR, REPO_ROOT, XML_PATH, Services
+from services import MAX_CACHED_DATASETS, REFERENCE, REPO_ROOT, Dataset, Services
 
 MAX_REFS_SHOWN = 5
 _CITATION = re.compile(r"\[(E\d+)\]")
+GENERIC_QUESTIONS = tuple(
+    QUESTIONS[i]
+    for i in ("subassemblies", "most_critical", "heaviest_materials", "single_source", "top_supplier", "off_topic_fr")
+)
 
 
-@st.cache_resource
-def get_agent() -> PlmAgent | ReplayingAgent:
+@st.cache_resource(max_entries=MAX_CACHED_DATASETS)
+def get_agent(xml_path: str, enrichment_dir: str) -> PlmAgent | ReplayingAgent:
     config = AgentConfig.from_env(dotenv_path=REPO_ROOT / ".env")
     config = dataclasses.replace(config, replay_path=REPO_ROOT / config.replay_path)
-    return build_assistant(config, XML_PATH, ENRICHMENT_DIR)
+    return build_assistant(config, Path(xml_path), Path(enrichment_dir))
 
 
-def load_agent() -> PlmAgent | ReplayingAgent | None:
-    """The agent, or None after showing why it cannot be built (missing key, invalid setting)."""
+def load_agent(dataset: Dataset = REFERENCE) -> PlmAgent | ReplayingAgent | None:
+    """The agent on the dataset, or None after showing why it cannot be built (missing key, invalid setting)."""
     try:
-        return get_agent()
+        return get_agent(str(dataset.xml_path), str(dataset.enrichment_dir))
     except AgentConfigError as exc:
         st.error(str(exc))
         st.caption("Set PLM_AGENT_REPLAY=only in .env to replay the recorded answers without a key.")
         return None
 
 
-def agent_status(agent: PlmAgent | ReplayingAgent) -> str:
+def agent_status(agent: PlmAgent | ReplayingAgent, dataset: Dataset = REFERENCE) -> str:
     status = f"Model {agent.config.model}"
     if isinstance(agent, ReplayingAgent):
         status += f", replay mode {agent.mode} with {len(agent.store)} recorded answer(s)"
         stale = agent.store.stale_count(agent.fingerprint)
-        if stale:
+        if stale and not dataset.reference:
+            status += ", none for this dataset"
+        elif stale:
             status += f", {stale} recorded on older data and ignored"
     return status
 
@@ -97,11 +105,11 @@ def new_conversation(agent: PlmAgent | ReplayingAgent) -> None:
     st.session_state.assistant_turns = []
 
 
-def example_buttons(columns: int = 1) -> str | None:
+def example_buttons(columns: int = 1, questions: Sequence[str] = DEMO_QUESTIONS) -> str | None:
     """One button per demo question; returns the question clicked in this run, if any."""
     clicked = None
     slots = st.columns(columns)
-    for index, example in enumerate(DEMO_QUESTIONS):
+    for index, example in enumerate(questions):
         if slots[index % columns].button(example, key=f"example-{index}", width="stretch"):
             clicked = example
     return clicked
@@ -112,13 +120,13 @@ def _queue_example() -> None:
     st.session_state.assistant_example = None
 
 
-def example_pills() -> str | None:
+def example_pills(questions: Sequence[str] = DEMO_QUESTIONS) -> str | None:
     """Demo questions as pills, folded away once a conversation has started; returns the question picked."""
     if st.session_state.get("assistant_turns"):
         with st.expander("Example questions", icon=":material/lightbulb:"):
-            st.pills("Ask one of these", DEMO_QUESTIONS, key="assistant_example", on_change=_queue_example)
+            st.pills("Ask one of these", questions, key="assistant_example", on_change=_queue_example)
     else:
-        st.pills("Try a question", DEMO_QUESTIONS, key="assistant_example", on_change=_queue_example)
+        st.pills("Try a question", questions, key="assistant_example", on_change=_queue_example)
     return st.session_state.pop("assistant_pending", None)
 
 
@@ -156,14 +164,23 @@ def render(s: Services) -> None:
             "Figures are computed by the analysis code, never by the model. Every answer lists the XML elements and "
             "CSV rows it comes from.",
         )
-    agent = load_agent()
+    agent = load_agent(s.dataset)
     if agent is None:
         return
     with tools, st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center"):
         show_tool_calls = st.toggle("Show tool calls", value=False)
         if st.button("New conversation", icon=":material/add_comment:"):
             new_conversation(agent)
-    st.caption(agent_status(agent))
+    st.caption(agent_status(agent, s.dataset))
+    if isinstance(agent, ReplayingAgent) and agent.mode == "only" and not s.dataset.reference:
+        st.info(
+            "Recorded answers only exist for the reference dataset. To ask about this dataset, set "
+            "PLM_LLM_API_KEY and PLM_AGENT_REPLAY=fallback (or off) in .env.",
+            icon=":material/info:",
+        )
+    missing = s.enrichment.missing_files()
+    if missing:
+        st.caption(f"Not provided with this dataset: {', '.join(missing)}. The assistant says so when asked.")
 
-    pending = example_pills()
+    pending = example_pills(DEMO_QUESTIONS if s.dataset.reference else GENERIC_QUESTIONS)
     chat(agent, pending, show_tool_calls)

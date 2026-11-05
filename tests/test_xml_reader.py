@@ -4,6 +4,7 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
+from conftest import XML_PATH
 
 from plm.contract import UnknownProductError
 from plm.parser import PlmParseError, PlmValidationError, XmlPlmRepository, normalize_name
@@ -241,3 +242,16 @@ def test_not_well_formed(tmp_path):
 def test_missing_file(tmp_path):
     with pytest.raises(FileNotFoundError):
         XmlPlmRepository.from_file(tmp_path / "missing.xml")
+
+
+def test_external_entities_are_not_resolved(plm, tmp_path):
+    secret = tmp_path / "secret.txt"
+    secret.write_text("TOPSECRET", encoding="utf-8")
+    text = XML_PATH.read_text(encoding="utf-8")
+    text = text.replace(
+        "<XPDMXML ", f'<!DOCTYPE XPDMXML [<!ENTITY leak SYSTEM "{secret.as_uri()}">]>\n<XPDMXML ', 1
+    ).replace("<Description>High Speed Shaft</Description>", "<Description>&leak;</Description>", 1)
+    path = tmp_path / "entity.xml"
+    path.write_text(text, encoding="utf-8")
+    repo = XmlPlmRepository.from_file(path)
+    assert all("TOPSECRET" not in (p.description or "") for p in repo.products())

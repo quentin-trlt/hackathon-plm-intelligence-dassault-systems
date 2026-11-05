@@ -6,7 +6,7 @@ import pytest
 from conftest import ENRICHMENT_DIR
 
 from plm.analysis.cost import MaterialCostService
-from plm.analysis.risk import MESHING_ARTEFACTS, RiskConfig, RiskService
+from plm.analysis.risk import MESHING_ARTEFACTS, RiskConfig, RiskService, meshing_artefacts
 from plm.parser import CsvEnrichmentRepository, XmlPlmRepository
 
 
@@ -129,3 +129,26 @@ def test_price_criterion_does_not_change_supply_score(plm, risk):
             c.weight for c in on_axes if c.axis == "probability"
         )
         assert r.probability == pytest.approx(p)
+
+
+def test_without_sourcing_supply_criteria_are_left_out(plm: XmlPlmRepository, tmp_path) -> None:
+    empty = CsvEnrichmentRepository.from_dir(tmp_path, plm)
+    service = RiskService(plm, empty, MaterialCostService(plm, empty))
+    assert not service.has_sourcing
+    for risk in service.ranking():
+        assert {c.code for c in risk.criteria} == {"MATURITY", "REUSE"}
+    assert service.supplier_exposure() == []
+
+
+def test_with_sourcing_a_part_without_supplier_stays_at_maximum(plm: XmlPlmRepository, enrichment) -> None:
+    service = RiskService(plm, enrichment, MaterialCostService(plm, enrichment))
+    assert service.has_sourcing
+    assert all(r.criterion("SUPPLY") is not None for r in service.ranking())
+
+
+def test_meshing_artefacts_are_only_excluded_when_present(plm: XmlPlmRepository, derived_xml, tmp_path) -> None:
+    assert meshing_artefacts(plm) == MESHING_ARTEFACTS
+    other = XmlPlmRepository.from_file(derived_xml)
+    service = RiskService(other, CsvEnrichmentRepository.from_dir(tmp_path, other))
+    assert meshing_artefacts(other) == frozenset()
+    assert len(service.ranking()) == len(other.leaves())

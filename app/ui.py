@@ -15,7 +15,8 @@ import streamlit as st
 
 from plm.agent.evidence import describe
 from plm.model import SourceRef
-from services import XML_PATH, Services
+from plm.parser import MATERIAL_PRICES_FILE, PART_SOURCING_FILE
+from services import Services
 
 STYLE = (Path(__file__).parent / "style.css").read_text(encoding="utf-8")
 
@@ -62,15 +63,46 @@ def product_sheet(s: Services) -> None:
         ("Products", str(len(s.plm.products()))),
     ]
     rows = "".join(f"<div><dt>{label}</dt><dd>{escape(value)}</dd></div>" for label, value in specs)
+    origin = "reference extract" if s.dataset.reference else "uploaded"
+    missing = s.enrichment.missing_files()
+    team = f"Team data missing: {', '.join(missing)}" if missing else "Team data: prices, suppliers, sourcing"
     st.html(
         '<section class="sb-sheet" aria-label="Root assembly">'
         f'<p class="sb-caption">Root assembly</p><p class="sb-name">{escape(root.name)}</p>'
         f'<p class="sb-id">{escape(root.plm_id)}</p><dl class="sb-specs">{rows}</dl>'
-        f'<p class="sb-file">Source: {escape(XML_PATH.name)}</p></section>'
+        f'<p class="sb-file">Source: {escape(s.dataset.name)} ({origin})</p>'
+        f'<p class="sb-file{" is-missing" if missing else ""}">{escape(team)}</p></section>'
         '<div class="sb-key">'
         '<span><i class="plm-swatch is-plm"></i>OEM extract</span>'
         '<span><i class="plm-swatch is-team"></i>Team data, not in the extract</span>'
         "</div>"
+    )
+
+
+def missing_data(what: str, file: str) -> None:
+    """Stands in for a chart or table that needs an enrichment file the active dataset does not have."""
+    st.info(f"Missing data: {what} needs {file}, not provided with this dataset.", icon=":material/database_off:")
+
+
+def missing_figure(label: str, file: str) -> Figure:
+    return Figure(label, "Missing data", f"Needs {file}.", team_data=True)
+
+
+def risk_basis(s: Services) -> None:
+    """States which criteria the risk score rests on when enrichment data is missing."""
+    groups = (
+        (PART_SOURCING_FILE, s.risk.has_sourcing, ["supply", "concentration", "lead time"]),
+        (MATERIAL_PRICES_FILE, s.has_prices, ["cost share", "price volatility"]),
+    )
+    absent = [file for file, loaded, _ in groups if not loaded]
+    if not absent:
+        return
+    scored = ["maturity", "reuse"] + [c for _, loaded, codes in groups if loaded for c in codes]
+    left_out = [c for _, loaded, codes in groups if not loaded for c in codes]
+    st.info(
+        f"Partial risk score: it rests on {', '.join(scored)} only. {' and '.join(absent)} not provided, so "
+        f"{', '.join(left_out)} are not scored.",
+        icon=":material/database_off:",
     )
 
 

@@ -1,4 +1,8 @@
-"""Data access shared by every view. Everything goes through `plm.parser.load()` and the analysis services."""
+"""Data access shared by every view. Everything goes through `plm.parser.load()` and the analysis services.
+
+The dataset is chosen per browser session: the reference extract of the repository by default, or an extract
+uploaded from the sidebar (app/dataset.py). Services are cached per dataset.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +15,7 @@ import streamlit as st
 
 from plm.analysis.cost import MaterialCostService
 from plm.analysis.impact import ChangeImpactService
-from plm.analysis.risk import MESHING_ARTEFACTS, Criterion, PartRisk, RiskService
+from plm.analysis.risk import Criterion, PartRisk, RiskService
 from plm.model import Product
 from plm.parser import CsvEnrichmentRepository, PlmData, XmlPlmRepository, load
 
@@ -19,10 +23,27 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 XML_PATH = REPO_ROOT / "data" / "raw" / "XPDMXML_ECAR_PLM.xml"
 ENRICHMENT_DIR = REPO_ROOT / "data" / "enrichment"
 NON_PLM = "non-PLM source"
+DATASET_KEY = "dataset"
+MAX_CACHED_DATASETS = 8
+
+
+@dataclass(frozen=True)
+class Dataset:
+    xml_path: Path
+    enrichment_dir: Path
+    reference: bool = False
+
+    @property
+    def name(self) -> str:
+        return self.xml_path.name
+
+
+REFERENCE = Dataset(XML_PATH, ENRICHMENT_DIR, reference=True)
 
 
 @dataclass(frozen=True)
 class Services:
+    dataset: Dataset
     data: PlmData
     cost: MaterialCostService
     risk: RiskService
@@ -36,13 +57,36 @@ class Services:
     def enrichment(self) -> CsvEnrichmentRepository:
         return self.data.enrichment
 
+    @property
+    def has_prices(self) -> bool:
+        return self.enrichment.has_prices
 
-@st.cache_resource
-def get_services() -> Services:
-    data = load(XML_PATH, ENRICHMENT_DIR)
+    @property
+    def has_sourcing(self) -> bool:
+        return self.enrichment.has_sourcing
+
+
+def active_dataset() -> Dataset:
+    return st.session_state.get(DATASET_KEY, REFERENCE)
+
+
+@st.cache_resource(max_entries=MAX_CACHED_DATASETS, show_spinner="Loading the PLM data...")
+def _build(xml_path: str, enrichment_dir: str, reference: bool) -> Services:
+    dataset = Dataset(Path(xml_path), Path(enrichment_dir), reference)
+    data = load(dataset.xml_path, dataset.enrichment_dir)
     cost = MaterialCostService(data.plm, data.enrichment)
     risk = RiskService(data.plm, data.enrichment, cost)
-    return Services(data=data, cost=cost, risk=risk, impact=ChangeImpactService(data.plm, data.enrichment, cost, risk))
+    impact = ChangeImpactService(data.plm, data.enrichment, cost, risk)
+    return Services(dataset=dataset, data=data, cost=cost, risk=risk, impact=impact)
+
+
+def build_services(dataset: Dataset) -> Services:
+    return _build(str(dataset.xml_path), str(dataset.enrichment_dir), dataset.reference)
+
+
+def get_services() -> Services:
+    """Services of the dataset active in this browser session."""
+    return build_services(active_dataset())
 
 
 def label(product: Product) -> str:
@@ -51,7 +95,7 @@ def label(product: Product) -> str:
 
 def part_risk(s: Services, plm_id: str) -> PartRisk | None:
     """Risk of a scored leaf part, None for assemblies, wrappers and the stator meshing artefacts."""
-    if plm_id in MESHING_ARTEFACTS or not s.plm.product(plm_id).is_leaf:
+    if plm_id in s.risk.excluded or not s.plm.product(plm_id).is_leaf:
         return None
     return s.risk.part_risk(plm_id)
 

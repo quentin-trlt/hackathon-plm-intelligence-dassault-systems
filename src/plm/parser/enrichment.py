@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 MATERIAL_PRICES_FILE = "material_prices.csv"
 SUPPLIERS_FILE = "suppliers.csv"
 PART_SOURCING_FILE = "part_sourcing.csv"
+ENRICHMENT_FILES = (MATERIAL_PRICES_FILE, SUPPLIERS_FILE, PART_SOURCING_FILE)
 
 _SUPPLIER_ID = re.compile(r"^SUP-\d{3}$")
 _COUNTRY = re.compile(r"^[A-Z]{2}$")
@@ -113,6 +114,29 @@ class CsvEnrichmentRepository:
             logger.warning("Enrichment directory not found, no enrichment data loaded: %s", directory)
             return cls([], [], [], [])
         return _Loader(directory, plm).load()
+
+    @property
+    def has_prices(self) -> bool:
+        """At least one material price was loaded: material costs can be computed."""
+        return bool(self._prices)
+
+    @property
+    def has_suppliers(self) -> bool:
+        return bool(self._suppliers)
+
+    @property
+    def has_sourcing(self) -> bool:
+        """At least one part sourcing row was loaded. False means no sourcing data, not 'no supplier'."""
+        return bool(self._sourcing)
+
+    def missing_files(self) -> tuple[str, ...]:
+        """Enrichment files that brought no data, in ENRICHMENT_FILES order."""
+        loaded = {
+            MATERIAL_PRICES_FILE: self.has_prices,
+            SUPPLIERS_FILE: self.has_suppliers,
+            PART_SOURCING_FILE: self.has_sourcing,
+        }
+        return tuple(file for file in ENRICHMENT_FILES if not loaded[file])
 
     def material_price(self, material: str) -> MaterialPrice | None:
         return self._prices.get(material)
