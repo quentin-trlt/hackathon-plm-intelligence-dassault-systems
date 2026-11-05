@@ -2,9 +2,7 @@
 
 Project 7 of the ESILV A5 DPM/PLM hackathon (4 to 6 November 2026), "PLM Intelligence Challenge", proposed by Dassault Systèmes.
 
-We are the engineering and digital team of an electric motor supplier for the automotive industry. Our OEM customer runs its developments in 3DEXPERIENCE and only sends us a raw XML extract of the product structure. The application turns this extract into information that supports decisions on cost, risk, quality and sustainability: exploring the BOM, spotting critical components and assessing the impact of a component change. Every piece of information displayed links back to the XML element it comes from.
-
-Static web mockup: https://dassault-systemes-plm-project.netlify.app/ (source in `presentation/web_mockup/`; hardcoded data, not connected to the parser).
+We are the engineering and digital team of an electric motor supplier for the automotive industry. Our OEM customer runs its developments in 3DEXPERIENCE and only sends us a raw XML extract of the product structure. The application turns this extract into information that supports cost and risk decisions: exploring the BOM, spotting critical components and assessing the impact of a component change. Every piece of information displayed links back to the XML element it comes from.
 
 ## Context
 
@@ -16,7 +14,7 @@ Everything the application computes or displays must therefore be traceable to a
 
 - **Product Explorer**: navigate the BOM and assemblies, search and filter, inspect a component and its properties, compare versions and lifecycle states.
 - **Product Intelligence**: identify critical components, supplier dependencies and lifecycle risks.
-- **Change Impact Analysis**: starting from a proposed component replacement, find the impacted assemblies, suppliers and costs.
+- **Change Impact Analysis**: starting from a proposed change of a component (new mass, new material, or replacement by another part), find the impacted assemblies, suppliers, lead times and material costs.
 - **AI assistant**: ask questions about the motor in natural language. Every figure is computed by the analysis code and every answer cites the XML elements and enrichment rows it comes from. See [AI assistant](#ai-assistant).
 
 ## Business questions
@@ -47,7 +45,8 @@ The parser reads the extract and translates it into an internal data model that 
 | `src/plm/agent/` | AI assistant with source citation |
 | `app/` | Streamlit interface: `app.py` entry point, `services.py` data access, one module per view in `views/`; `app/assistant.py` is the assistant's standalone test page |
 | `tests/` | Automated tests |
-| `presentation/` | Pitch material; `web_mockup/` holds the first static UI mockup |
+| `tools/viewer3d/` | `build_data.py`, which generates the 3D shape profiles of `data/raw/geometry_reference.json` from the XML (see [3D shape profiles](#3d-shape-profiles)) |
+| `presentation/` | Hackathon deliverables: defence slides and one pager |
 
 ## Data
 
@@ -65,7 +64,7 @@ Requirement: Python 3.11 or later.
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"        # parser, analysis, tests
-pip install -e ".[dev,app]"    # adds the AI assistant and its Streamlit page
+pip install -e ".[dev,app]"    # adds the Streamlit interface and the AI assistant
 ```
 
 Load the extract and the enrichment files, then print a summary and the enrichment coverage:
@@ -101,7 +100,21 @@ Every figure it shows comes from `load()` and the analysis services; values from
 
 The **Change dataset** button in the sidebar loads another XPDMXML extract in the same format, with its enrichment files (`material_prices.csv`, `suppliers.csv`, `part_sourcing.csv`) as optional uploads. The files are checked like the reference ones: a malformed extract or a CSV that breaks [the data contract](docs/data_contract.md) is refused and the active dataset is kept. They are kept in a temporary folder for the browser session only, never in the repository. Figures, charts and columns that need a missing file say so instead of showing a value, and the risk score then rests on the criteria that remain (see [docs/risk_rules.md](docs/risk_rules.md)). The assistant works on the active dataset; recorded replays only exist for the reference extract.
 
-The **3D view** is rebuilt from the active extract each time it is loaded: the whole product in the "3D view" tab of Product structure, the selected product in the "3D" tab of its card, the changed component and its subassembly in Change impact, and every part in the colour of its risk level in Risks. Positions compose the `RelativeTransformation3D` of every instance from the root; shapes are illustrative profiles (`data/raw/geometry_reference.json`, partner-derived like the XML) matched by PLM ID and moved to the XML position. They are not the OEM CAD. A part without a profile, for instance in another extract, is drawn as a marker at its XML origin, and the consistency checks under the viewer say so. The viewer sources (`app/assets/viewer3d/`, three.js r147 under the MIT licence) hold no partner data; the scene is injected as JSON and nothing is sent back to the app.
+The **3D view** is rebuilt from the active extract each time it is loaded: the whole product in the "3D view" tab of Product structure, the selected product in the "Show in 3D" section of its card, the changed component and its subassembly in Change impact, and every part in the colour of its risk level in Risks. Positions compose the `RelativeTransformation3D` of every instance from the root; shapes are illustrative profiles (`data/raw/geometry_reference.json`, partner-derived like the XML) matched by PLM ID and moved to the XML position. They are not the OEM CAD. A part without a profile, for instance in another extract, is drawn as a marker at its XML origin, and the consistency checks under the viewer say so. The viewer sources (`app/assets/viewer3d/`, three.js r147 under the MIT licence) hold no partner data; the scene is injected as JSON and nothing is sent back to the app.
+
+### 3D shape profiles
+
+The extract holds no geometry: its `Rep3DAggr` elements only carry an ID, a revision and a maturity. `tools/viewer3d/build_data.py` writes the shape profiles of `data/raw/geometry_reference.json` from the unchanged XML, and `app/assets/viewer3d/geometry.js` draws them with three.js primitives. Each profile has a `note` that says where its dimensions come from:
+
+- **From the XML**: position and orientation of every part, the three shaft axes (read from the bearing positions, 100 and 154 mm apart), screw diameter and length (read from the part name), and the outline of the left and right housings (convex hull of the flange screws).
+- **From the XML mass**: bearing outer diameter, gear radius and width, stator core outer diameter and cross pin length. Mass is turned into volume with typical handbook densities written in the script, which are not PLM data. Gear radii are split so that meshing pairs touch at the centre distances read from the XML.
+- **Drawn by hand**: shaft profiles, cooling jacket, hairpin windings, differential gears and casing, seal, motor case, plate and transmission support. The 10 profiles whose shape or placement is reconstructed rather than read from the XML are marked `place: "estimated"`.
+
+The script identifies parts by their XML `@id`, so it only fits the reference extract; in another extract, parts without a profile are drawn as markers. It needs numpy, installed with the `app` extra through pandas:
+
+```bash
+python tools/viewer3d/build_data.py    # defaults: data/raw/XPDMXML_ECAR_PLM.xml -> data/raw/geometry_reference.json
+```
 
 ## AI assistant
 
@@ -116,7 +129,7 @@ question ─► LLM ─► tool calls ─► plm / enrichment / analysis (Traced
 LLM ─► answer citing [En] ─► citation check ─► answer with its sources
 ```
 
-The model never reads the extract. It calls Python tools built on `load()` and on the analysis services: search, product card, BOM children, where-used, quantities, material costs, sourcing, supplier dependencies, comparisons and aggregations. Every fact a tool returns carries an evidence id, which groups the `SourceRef`s behind it: XML line and element, or CSV row. Totals, shares and costs are computed by the tools, never by the model.
+The model never reads the extract. It calls Python tools built on `load()` and on the analysis services: search, product card, BOM children, where-used, quantities, material costs, sourcing, supplier dependencies, comparisons, aggregations, risk ranking and exposure, and change impact. Every fact a tool returns carries an evidence id, which groups the `SourceRef`s behind it: XML line and element, or CSV row. Totals, shares and costs are computed by the tools, never by the model.
 
 Before an answer is shown, three checks run:
 
@@ -166,19 +179,8 @@ Each recorded answer stores a fingerprint of the XML and CSV files, and is ignor
 
 ### Current limits
 
-- Risk scoring and change-impact simulation are not tools yet. They will wrap the analysis services once those exist.
 - The model sometimes writes a simple sum itself, or cites a table once instead of row by row. The uncited-figure warning shows both.
 - An off-topic answer that cites a real evidence id would pass the grounding check. The scope rule in the prompt is the only defence against it.
-
-## Team organisation
-
-| Workstream | Scope | Folders | Owner |
-|---|---|---|---|
-| Data | XML parsing and mapping, data model | `src/plm/parser`, `docs/` | |
-| Analysis | BOM graph, risks, change impact | `src/plm/analysis` | |
-| UI | Interface and demo flow | `app/` | |
-| Agent | AI assistant with sources | `src/plm/agent`, `app/views/assistant.py`, `app/assistant.py` | |
-| Pitch | Slides | `presentation/` | |
 
 ## Git conventions
 
@@ -187,14 +189,6 @@ Each recorded answer stores a fingerprint of the XML and CSV files, and is ignor
 - Every change goes through a PR to `main`, reviewed by at least one person.
 - Squash merge.
 - Frequent merges, every 2 to 3 hours, to limit divergence.
-
-## Schedule
-
-| Day | Goals |
-|---|---|
-| D1 (4 Nov.) | XML analysis and Product Explorer |
-| D2 (5 Nov.) | Risks, change impact and assistant |
-| D3 (6 Nov.) | Demo finalisation and pitch |
 
 ## Team
 
