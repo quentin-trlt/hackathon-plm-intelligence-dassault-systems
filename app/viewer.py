@@ -35,6 +35,7 @@ CONFIG_MARK = "/*PLM_CONFIG*/{}"
 COMPACT_HEIGHT = 380
 FULL_HEIGHT = 840
 CHECK_DOTS = {"ok": "low", "check": "medium"}
+CHECK_LABELS = {"ok": "OK", "check": "Check"}
 _SOURCE_MARK = re.compile(r"/\*(" + "|".join(SOURCES) + r")\*/")
 
 
@@ -77,8 +78,8 @@ def consistency_checks(s: Services) -> None:
         return
     st.markdown("**Consistency checks**")
     rows = "".join(
-        f'<p class="att-text"><i class="dot is-{CHECK_DOTS[c.status]}" title="{c.status}"></i>'
-        f"<span>{escape(c.text)}</span></p>"
+        f'<p class="att-text"><span class="att-level is-{CHECK_DOTS[c.status]}"><i class="dot '
+        f'is-{CHECK_DOTS[c.status]}"></i>{CHECK_LABELS[c.status]}</span><span>{escape(c.text)}</span></p>'
         for c in s.viewer.checks(s.plm.root().mass_kg)
     )
     st.html(f'<div class="viewer-checks">{rows}</div>')

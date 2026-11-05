@@ -63,8 +63,9 @@ def _anatomy(s: Services) -> None:
         st.info(f"{root.name} has no subassembly in the extract.")
         return
     st.html(
-        f'<p class="anat-intro">{len(subs)} subassemblies under {escape(root.name)}. Each panel is as wide as its '
-        "share of the declared mass, and its top edge shows the worst risk level below it.</p>"
+        f'<p class="anat-intro">{len(subs)} subassemblies under {escape(root.name)}. Panel widths follow the share '
+        "of the declared mass, with a minimum width for the smallest ones. The top edge shows the worst risk level "
+        "below.</p>"
     )
     columns = st.columns([max(sub.mass_share, 0.2) for sub in subs], gap="small")
     for index, (column, sub) in enumerate(zip(columns, subs, strict=True)):
@@ -213,8 +214,8 @@ def _attention(s: Services, parts: pd.DataFrame) -> None:
             text, action = st.columns([5, 1], vertical_alignment="center", gap="small")
             swatch = '&nbsp;<i class="plm-swatch is-team" title="Based on team data"></i>' if finding.team_data else ""
             text.html(
-                f'<p class="att-text"><i class="dot is-{finding.level}" title="{finding.level}"></i>'
-                f"<span>{escape(finding.text)}{swatch}</span></p>"
+                f'<p class="att-text"><span class="att-level is-{finding.level}"><i class="dot is-{finding.level}">'
+                f"</i>{finding.level.capitalize()}</span><span>{escape(finding.text)}{swatch}</span></p>"
             )
             if finding.page:
                 with action:
@@ -225,9 +226,10 @@ def _top_parts(s: Services) -> None:
     st.subheader("Most critical parts", anchor=False)
     items = []
     for r in s.risk.ranking()[:6]:
-        material = s.plm.product(r.plm_id).material or ""
+        material = s.plm.product(r.plm_id).material
+        detail = f"{r.level.capitalize()} risk" + (f" · {material}" if material else "")
         items.append(
-            f'<li><span class="crit-name">{escape(r.name)}<small>{escape(material)}</small></span>'
+            f'<li><span class="crit-name">{escape(r.name)}<small>{escape(detail)}</small></span>'
             f'<span class="crit-track is-{r.level}"><span style="width:{r.criticality:.0f}%"></span></span>'
             f'<span class="crit-value">{r.criticality:.0f}</span></li>'
         )
@@ -247,6 +249,7 @@ def _data_quality(s: Services) -> None:
         mass_gap = rolled - root.mass_kg
         single_revision = len({p.revision_family for p in products}) == len(products)
         in_work = sum(1 for p in products if p.maturity == "IN_WORK")
+        undescribed = sum(1 for p in products if not p.description)
         reps_consistent = sum(
             1
             for p in leaves
@@ -263,7 +266,7 @@ def _data_quality(s: Services) -> None:
             ),
             (
                 "Load warnings",
-                f"{len(s.plm.warnings)} non-blocking anomaly",
+                f"{len(s.plm.warnings)} non-blocking {'anomaly' if len(s.plm.warnings) == 1 else 'anomalies'}",
                 "none" if not s.plm.warnings else "shown at the top of the page",
             ),
             (
@@ -273,8 +276,8 @@ def _data_quality(s: Services) -> None:
             ),
             (
                 "Descriptions",
-                f"{sum(1 for p in products if not p.description)}/{len(products)} products without description",
-                "gap in the extract",
+                f"{undescribed}/{len(products)} products without description",
+                "gap in the extract" if undescribed else "complete",
             ),
             (
                 "Lifecycle",
@@ -317,8 +320,8 @@ def _data_quality(s: Services) -> None:
         )
         st.dataframe(pd.DataFrame(checks, columns=["Check", "Finding", "Status"]), hide_index=True, width="stretch")
         st.caption(
-            "The extract holds no product quality data (defects, tests, deviations, tolerances): quality decisions "
-            "rest on the quality of the data itself, checked here."
+            "No product quality data (defects, tests, deviations, tolerances) is read from the extract: quality "
+            "decisions rest on the quality of the data itself, checked here."
         )
 
 
@@ -330,12 +333,12 @@ def render(s: Services) -> None:
     )
     parts = leaf_frame(s)
     _figures(s, parts)
-    _anatomy(s)
     left, right = st.columns([3, 2], gap="large")
     with left:
         _attention(s, parts)
     with right:
         _top_parts(s)
+    _anatomy(s)
 
     with st.expander(f"All leaf parts ({len(parts)})", icon=":material/table_rows:"):
         st.dataframe(

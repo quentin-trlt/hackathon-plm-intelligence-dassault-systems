@@ -7,6 +7,7 @@ function icon(name){return `<svg viewBox="0 0 24 24" fill="none" stroke="current
 document.querySelectorAll('[data-icon]').forEach(e=>e.innerHTML=icon(e.dataset.icon));
 
 const COMPACT=CONFIG.mode==='compact';
+if(COMPACT)document.body.classList.add('compact');
 const HEX=/^#[0-9a-fA-F]{6}$/;
 const CUSTOM=Object.fromEntries(Object.entries(CONFIG.colors||{}).filter(([,c])=>HEX.test(c)));
 const HAS_CUSTOM=CONFIG.colors!==null&&CONFIG.colors!==undefined;
@@ -21,6 +22,8 @@ const vector=a=>new THREE.Vector3(...a);
 const clean=s=>String(s).replace(/_/g,' ');
 
 const data=DATA,items=data.items,unique=[...new Map(items.map(i=>[i.pid,i])).values()];
+const nameCounts=unique.reduce((a,i)=>a.set(i.name,(a.get(i.name)||0)+1),new Map());
+const ZOOM_HINT=`${/Mac|iPhone|iPad/.test(navigator.platform)?'⌘':'Ctrl'} + scroll to zoom`;
 const BLOCKS=[...new Set(items.map(i=>i.block))];
 const COLORS=Object.fromEntries(BLOCKS.map((b,n)=>[b,KNOWN_BLOCKS[b]||PALETTE[n%PALETTE.length]]));
 let scene,camera,renderer,controls,model,plane,groups=[],dirty=true,lastRender=0;
@@ -33,7 +36,6 @@ function blockMass(b){return items.filter(i=>i.block===b).reduce((a,i)=>a+i.mass
 
 function start(){
  try{
-  if(COMPACT)document.body.classList.add('compact');
   header();
   renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,preserveDrawingBuffer:true,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputEncoding=THREE.sRGBEncoding;
@@ -42,6 +44,7 @@ function start(){
   scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(34,1,.001,30);camera.up.set(0,0,1);
   controls=new THREE.OrbitControls(camera,$('scene'));controls.enableDamping=true;controls.dampingFactor=.09;controls.minDistance=.06;controls.maxDistance=5;controls.autoRotateSpeed=.45;
   controls.addEventListener('start',()=>cameraTween=null);controls.addEventListener('change',()=>dirty=true);
+  if(COMPACT){controls.enableZoom=false;$('viewport').addEventListener('wheel',e=>{controls.enableZoom=e.ctrlKey||e.metaKey;if(!controls.enableZoom)toast(ZOOM_HINT);},{capture:true,passive:true});}
   const pm=new THREE.PMREMGenerator(renderer),room=new THREE.RoomEnvironment();scene.environment=pm.fromScene(room,.04).texture;pm.dispose();room.dispose?.();
   scene.add(new THREE.HemisphereLight(0xe7f2ff,0x5f6c79,.4));
   const key=new THREE.DirectionalLight(0xfff5e8,1.5),size=COMPACT?1024:2048;key.position.set(.5,-.6,1.4);key.castShadow=true;key.shadow.mapSize.set(size,size);
@@ -143,7 +146,7 @@ function renderTree(){
  $('tree').innerHTML=BLOCKS.map(b=>{
   const list=unique.filter(i=>i.block===b&&[i.name,i.plm,i.pid,i.material,i.rev].join(' ').toLowerCase().includes(q));hits+=list.length;
   if(!list.length)return '';const open=q||!collapsed.has(b);
-  return `<section class="tree-group"><button class="group-head" data-group="${esc(b)}" aria-expanded="${!!open}"><span style="transform:rotate(${open?90:0}deg)">${icon('chevron')}</span><i class="group-dot" style="background:${COLORS[b]}"></i>${esc(b)}<small>${num(blockMass(b),2)} kg</small></button>${open?list.map(i=>`<button class="part-row ${selected?.pid===i.pid?'selected':''}" data-part="${esc(i.pid)}" title="${esc(i.name)} · ${esc(i.pid)} · Rev ${esc(i.rev)}" aria-pressed="${selected?.pid===i.pid}"><span class="source-dot ${i.place==='xml'?'':'estimated'}"></span><span class="part-name">${esc(clean(i.name))}${/GEAR.?WHEEL/i.test(i.name)?` · ${esc(i.rev)}`:''}</span><span class="qty">×${i.qty}</span></button>`).join(''):''}</section>`;
+  return `<section class="tree-group"><button class="group-head" data-group="${esc(b)}" aria-expanded="${!!open}"><span style="transform:rotate(${open?90:0}deg)">${icon('chevron')}</span><i class="group-dot" style="background:${COLORS[b]}"></i>${esc(b)}<small>${num(blockMass(b),2)} kg</small></button>${open?list.map(i=>`<button class="part-row ${selected?.pid===i.pid?'selected':''}" data-part="${esc(i.pid)}" title="${esc(i.name)} · ${esc(i.pid)} · Rev ${esc(i.rev)}" aria-pressed="${selected?.pid===i.pid}"><span class="source-dot ${i.place==='xml'?'':'estimated'}"></span><span class="part-name">${esc(clean(i.name))}${nameCounts.get(i.name)>1?` · Rev ${esc(i.rev)}`:''}</span><span class="qty">×${i.qty}</span></button>`).join(''):''}</section>`;
  }).join('')||'<p class="no-results">No matching components.<br>Try a name, material or PLM ID.</p>';
  $('tree-count').textContent=q?`${hits} / ${unique.length}`:unique.length;
 }

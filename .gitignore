@@ -34,3 +34,6 @@ dist/
 
 # Dossier de travail du viewer 3D : contient des données dérivées du partenaire
 ecar-viewer/
+presentation/onepager
+presentation/supports
+source
