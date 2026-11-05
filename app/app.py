@@ -9,10 +9,10 @@ from pathlib import Path
 
 import streamlit as st
 
+import dataset
 import nav
 import ui
-from plm.parser import EnrichmentError, PlmParseError, PlmValidationError
-from services import Services, get_services
+from services import REFERENCE, Services, active_dataset, get_services
 from views import assistant, dashboard, explorer, impact, risks, supply
 
 ASSETS = Path(__file__).parent / "assets"
@@ -62,13 +62,19 @@ def main() -> None:
     ui.inject_style()
     try:
         services = get_services()
-    except (FileNotFoundError, PlmParseError, PlmValidationError, EnrichmentError) as exc:
+    except dataset.LOAD_ERRORS as exc:
+        if not active_dataset().reference:
+            dataset.activate(REFERENCE)
+            st.toast("The uploaded dataset could not be read any more: back to the reference dataset.")
+            st.rerun()
         st.error(f"The PLM data could not be loaded: {exc}. Check that data/raw/ and data/enrichment/ are present.")
         st.stop()
 
     page = st.navigation(pages(services), position="sidebar", expanded=True)
     with st.sidebar:
         ui.product_sheet(services)
+        if st.button("Change dataset", icon=":material/upload_file:", width="stretch"):
+            dataset.dialog()
     for warning in services.plm.warnings:
         st.warning(warning)
     page.run()

@@ -99,6 +99,8 @@ streamlit run app/app.py
 
 Every figure it shows comes from `load()` and the analysis services; values from `data/enrichment/` are labelled "non-PLM source". The Assistant view needs the setup described in [AI assistant](#ai-assistant).
 
+The **Change dataset** button in the sidebar loads another XPDMXML extract in the same format, with its enrichment files (`material_prices.csv`, `suppliers.csv`, `part_sourcing.csv`) as optional uploads. The files are checked like the reference ones: a malformed extract or a CSV that breaks [the data contract](docs/data_contract.md) is refused and the active dataset is kept. They are kept in a temporary folder for the browser session only, never in the repository. Figures, charts and columns that need a missing file say so instead of showing a value, and the risk score then rests on the criteria that remain (see [docs/risk_rules.md](docs/risk_rules.md)). The assistant works on the active dataset; recorded replays only exist for the reference extract.
+
 ## AI assistant
 
 The assistant answers questions such as "Which supplier do we depend on the most?" or "If the differential side shaft is replaced, what is impacted?", in English or French. The design and its test results are in [docs/agent_plan.md](docs/agent_plan.md).

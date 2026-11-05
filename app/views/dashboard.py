@@ -10,8 +10,9 @@ import streamlit as st
 
 import nav
 import ui
-from plm.analysis.risk import MESHING_ARTEFACTS
 from plm.analysis.summary import SubassemblySummary, subassembly_summary
+from plm.parser import MATERIAL_PRICES_FILE, PART_SOURCING_FILE
+from plm.parser.xml_reader import MASS_TOLERANCE_KG
 from services import Services, leaf_frame
 from views import explorer
 
@@ -36,7 +37,7 @@ def _bar_row(label: str, share: float | None, tone: str) -> str:
     )
 
 
-def _panel(sub: SubassemblySummary) -> str:
+def _panel(sub: SubassemblySummary, has_prices: bool) -> str:
     counts = sub.count_by_level
     risk = "".join(f'<span><i class="dot is-{lv}"></i>{counts[lv]} {lv}</span>' for lv in LEVELS)
     worst = (
@@ -48,7 +49,7 @@ def _panel(sub: SubassemblySummary) -> str:
         f'<p class="anat-name">{escape(sub.name)}</p>'
         f'<p class="anat-mass">{sub.mass_kg:.2f} kg</p>'
         + _bar_row("Share of motor mass", sub.mass_share, "plm")
-        + _bar_row("Share of material cost", sub.cost_share, "team")
+        + (_bar_row("Share of material cost", sub.cost_share, "team") if has_prices else "")
         + f'<div class="anat-risk" aria-label="Supply risk of the {sub.parts} scored parts below">{risk}'
         f"<span>of {sub.parts} scored</span></div>{worst}"
     )
@@ -58,6 +59,9 @@ def _anatomy(s: Services) -> None:
     subs = sorted(subassembly_summary(s.plm, s.cost, s.risk), key=lambda sub: -sub.mass_share)
     root = s.plm.root()
     st.subheader("The motor by subassembly", anchor=False)
+    if not subs:
+        st.info(f"{root.name} has no subassembly in the extract.")
+        return
     st.html(
         f'<p class="anat-intro">{len(subs)} subassemblies under {escape(root.name)}. Each panel is as wide as its '
         "share of the declared mass, and its top edge shows the worst risk level below it.</p>"
@@ -66,7 +70,7 @@ def _anatomy(s: Services) -> None:
     for index, (column, sub) in enumerate(zip(columns, subs, strict=True)):
         level = sub.worst.level if sub.worst else "none"
         with column, st.container(border=True, key=f"anat-{level}-{index}"):
-            st.html(_panel(sub))
+            st.html(_panel(sub, s.has_prices))
             if st.button("Open in the structure", key=f"open-{sub.plm_id}", icon=":material/account_tree:"):
                 explorer.focus(s, sub.plm_id)
                 st.switch_page(nav.page("structure"))
@@ -79,6 +83,29 @@ def _figures(s: Services, parts: pd.DataFrame) -> None:
     counts = {lv: sum(1 for r in ranking if r.level == lv) for lv in LEVELS}
     single = int((parts["Suppliers"] == 1).sum())
     cost_complete = parts["Cost in motor (EUR)"].notna().all()
+    scored = len(ranking) or 1
+    cost = (
+        ui.Figure(
+            "Material cost",
+            f"{parts['Cost in motor (EUR)'].sum():.2f} EUR" if cost_complete else "Incomplete",
+            "Mass x material price. Raw material only, not the purchase price.",
+            team_data=True,
+        )
+        if s.has_prices
+        else ui.missing_figure("Material cost", MATERIAL_PRICES_FILE)
+    )
+    sourcing = (
+        ui.Figure(
+            "Single-sourced parts",
+            f"{single} of {len(parts)}",
+            "One supplier recorded.",
+            team_data=True,
+            alert=single > 0,
+            bar=(ui.Segment(single / len(parts), "team", f"{single} single-sourced"),),
+        )
+        if s.has_sourcing
+        else ui.missing_figure("Single-sourced parts", PART_SOURCING_FILE)
+    )
     ui.figures(
         [
             ui.Figure(
@@ -86,33 +113,32 @@ def _figures(s: Services, parts: pd.DataFrame) -> None:
                 f"{parts['Mass in motor (kg)'].sum():.2f} kg",
                 f"{len(parts)} leaf parts, {int(parts['Qty in motor'].sum())} units. Declared {root.mass_kg} kg.",
             ),
-            ui.Figure(
-                "Material cost",
-                f"{parts['Cost in motor (EUR)'].sum():.2f} EUR" if cost_complete else "Incomplete",
-                "Mass x material price. Raw material only, not the purchase price.",
-                team_data=True,
-            ),
+            cost,
             ui.Figure(
                 "High supply risk",
                 f"{counts['high']} parts",
-                f"Out of {len(ranking)} scored parts.",
+                f"Out of {len(ranking)} scored parts." + ("" if s.has_sourcing else " PLM criteria only."),
                 alert=counts["high"] > 0,
-                bar=tuple(ui.Segment(counts[lv] / len(ranking), lv, f"{counts[lv]} {lv}") for lv in LEVELS),
+                bar=tuple(ui.Segment(counts[lv] / scored, lv, f"{counts[lv]} {lv}") for lv in LEVELS),
             ),
-            ui.Figure(
-                "Single-sourced parts",
-                f"{single} of {len(parts)}",
-                "One supplier recorded.",
-                team_data=True,
-                alert=single > 0,
-                bar=(ui.Segment(single / len(parts), "team", f"{single} single-sourced"),),
-            ),
+            sourcing,
         ]
     )
 
 
 def _findings(s: Services, parts: pd.DataFrame) -> list[Finding]:
     findings = []
+    missing = s.enrichment.missing_files()
+    if missing:
+        findings.append(
+            Finding(
+                "info",
+                f"Team data not provided with this dataset: {', '.join(missing)}. The figures that need it say so.",
+                "",
+                "",
+                True,
+            )
+        )
     ranking = s.risk.ranking()
     if ranking:
         top = ranking[0]
@@ -139,19 +165,22 @@ def _findings(s: Services, parts: pd.DataFrame) -> list[Finding]:
                 True,
             )
         )
-    by_material = parts.groupby("Material")[["Mass in motor (kg)", "Cost in motor (EUR)"]].sum()
+    by_material = parts.groupby("Material")[["Mass in motor (kg)", "Cost in motor (EUR)"]].sum(min_count=1)
     mass_share = by_material["Mass in motor (kg)"] / by_material["Mass in motor (kg)"].sum()
     cost_share = by_material["Cost in motor (EUR)"] / by_material["Cost in motor (EUR)"].sum()
-    material = (cost_share - mass_share).idxmax()
-    findings.append(
-        Finding(
-            "info",
-            f"{material} is {mass_share[material]:.0%} of the mass but {cost_share[material]:.0%} of the material cost.",
-            "supply",
-            "Supply",
-            True,
+    gap = (cost_share - mass_share).dropna()
+    if not gap.empty:
+        material = gap.idxmax()
+        findings.append(
+            Finding(
+                "info",
+                f"{material} is {mass_share[material]:.0%} of the mass but {cost_share[material]:.0%} of the "
+                "material cost.",
+                "supply",
+                "Supply",
+                True,
+            )
         )
-    )
     price = [r for r in s.risk.price_ranking() if r.price_level == "high"]
     if price:
         findings.append(
@@ -187,8 +216,9 @@ def _attention(s: Services, parts: pd.DataFrame) -> None:
                 f'<p class="att-text"><i class="dot is-{finding.level}" title="{finding.level}"></i>'
                 f"<span>{escape(finding.text)}{swatch}</span></p>"
             )
-            with action:
-                nav.link(finding.page, finding.link, icon=":material/arrow_outward:")
+            if finding.page:
+                with action:
+                    nav.link(finding.page, finding.link, icon=":material/arrow_outward:")
 
 
 def _top_parts(s: Services) -> None:
@@ -209,8 +239,14 @@ def _data_quality(s: Services) -> None:
     with st.expander("Data quality", icon=":material/fact_check:"):
         products = s.plm.products()
         leaves = s.plm.leaves()
+        root = s.plm.root()
         report = s.enrichment.coverage(s.plm)
+        missing = s.enrichment.missing_files()
+        excluded = sorted(s.risk.excluded)
         rolled = sum(p.mass_kg * s.plm.total_quantity(p.plm_id).value for p in leaves)
+        mass_gap = rolled - root.mass_kg
+        single_revision = len({p.revision_family for p in products}) == len(products)
+        in_work = sum(1 for p in products if p.maturity == "IN_WORK")
         reps_consistent = sum(
             1
             for p in leaves
@@ -220,7 +256,11 @@ def _data_quality(s: Services) -> None:
         )
         checks = [
             ("Structure", "Single root, no broken reference, no cycle, unique identifiers", "passed at load"),
-            ("Mass roll-up", f"Leaves x quantities = {rolled:.2f} kg vs root {s.plm.root().mass_kg} kg", "consistent"),
+            (
+                "Mass roll-up",
+                f"Leaves x quantities = {rolled:.2f} kg vs root {root.mass_kg} kg",
+                "consistent" if abs(mass_gap) <= MASS_TOLERANCE_KG else f"gap of {mass_gap:+.3f} kg",
+            ),
             (
                 "Load warnings",
                 f"{len(s.plm.warnings)} non-blocking anomaly",
@@ -238,24 +278,31 @@ def _data_quality(s: Services) -> None:
             ),
             (
                 "Lifecycle",
-                f"{sum(1 for p in products if p.maturity == 'IN_WORK')}/{len(products)} products IN_WORK, "
-                "one revision per product",
-                "no history",
+                f"{in_work}/{len(products)} products IN_WORK, "
+                + ("one revision per product" if single_revision else "several revisions of some products"),
+                "no history" if single_revision else "history available",
             ),
-            (
-                "Meshing artefacts",
-                f"{len(MESHING_ARTEFACTS)} stator parts modelled for meshing "
-                f"({sum(s.plm.product(p).mass_kg for p in MESHING_ARTEFACTS):.2f} kg counted in the stator mass)",
-                "excluded from risk",
-            ),
+        ]
+        if excluded:
+            checks.append(
+                (
+                    "Meshing artefacts",
+                    f"{len(excluded)} stator parts modelled for meshing "
+                    f"({sum(s.plm.product(p).mass_kg for p in excluded):.2f} kg counted in the stator mass)",
+                    "excluded from risk",
+                )
+            )
+        if missing:
+            checks.append(("Enrichment files", f"Not provided: {', '.join(missing)}", "missing data"))
+        checks.append(
             (
                 "Enrichment coverage",
                 f"{len(report.materials_without_price)} material without price, "
                 f"{len(report.leaves_without_sourcing)} leaf without supplier, "
                 f"{len(report.unfilled_rows)} unfilled row",
                 "complete" if report.complete else "incomplete",
-            ),
-        ]
+            )
+        )
         st.dataframe(pd.DataFrame(checks, columns=["Check", "Finding", "Status"]), hide_index=True, width="stretch")
         st.caption(
             "The extract holds no product quality data (defects, tests, deviations, tolerances): quality decisions "
@@ -266,7 +313,7 @@ def _data_quality(s: Services) -> None:
 def render(s: Services) -> None:
     ui.page_header(
         "Overview",
-        "The 410 kW front e-drive as described by the OEM extract: how its mass, material cost and supply risk "
+        f"{s.plm.root().name} as described by the OEM extract: how its mass, material cost and supply risk "
         "split across subassemblies, and what to look at first.",
     )
     parts = leaf_frame(s)

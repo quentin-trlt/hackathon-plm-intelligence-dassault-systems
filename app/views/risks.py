@@ -9,12 +9,13 @@ import streamlit as st
 import nav
 import ui
 from plm.analysis.risk import PartRisk
+from plm.parser import MATERIAL_PRICES_FILE
 from services import Services, leaf_frame
 
 ZONE_TINTS = {"high": "rgba(180, 35, 24, 0.16)", "medium": "rgba(224, 138, 46, 0.18)", "low": "rgba(46, 125, 91, 0.11)"}
 
 
-def _figures(ranking: list[PartRisk], price: list[PartRisk]) -> None:
+def _figures(s: Services, ranking: list[PartRisk], price: list[PartRisk]) -> None:
     counts = {level: sum(1 for r in ranking if r.level == level) for level in ("high", "medium", "low")}
     total = len(ranking) or 1
     high_price = sum(1 for r in price if r.price_level == "high")
@@ -43,7 +44,9 @@ def _figures(ranking: list[PartRisk], price: list[PartRisk]) -> None:
                 "Delivered, but exposed to a material price rise.",
                 team_data=True,
                 alert=high_price > 0,
-            ),
+            )
+            if s.has_prices
+            else ui.missing_figure("High price risk", MATERIAL_PRICES_FILE),
         ]
     )
 
@@ -121,8 +124,11 @@ def _ranking(ranking: list[PartRisk]) -> None:
     nav.link("structure", "Open Product structure", icon=":material/account_tree:")
 
 
-def _price_exposure(price: list[PartRisk]) -> None:
+def _price_exposure(s: Services, price: list[PartRisk]) -> None:
     st.subheader("Price exposure", anchor=False)
+    if not s.has_prices:
+        ui.missing_data("price exposure", MATERIAL_PRICES_FILE)
+        return
     if not price:
         st.info("None of the filtered parts has a known price volatility.")
         return
@@ -194,12 +200,13 @@ def render(s: Services) -> None:
         st.info("None of the filtered parts is scored. Clear the filters to see the risks.")
         return
 
-    _figures(ranking, price)
+    ui.risk_basis(s)
+    _figures(s, ranking, price)
     left, right = st.columns([1, 1], gap="large")
     with left:
         _heat_map(s, ranking)
     with right:
         _ranking(ranking)
-    _price_exposure(price)
+    _price_exposure(s, price)
     _reuse(s, ranking)
     ui.show_sources([ref for r in ranking for ref in r.sources], "Where the risk scores come from")

@@ -11,6 +11,8 @@ Risk = **probability** of a disruption × **impact** of that disruption, as in a
 
 A criterion without data (for example no lead time) is **left out** and its axis is re-weighted over the remaining criteria. It is never scored as 0.
 
+When no sourcing data is loaded at all (a dataset uploaded without `part_sourcing.csv`), SUPPLY and CONCENTRATION are left out as well, and the score rests on the PLM criteria and the cost share. A missing file is not the same as a part listed without supplier: inside a loaded `part_sourcing.csv`, a part with no row still scores SUPPLY 1. The stator meshing artefacts are excluded only when their `plm_id`s are present in the loaded extract.
+
 Every criterion keeps its raw value, a sentence explaining it, and its `SourceRef`s (XML elements and CSV rows), so the UI can show why a part is critical.
 
 ## Criteria

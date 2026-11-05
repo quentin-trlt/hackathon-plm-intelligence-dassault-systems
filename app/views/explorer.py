@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from functools import partial
 from html import escape
 from typing import Any
@@ -11,6 +12,7 @@ import streamlit as st
 
 import ui
 from plm.model import Occurrence, Product, SourceRef
+from plm.parser import MATERIAL_PRICES_FILE, PART_SOURCING_FILE
 from services import Services, criteria_frame, label, leaves_below, part_risk, sourcing_frame
 from tree import structure_tree
 
@@ -21,6 +23,7 @@ TREE_EXPANDED = "tree-expanded"
 TREE_SELECTED = "tree-selected"
 KIND_BADGES = {"assembly": "blue", "part": "gray", "wrapper": "violet"}
 COMPARE_DEFAULT = "ECAR-EI_GEAR_WHEEL"
+MISSING = "Missing data"
 
 
 def _is_wrapper(s: Services, plm_id: str) -> bool:
@@ -180,6 +183,8 @@ def _sourcing(s: Services, product: Product) -> list[SourceRef]:
             "Mass x material price.",
             team_data=True,
         )
+        if s.has_prices
+        else ui.missing_figure("Material cost per unit", MATERIAL_PRICES_FILE)
     ]
     if price:
         volatility = f"Volatility {price.price_volatility}." if price.price_volatility else ""
@@ -191,9 +196,12 @@ def _sourcing(s: Services, product: Product) -> list[SourceRef]:
     if len(leaves) != 1:
         st.caption(f"Assembly of {len(leaves)} leaf parts. Open a leaf part to see its suppliers.")
         return refs
+    if not s.has_sourcing:
+        ui.missing_data("the supplier list", PART_SOURCING_FILE)
+        return refs
     sourcing = sourcing_frame(s, leaves)
     if sourcing.empty:
-        st.warning("No supplier is recorded for this part in data/enrichment/part_sourcing.csv.")
+        st.warning(f"No supplier is recorded for this part in {PART_SOURCING_FILE}.")
         return refs
     st.dataframe(
         sourcing.drop(columns=["Part", "CSV line"]),
@@ -234,6 +242,8 @@ def _risk(s: Services, product: Product) -> list[SourceRef]:
                 "Explanation": st.column_config.TextColumn(width="large"),
             },
         )
+        if not s.risk.has_sourcing:
+            st.caption(f"Partial score: supply, concentration and lead time need {PART_SOURCING_FILE}.")
         return list(risk.sources)
 
     assembly = s.risk.assembly_risk(product.plm_id)
@@ -322,7 +332,7 @@ def _browse(s: Services) -> None:
             merge = st.toggle(
                 "Hide wrappers",
                 value=True,
-                help="Each ECAR-EI wrapper holds exactly one ECAR-3D part. Hiding them shows the part in its place.",
+                help="Each logical wrapper holds exactly one physical part. Hiding them shows the part in its place.",
             )
             expanded_key = f"{TREE_EXPANDED}-{merge}"
             rows = _tree_rows(s, merge, matches)
@@ -463,15 +473,26 @@ def _versions(s: Services) -> None:
         width="stretch",
         column_config={"Consistent": st.column_config.CheckboxColumn()},
     )
-    st.caption("Each leaf part against the ECAR-EI wrapper that holds it and its 3D representation.")
+    st.caption("Each leaf part against the logical wrapper that holds it and its 3D representation.")
+
+
+def _compare_default(products: list[Product]) -> str | None:
+    """The reference gear wheels, or else the name most shared by different products of the extract."""
+    counts = Counter(p.name for p in products)
+    if counts[COMPARE_DEFAULT] >= 2:
+        return COMPARE_DEFAULT
+    name, count = counts.most_common(1)[0] if counts else (None, 0)
+    return name if count >= 2 else None
 
 
 def _compare(s: Services) -> None:
     products = s.plm.products()
+    default_name = _compare_default(products)
+    defaults = [p for p in products if p.name == default_name][:4]
     chosen = st.multiselect(
         "Products to compare (2 to 4)",
         products,
-        default=[p for p in products if p.name == COMPARE_DEFAULT][:4],
+        default=defaults,
         format_func=label,
         max_selections=4,
     )
@@ -487,6 +508,10 @@ def _compare(s: Services) -> None:
         sourcing = [row for leaf in leaves for row in s.enrichment.sourcing(leaf)]
         risk = part_risk(s, leaves[0]) if len(leaves) == 1 else None
         price = s.enrichment.material_price(product.material) if product.material else None
+        volatility = (price.price_volatility or "Unknown") if price else "n/a"
+        unit_cost = f"{cost.value:.2f}" if cost else "Unknown"
+        suppliers = ", ".join(sorted({s.enrichment.supplier(r.supplier_id).name for r in sourcing})) or "None"
+        lead_time = min((r.lead_time_days for r in sourcing if r.lead_time_days is not None), default="n/a")
         columns[label(product)] = {
             "PLM ID": product.plm_id,
             "Kind": product.item_kind,
@@ -496,12 +521,10 @@ def _compare(s: Services) -> None:
             "Unit mass (kg)": f"{product.mass_kg:.3f}",
             "Qty in motor": quantity,
             "Material": product.material or "None (assembly)",
-            "Material volatility": (price.price_volatility or "Unknown") if price else "n/a",
-            "Unit material cost (EUR)": f"{cost.value:.2f}" if cost else "Unknown",
-            "Suppliers": ", ".join(sorted({s.enrichment.supplier(r.supplier_id).name for r in sourcing})) or "None",
-            "Shortest lead time (days)": min(
-                (r.lead_time_days for r in sourcing if r.lead_time_days is not None), default="n/a"
-            ),
+            "Material volatility": volatility if s.has_prices else MISSING,
+            "Unit material cost (EUR)": unit_cost if s.has_prices else MISSING,
+            "Suppliers": suppliers if s.has_sourcing else MISSING,
+            "Shortest lead time (days)": lead_time if s.has_sourcing else MISSING,
             "Risk level": risk.level if risk else "Not scored",
             "Criticality": f"{risk.criticality:.1f}" if risk else "",
             "Price risk": f"{risk.price_risk:.1f}" if risk and risk.price_risk is not None else "",
@@ -513,10 +536,12 @@ def _compare(s: Services) -> None:
             refs += cost.sources
     table = pd.DataFrame(columns).astype(str)
     st.dataframe(table, width="stretch", height=35 * (len(table) + 1) + 3)
-    st.caption(
-        f"By default the four {COMPARE_DEFAULT}: four different gears sharing one name. Volatility, cost, suppliers, "
-        "lead time and risk are team data."
+    default_text = (
+        f"By default the {len(defaults)} {default_name}: {len(defaults)} different products sharing one name. "
+        if defaults
+        else ""
     )
+    st.caption(f"{default_text}Volatility, cost, suppliers, lead time and risk are team data.")
     ui.show_sources(refs)
 
 

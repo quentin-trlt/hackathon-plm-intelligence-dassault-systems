@@ -348,3 +348,34 @@ def test_new_tools_cite_registered_evidence(ctx: ToolContext) -> None:
     ]
     ids = evidence_ids(results)
     assert ids and all(i in ctx.registry for i in ids)
+
+
+def test_tools_answer_on_another_extract_without_enrichment(derived_xml, tmp_path) -> None:
+    from plm.agent.prompts import system_prompt
+    from plm.parser import load
+
+    data = load(derived_xml, tmp_path)
+    other = ToolContext.build(data.plm, data.enrichment, EvidenceRegistry())
+    leaf = next(p for p in data.plm.leaves() if p.material)
+    root = data.plm.root().plm_id
+    calls = {
+        "search_products": {"query": "screw"},
+        "get_product": {"plm_id": leaf.plm_id},
+        "get_children": {"plm_id": root},
+        "get_where_used": {"plm_id": leaf.plm_id},
+        "get_total_quantity": {"plm_id": leaf.plm_id},
+        "get_unit_cost": {"plm_id": leaf.plm_id},
+        "compare_products": {"plm_ids": [p.plm_id for p in data.plm.leaves()[:2]]},
+        "get_sourcing": {"plm_id": leaf.plm_id},
+        "get_supplier_dependencies": {},
+        "aggregate_leaves": {"group_by": "material", "metric": "material_cost_eur"},
+        "get_risk_ranking": {},
+        "get_part_risk": {"plm_id": leaf.plm_id},
+        "get_risk_exposure": {"by": "material"},
+        "assess_change": {"plm_id": leaf.plm_id, "new_mass_kg": leaf.mass_kg * 2},
+    }
+    assert set(calls) == {t.name for t in TOOLS}
+    for name, arguments in calls.items():
+        call(other, name, **arguments)
+    prompt = system_prompt(data.plm, data.enrichment)
+    assert "No material prices were provided" in prompt and "No part sourcing data was provided" in prompt

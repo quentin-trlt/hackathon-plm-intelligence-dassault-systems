@@ -93,6 +93,10 @@ h1, h2, h3, h4 {
     overflow-wrap: anywhere;
 }
 
+.sb-file.is-missing {
+    color: #F5C26B;
+}
+
 .sb-specs {
     display: grid;
     grid-template-columns: 1fr 1fr;

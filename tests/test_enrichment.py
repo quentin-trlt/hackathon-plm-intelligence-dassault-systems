@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from plm.contract import UnknownSupplierError
-from plm.parser import CsvEnrichmentRepository, EnrichmentError
+from plm.parser import ENRICHMENT_FILES, CsvEnrichmentRepository, EnrichmentError, XmlPlmRepository
 
 REPO_ENRICHMENT_DIR = Path(__file__).resolve().parents[1] / "data" / "enrichment"
 
@@ -144,3 +144,20 @@ def test_price_volatility_is_optional_and_validated(plm, tmp_path):
     (tmp_path / "material_prices.csv").write_text(header + f"{BEARING},1.6,note,extreme\n", encoding="utf-8")
     problems = _problems(tmp_path, plm)
     assert len(problems) == 1 and "price_volatility" in problems[0]
+
+
+def test_missing_files_on_an_empty_folder(plm, tmp_path):
+    repo = CsvEnrichmentRepository.from_dir(tmp_path, plm)
+    assert repo.missing_files() == ENRICHMENT_FILES
+    assert not (repo.has_prices or repo.has_suppliers or repo.has_sourcing)
+
+
+def test_reference_files_bring_every_dataset(plm):
+    repo = CsvEnrichmentRepository.from_dir(REPO_ENRICHMENT_DIR, plm)
+    assert repo.missing_files() == ()
+    assert repo.has_prices and repo.has_suppliers and repo.has_sourcing
+
+
+def test_reference_csv_do_not_fit_another_extract(derived_xml):
+    with pytest.raises(EnrichmentError, match="is not in the PLM extract"):
+        CsvEnrichmentRepository.from_dir(REPO_ENRICHMENT_DIR, XmlPlmRepository.from_file(derived_xml))
