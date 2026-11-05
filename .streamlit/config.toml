@@ -7,21 +7,29 @@ toolbarMode = "minimal"
 [theme]
 base = "light"
 primaryColor = "#005386"
-backgroundColor = "#F3F5F7"
-secondaryBackgroundColor = "#E6EBF0"
-textColor = "#1C2733"
+backgroundColor = "#F4F6F8"
+secondaryBackgroundColor = "#E8EDF2"
+textColor = "#172331"
 linkColor = "#005386"
-borderColor = "#C9D2DB"
+borderColor = "#D3DAE2"
 showWidgetBorder = true
-baseRadius = "4px"
-buttonRadius = "4px"
+baseRadius = "6px"
+buttonRadius = "6px"
 baseFontSize = 15
 font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap, sans-serif"
 headingFont = "IBM Plex Sans Condensed:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap, sans-serif"
 codeFont = "IBM Plex Mono:https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap, monospace"
 headingFontWeights = [600, 600, 600, 600, 500, 500]
-headingFontSizes = ["2.1rem", "1.6rem", "1.25rem", "1.05rem", "1rem", "0.9rem"]
-dataframeHeaderBackgroundColor = "#E6EBF0"
+headingFontSizes = ["2rem", "1.45rem", "1.15rem", "1rem", "0.95rem", "0.9rem"]
+dataframeHeaderBackgroundColor = "#EEF2F6"
 dataframeHeaderTextColor = "#3D4B59"
-dataframeBorderColor = "#D5DCE3"
-chartCategoricalColors = ["#005386", "#6941C6", "#2E7D5B", "#B54708", "#5B6B7A", "#0E7490", "#B42318", "#8C6D1F"]
+dataframeBorderColor = "#DCE2E8"
+chartCategoricalColors = ["#005386", "#6941C6", "#2E7D5B", "#B54708", "#5A6878", "#0E7490", "#B42318", "#8C6D1F"]
+
+[theme.sidebar]
+backgroundColor = "#0D2B45"
+secondaryBackgroundColor = "#16395A"
+textColor = "#DCE6F0"
+primaryColor = "#8CC4EC"
+borderColor = "#2A4E70"
+linkColor = "#8CC4EC"

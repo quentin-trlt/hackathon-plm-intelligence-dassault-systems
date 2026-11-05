@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+from html import escape
 from typing import Any
 
 import pandas as pd
@@ -100,6 +101,16 @@ def _on_tree_expanded(expanded_key: str, searching: bool) -> None:
 
 def _set_expanded(key: str, row_ids: set[str]) -> None:
     st.session_state[key] = set(row_ids)
+
+
+def focus(s: Services, plm_id: str) -> None:
+    """Select a product reached from another page and unfold the assemblies down to it, wrappers hidden."""
+    occurrences = s.plm.where_used(plm_id)
+    row_id = "/".join(_node(s, occurrences[0], merge=True)) if occurrences else plm_id
+    key = f"{TREE_EXPANDED}-True"
+    opened = _ancestor_ids(row_id) | ({row_id} if s.plm.children(plm_id) else set())
+    st.session_state[TREE_SELECTED] = row_id
+    st.session_state[key] = st.session_state.get(key, {s.plm.root().plm_id}) | opened
 
 
 def _attributes(s: Services, product: Product) -> pd.DataFrame:
@@ -241,6 +252,11 @@ def _risk(s: Services, product: Product) -> list[SourceRef]:
 
 def _card(s: Services, plm_id: str) -> None:
     product = s.plm.product(plm_id)
+    occurrences = s.plm.where_used(plm_id)
+    if occurrences and not product.is_root:
+        crumbs = [s.plm.product(pid).name for pid in occurrences[0].path[:-1] if not _is_wrapper(s, pid)]
+        more = f" (and {len(occurrences) - 1} other place(s))" if len(occurrences) > 1 else ""
+        st.html(f'<p class="card-crumbs">{escape(" / ".join(crumbs))}{more}</p>')
     st.subheader(product.name, anchor=False)
     with st.container(horizontal=True, gap="small"):
         st.badge(product.item_kind.capitalize(), color=KIND_BADGES.get(product.item_kind, "gray"))

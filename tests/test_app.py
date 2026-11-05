@@ -11,7 +11,7 @@ pytest.importorskip("plotly")
 from streamlit.testing.v1 import AppTest  # noqa: E402
 
 APP = Path(__file__).resolve().parents[1] / "app" / "app.py"
-VIEWS = ["dashboard", "explorer", "impact", "assistant"]
+VIEWS = ["dashboard", "explorer", "risks", "supply", "impact", "assistant"]
 
 
 def _render_view(app_dir: str, view: str) -> None:
@@ -49,8 +49,16 @@ def test_view_renders(plm, view: str) -> None:
 
 def test_dashboard_sections(app: AppTest) -> None:
     subheaders = {h.value for h in app.subheader}
-    assert {"By subassembly", "Risk heat map", "Price exposure", "Material dependency"} <= subheaders
+    assert {"The motor by subassembly", "Needs attention", "Most critical parts"} <= subheaders
     assert any(e.label == "Data quality" for e in app.expander)
+
+
+def test_risk_and_supply_sections(plm) -> None:
+    assert {"Risk heat map", "Price exposure", "Parts used in several places"} <= {
+        h.value for h in _view("risks").subheader
+    }
+    supply = {h.value for h in _view("supply").subheader}
+    assert {"Supplier exposure", "Single-sourced parts", "Material dependency"} <= supply
 
 
 def test_explorer_tabs_and_filters(plm) -> None:

@@ -323,6 +323,14 @@ class RiskService:
         total = sum(c.weight for c in on_axis)
         return sum(c.weight * c.score for c in on_axis) / total if total else 0.0
 
+    @property
+    def config(self) -> RiskConfig:
+        return self._cfg
+
+    def level(self, probability: float, impact: float) -> Level:
+        """Supply risk level of a point of the heat map, as used to classify every part."""
+        return self._level(probability, impact)
+
     def _band(self, x: float) -> int:
         return 0 if x < self._cfg.band_low else (2 if x >= self._cfg.band_high else 1)
 

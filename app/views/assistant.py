@@ -113,8 +113,12 @@ def _queue_example() -> None:
 
 
 def example_pills() -> str | None:
-    """Demo questions as pills; returns the question picked in this run, if any."""
-    st.pills("Try a question", DEMO_QUESTIONS, key="assistant_example", on_change=_queue_example)
+    """Demo questions as pills, folded away once a conversation has started; returns the question picked."""
+    if st.session_state.get("assistant_turns"):
+        with st.expander("Example questions", icon=":material/lightbulb:"):
+            st.pills("Ask one of these", DEMO_QUESTIONS, key="assistant_example", on_change=_queue_example)
+    else:
+        st.pills("Try a question", DEMO_QUESTIONS, key="assistant_example", on_change=_queue_example)
     return st.session_state.pop("assistant_pending", None)
 
 
