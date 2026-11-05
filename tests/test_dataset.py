@@ -38,9 +38,13 @@ def _render_view(app_dir: str, view: str, xml_path: str, enrichment_dir: str) ->
     importlib.import_module(f"views.{view}").render(services)
 
 
-def _view(view: str, xml_path: Path, enrichment_dir: Path) -> AppTest:
+def _view(view: str, xml_path: Path, enrichment_dir: Path, structure_tab: str | None = None) -> AppTest:
+    """The view rendered on the dataset. Product structure only runs its open tab: `structure_tab` picks it."""
     args = (str(APP.parent), view, str(xml_path), str(enrichment_dir))
-    return AppTest.from_function(_render_view, args=args, default_timeout=60).run()
+    at = AppTest.from_function(_render_view, args=args, default_timeout=60)
+    if structure_tab:
+        at.session_state["structure-tab"] = structure_tab
+    return at.run()
 
 
 def _texts(at: AppTest) -> str:
@@ -210,7 +214,7 @@ def _frames(at: AppTest) -> list[str]:
     ],
 )
 def test_reference_views_draw_the_3d_view(plm, view: str, expected: str) -> None:
-    at = _view(view, XML_PATH, ENRICHMENT_DIR)
+    at = _view(view, XML_PATH, ENRICHMENT_DIR, structure_tab="3D view")
     assert not at.exception, [e.value for e in at.exception]
     frames = _frames(at)
     assert frames and any(expected in f for f in frames)
@@ -230,7 +234,7 @@ def test_risk_colours_follow_the_risk_levels(plm) -> None:
 
 @pytest.mark.parametrize("view", ["risks", "impact", "explorer"])
 def test_another_extract_is_drawn_as_markers(derived_xml, derived_enrichment, view: str) -> None:
-    at = _view(view, derived_xml, derived_enrichment())
+    at = _view(view, derived_xml, derived_enrichment(), structure_tab="3D view")
     assert not at.exception, [e.value for e in at.exception]
     frames = _frames(at)
     assert frames and any(DERIVED_PREFIX in f and '"t":"generic"' in f for f in frames)
@@ -250,11 +254,14 @@ def _card_of_side_shaft(app_dir: str) -> None:
     import sys
 
     sys.path.insert(0, app_dir)
+    import streamlit as st
+
     from services import get_services
     from views import explorer
 
     s = get_services()
     explorer.focus(s, next(p for p in s.plm.leaves() if p.name == "ECAR-3D_DifferentialSideShaft").plm_id)
+    st.session_state.setdefault(explorer.CARD_SECTION_KEY, "Show in 3D")
     explorer.render(s)
 
 

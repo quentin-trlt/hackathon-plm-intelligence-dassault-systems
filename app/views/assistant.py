@@ -73,7 +73,7 @@ def _evidence_html(rank: int, evidence) -> str:
     )
 
 
-def render_answer(answer: AgentAnswer, show_tool_calls: bool) -> None:
+def render_answer(answer: AgentAnswer, show_tool_calls: bool, open_sources: bool = False) -> None:
     if answer.replayed_at:
         st.caption(f"Recorded answer, replayed. Recorded {answer.replayed_at} on the same data.")
     st.markdown(numbered_text(answer))
@@ -81,7 +81,7 @@ def render_answer(answer: AgentAnswer, show_tool_calls: bool) -> None:
         st.caption(f"Warning: {warning}")
 
     if answer.evidence:
-        with st.expander(f"Sources ({len(answer.evidence)})"):
+        with st.expander(f"Sources ({len(answer.evidence)})", expanded=open_sources):
             st.html("".join(_evidence_html(rank, ev) for rank, ev in enumerate(answer.evidence, start=1)))
 
     if show_tool_calls and answer.tool_calls:
@@ -133,13 +133,14 @@ def chat(agent: PlmAgent | ReplayingAgent, pending: str | None, show_tool_calls:
     if "assistant_conversation" not in st.session_state:
         new_conversation(agent)
 
-    for question, answer in st.session_state.assistant_turns:
-        with st.chat_message("user"):
-            st.markdown(question)
-        with st.chat_message("assistant"):
-            render_answer(answer, show_tool_calls)
-
     question = st.chat_input("Ask about the motor, in English or French") or pending
+    turns = st.session_state.assistant_turns
+    for index, (asked, answer) in enumerate(turns):
+        with st.chat_message("user"):
+            st.markdown(asked)
+        with st.chat_message("assistant"):
+            render_answer(answer, show_tool_calls, open_sources=not question and index == len(turns) - 1)
+
     if not question:
         return
     with st.chat_message("user"):
@@ -152,7 +153,7 @@ def chat(agent: PlmAgent | ReplayingAgent, pending: str | None, show_tool_calls:
             st.error(f"The model could not answer. {exc}")
             return
         st.session_state.assistant_turns.append((question, answer))
-        render_answer(answer, show_tool_calls)
+        render_answer(answer, show_tool_calls, open_sources=True)
 
 
 def render(s: Services) -> None:

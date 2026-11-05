@@ -14,7 +14,7 @@ from plm.parser import MATERIAL_PRICES_FILE
 from services import Services, leaf_frame
 
 NOT_SCORED_COLOR = "#9AA5B1"
-ZONE_TINTS = {"high": "rgba(180, 35, 24, 0.16)", "medium": "rgba(224, 138, 46, 0.18)", "low": "rgba(46, 125, 91, 0.11)"}
+ZONE_TINTS = {"high": "rgba(180, 35, 24, 0.16)", "medium": "rgba(194, 112, 10, 0.16)", "low": "rgba(46, 125, 91, 0.11)"}
 
 
 def _figures(s: Services, ranking: list[PartRisk], price: list[PartRisk]) -> None:
@@ -80,7 +80,13 @@ def _heat_map(s: Services, ranking: list[PartRisk]) -> None:
             y=[r.probability for r in group],
             mode="markers",
             name=level.capitalize(),
-            marker=dict(size=13, color=ui.RISK_COLORS[level], line=dict(width=1.5, color="white"), opacity=0.92),
+            marker=dict(
+                size=13,
+                symbol=ui.RISK_SYMBOLS[level],
+                color=ui.RISK_COLORS[level],
+                line=dict(width=1.5, color="white"),
+                opacity=0.92,
+            ),
             customdata=[(r.name, r.criticality) for r in group],
             hovertemplate="<b>%{customdata[0]}</b><br>Impact %{x:.2f}, probability %{y:.2f}"
             "<br>Criticality %{customdata[1]:.1f}/100<extra></extra>",

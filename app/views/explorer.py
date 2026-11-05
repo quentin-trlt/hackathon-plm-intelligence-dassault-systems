@@ -26,6 +26,10 @@ KIND_BADGES = {"assembly": "blue", "part": "gray", "wrapper": "violet"}
 COMPARE_DEFAULT = "ECAR-EI_GEAR_WHEEL"
 MISSING = "Missing data"
 HIGHLIGHT_COLOR = "#E0562B"
+CARD_SECTIONS = ("PLM attributes", "Children and where-used", "Cost and sourcing", "Risk", "Show in 3D")
+CARD_SECTION_KEY = "card-section"
+PAGE_TABS = ("Structure", "3D view", "Versions and lifecycle", "Compare")
+PAGE_TAB_KEY = "structure-tab"
 
 
 def _is_wrapper(s: Services, plm_id: str) -> bool:
@@ -116,6 +120,7 @@ def focus(s: Services, plm_id: str) -> None:
     opened = _ancestor_ids(row_id) | ({row_id} if s.plm.children(plm_id) else set())
     st.session_state[TREE_SELECTED] = row_id
     st.session_state[key] = st.session_state.get(key, {s.plm.root().plm_id}) | opened
+    st.session_state[PAGE_TAB_KEY] = PAGE_TABS[0]
 
 
 def _attributes(s: Services, product: Product) -> pd.DataFrame:
@@ -192,7 +197,7 @@ def _sourcing(s: Services, product: Product) -> list[SourceRef]:
         volatility = f"Volatility {price.price_volatility}." if price.price_volatility else ""
         items.append(ui.Figure("Material price", f"{price.price_eur_per_kg:.2f} EUR/kg", volatility, team_data=True))
         refs.append(price.source)
-    ui.figures(items)
+    ui.figures(items, legend=False)
 
     leaves = leaves_below(s, product.plm_id)
     if len(leaves) != 1:
@@ -233,7 +238,8 @@ def _risk(s: Services, product: Product) -> list[SourceRef]:
                     "Exposure to material price moves, out of 100.",
                     team_data=True,
                 ),
-            ]
+            ],
+            legend=False,
         )
         st.dataframe(
             criteria_frame(risk.criteria),
@@ -291,19 +297,24 @@ def _card(s: Services, plm_id: str) -> None:
         ]
     )
 
-    t_attr, t_struct, t_source, t_risk, t_3d = st.tabs(
-        ["PLM attributes", "Structure", "Cost and sourcing", "Risk", "3D"]
+    section = st.segmented_control(
+        "Card section",
+        CARD_SECTIONS,
+        default=CARD_SECTIONS[0],
+        required=True,
+        key=CARD_SECTION_KEY,
+        label_visibility="collapsed",
     )
     refs: list[SourceRef] = [product.source]
-    with t_attr:
+    if section == "PLM attributes":
         st.dataframe(_attributes(s, product), hide_index=True, width="stretch")
-    with t_struct:
+    elif section == "Children and where-used":
         refs += _structure(s, product)
-    with t_source:
+    elif section == "Cost and sourcing":
         refs += _sourcing(s, product)
-    with t_risk:
+    elif section == "Risk":
         refs += _risk(s, product)
-    with t_3d:
+    else:
         _in_3d(s, product)
     ui.show_sources(refs)
 
@@ -451,14 +462,25 @@ def _versions(s: Services) -> None:
         ]
     )
     iterated = frame[frame["Revision index"] >= 3].sort_values(["Revision index", "Kind"], ascending=[False, True])
+    single_revision = len(families) == len(products)
+    iterated_revisions = ", ".join(sorted(iterated["Rev"].unique()))
     consistency = _consistency(s)
     consistent = int(consistency["Consistent"].sum())
 
     ui.figures(
         [
-            ui.Figure("Revision families", str(len(families)), f"For {len(products)} products, one revision each."),
+            ui.Figure(
+                "Revision families",
+                str(len(families)),
+                f"For {len(products)} products, "
+                + ("one revision each." if single_revision else "some of them in several revisions."),
+            ),
             ui.Figure("Maturity states", ", ".join(maturities), "Every product of the extract."),
-            ui.Figure("Iterated designs", str(len(iterated)), "Products at revision C or later."),
+            ui.Figure(
+                "Iterated designs",
+                str(len(iterated)),
+                "Products at revision index 3 or more" + (f" ({iterated_revisions})." if iterated_revisions else "."),
+            ),
             ui.Figure(
                 "Consistent leaf parts",
                 f"{consistent} / {len(consistency)}",
@@ -467,10 +489,16 @@ def _versions(s: Services) -> None:
             ),
         ]
     )
-    ui.insight(
-        "The extract holds a single revision per product and no lifecycle history: this view compares the "
-        "current revisions and states across products, not versions over time."
-    )
+    if single_revision:
+        ui.insight(
+            "The extract holds a single revision per product and no lifecycle history: this view compares the "
+            "current revisions and states across products, not versions over time."
+        )
+    else:
+        ui.insight(
+            f"The extract holds {len(products)} products in {len(families)} revision families: some designs appear "
+            "in several revisions, and the tables below count each revision present."
+        )
 
     left, right = st.columns(2, gap="large")
     with left:
@@ -574,13 +602,17 @@ def render(s: Services) -> None:
         "Product structure",
         "The expanded product structure from the OEM extract. Select a row to open its card.",
     )
-    browse, view_3d, versions, compare = st.tabs(["Structure", "3D view", "Versions and lifecycle", "Compare"])
-    with browse:
-        _browse(s)
-    with view_3d:
-        viewer.show(s, full=True)
-        viewer.consistency_checks(s)
-    with versions:
-        _versions(s)
-    with compare:
-        _compare(s)
+    browse, view_3d, versions, compare = st.tabs(PAGE_TABS, key=PAGE_TAB_KEY, on_change="rerun")
+    if browse.open:
+        with browse:
+            _browse(s)
+    if view_3d.open:
+        with view_3d:
+            viewer.show(s, full=True)
+            viewer.consistency_checks(s)
+    if versions.open:
+        with versions:
+            _versions(s)
+    if compare.open:
+        with compare:
+            _compare(s)

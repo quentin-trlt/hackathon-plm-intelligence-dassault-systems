@@ -25,8 +25,15 @@ TEAM_VIOLET = "#6941C6"
 INK = "#172331"
 MUTED = "#5A6878"
 RULE = "#D3DAE2"
-RISK_COLORS = {"high": "#B42318", "medium": "#B54708", "low": "#2E7D5B"}
+RISK_COLORS = {"high": "#B42318", "medium": "#C2700A", "low": "#2E7D5B"}
+RISK_INKS = {"high": "#B42318", "medium": "#9A5806", "low": "#276B4E"}
 RISK_TINTS = {"high": "#FDECEA", "medium": "#FEF3E2", "low": "#E8F4EE"}
+RISK_SYMBOLS = {"high": "diamond", "medium": "square", "low": "circle"}
+PROVENANCE_KEY = (
+    '<div class="plm-key" aria-label="Provenance key">'
+    '<span><i class="plm-swatch is-plm"></i>OEM extract</span>'
+    '<span><i class="plm-swatch is-team"></i>Team data, not in the extract</span></div>'
+)
 RISK_BADGES = {"high": "red", "medium": "orange", "low": "green"}
 
 
@@ -44,6 +51,7 @@ class Figure:
     note: str = ""
     team_data: bool = False
     alert: bool = False
+    missing: bool = False
     delta: str = ""
     delta_worse: bool | None = None
     bar: tuple[Segment, ...] = field(default=())
@@ -86,7 +94,7 @@ def missing_data(what: str, file: str) -> None:
 
 
 def missing_figure(label: str, file: str) -> Figure:
-    return Figure(label, "Missing data", f"Needs {file}.", team_data=True)
+    return Figure(label, "Missing data", f"Needs {file}.", missing=True)
 
 
 def risk_basis(s: Services) -> None:
@@ -121,22 +129,30 @@ def microbar(segments: Sequence[Segment], label: str = "") -> str:
     return f'<div class="plm-microbar"{aria}>{"".join(spans)}</div>'
 
 
-def figures(items: Sequence[Figure]) -> None:
+def figures(items: Sequence[Figure], legend: bool = True) -> None:
+    """A row of figure cards. Team figures are hatched and tagged; the provenance key heads a row that has any."""
     cells = []
     for item in items:
-        classes = ["plm-figure", "is-team" if item.team_data else "", "is-high" if item.alert else ""]
+        classes = [
+            "plm-figure",
+            "is-team" if item.team_data else "",
+            "is-missing" if item.missing else "",
+            "is-high" if item.alert and not item.missing else "",
+        ]
         delta = ""
         if item.delta:
             tone = {True: "is-worse", False: "is-better", None: ""}[item.delta_worse]
             delta = f'<div class="plm-figure-delta {tone}">{escape(item.delta)}</div>'
         bar = microbar(item.bar, ", ".join(seg.label for seg in item.bar if seg.label)) if item.bar else ""
         note = f'<div class="plm-figure-note">{escape(item.note)}</div>' if item.note else ""
+        tag = '<span class="plm-tag">Team data</span>' if item.team_data else ""
         cells.append(
             f'<div class="{" ".join(c for c in classes if c)}">'
-            f'<div class="plm-figure-label">{escape(item.label)}</div>'
+            f'<div class="plm-figure-label">{escape(item.label)}{tag}</div>'
             f'<div class="plm-figure-value">{escape(item.value)}</div>{delta}{bar}{note}</div>'
         )
-    st.html(f'<div class="plm-figures">{"".join(cells)}</div>')
+    key = PROVENANCE_KEY if legend and any(i.team_data for i in items) else ""
+    st.html(f'{key}<div class="plm-figures">{"".join(cells)}</div>')
 
 
 def insight(text: str) -> None:
@@ -205,7 +221,7 @@ def risk_badge(level: str, criticality: float | None = None) -> None:
 def level_style(value: object) -> str:
     if value not in RISK_COLORS:
         return ""
-    return f"color: {RISK_COLORS[value]}; background-color: {RISK_TINTS[value]}; font-weight: 600"
+    return f"color: {RISK_INKS[value]}; background-color: {RISK_TINTS[value]}; font-weight: 600"
 
 
 def part_filters(parts: pd.DataFrame) -> pd.DataFrame:
