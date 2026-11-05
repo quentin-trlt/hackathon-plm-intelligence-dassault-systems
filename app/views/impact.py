@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from html import escape
+
 import pandas as pd
 import streamlit as st
 
@@ -101,8 +103,39 @@ def _figures(s: Services, result: ChangeImpact) -> None:
     ui.figures(items)
 
 
+def _mass_change(before: float, after: float) -> str:
+    delta = after - before
+    if not delta:
+        return f"<b>{before:.3f} kg</b>, unchanged"
+    tone = "is-worse" if delta > 0 else "is-better"
+    return f'{before:.3f} &rarr; <b>{after:.3f} kg</b> <span class="{tone}">{delta:+.3f}</span>'
+
+
+def _propagation(result: ChangeImpact) -> None:
+    """The change climbing the structure: the component first, then every assembly above it, root last."""
+    st.subheader("How the change propagates", anchor=False)
+    target = result.target
+    unit = "unit" if result.quantity_in_root == 1 else "units"
+    steps = [
+        '<li class="is-source"><span class="prop-node" aria-hidden="true"></span>'
+        f'<div><div class="prop-name">{escape(target.name)}</div>'
+        f'<div class="prop-meta">Changed component, {result.quantity_in_root} {unit} in the motor</div></div>'
+        f'<div class="prop-mass">{_mass_change(result.current_unit_mass_kg, result.proposed_unit_mass_kg)}</div></li>'
+    ]
+    for a in sorted(result.impacted, key=lambda a: -a.depth):
+        held = "unit" if a.units == 1 else "units"
+        steps.append(
+            f'<li><span class="prop-node" aria-hidden="true">{a.depth}</span>'
+            f'<div><div class="prop-name">{escape(a.name)}</div>'
+            f'<div class="prop-meta">Level {a.depth}, {a.item_kind}, holds {a.units} {held} of the component</div></div>'
+            f'<div class="prop-mass">{_mass_change(a.declared_mass_kg, a.projected_mass_kg)}</div></li>'
+        )
+    st.html(
+        f'<ol class="prop" aria-label="Assemblies affected, from the component up to the root">{"".join(steps)}</ol>'
+    )
+
+
 def _impacted(result: ChangeImpact) -> None:
-    st.subheader("Impacted assemblies", anchor=False)
     frame = pd.DataFrame(
         [
             {
@@ -121,18 +154,19 @@ def _impacted(result: ChangeImpact) -> None:
     )
     money = st.column_config.NumberColumn(format="%.2f")
     mass = st.column_config.NumberColumn(format="%.3f")
-    st.dataframe(
-        frame,
-        hide_index=True,
-        width="stretch",
-        column_config={
-            "Declared mass (kg)": mass,
-            "Projected mass (kg)": mass,
-            "Material cost (EUR)": money,
-            "Projected cost (EUR)": money,
-        },
-    )
-    st.caption("Projected cost per assembly: current material cost plus the unit cost change x units. Team prices.")
+    with st.expander(f"Impacted assemblies in detail ({len(frame)})", icon=":material/table_rows:"):
+        st.dataframe(
+            frame,
+            hide_index=True,
+            width="stretch",
+            column_config={
+                "Declared mass (kg)": mass,
+                "Projected mass (kg)": mass,
+                "Material cost (EUR)": money,
+                "Projected cost (EUR)": money,
+            },
+        )
+        st.caption("Projected cost per assembly: current material cost plus the unit cost change x units. Team prices.")
 
 
 def _side(title: str, material: str | None, volatility: str | None) -> None:
@@ -152,8 +186,9 @@ def _suppliers(s: Services, plm_id: str) -> None:
     if frame.empty:
         st.info("No supplier is recorded in data/enrichment/part_sourcing.csv.")
         return
+    redundant = ["Part"] if frame["Part"].nunique() == 1 else []
     st.dataframe(
-        frame.drop(columns=["Source note", "CSV line"]),
+        frame.drop(columns=["Source note", "CSV line", *redundant]),
         hide_index=True,
         width="stretch",
         column_config={"Single source": st.column_config.CheckboxColumn()},
@@ -199,17 +234,11 @@ def render(s: Services) -> None:
 
     with result_col:
         _figures(s, result)
-        ui.key()
         st.caption(
             "Costs are material costs only (mass x price per kg). The data holds no purchase price, tooling, "
             "requalification or validation cost: the real cost of a change is higher."
         )
-
-        st.subheader("Where the component sits", anchor=False)
-        ui.paths(
-            ([s.plm.product(pid).name for pid in occ.path], occ.cumulative_quantity)
-            for occ in s.plm.where_used(result.target.plm_id)
-        )
+        _propagation(result)
         _impacted(result)
         _before_after(s, result)
         ui.show_sources(result.sources)

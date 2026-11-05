@@ -1,4 +1,4 @@
-"""Presentation helpers shared by the views: title block, figure strip, provenance chips, where-used paths.
+"""Presentation helpers shared by the views: product sheet, figures, provenance chips, paths, filters, charts.
 
 Data from the OEM extract is drawn plain; data written by the team in data/enrichment/ is hatched.
 """
@@ -6,10 +6,11 @@ Data from the OEM extract is drawn plain; data written by the team in data/enric
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from html import escape
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 
 from plm.agent.evidence import describe
@@ -20,11 +21,19 @@ STYLE = (Path(__file__).parent / "style.css").read_text(encoding="utf-8")
 
 PLM_BLUE = "#005386"
 TEAM_VIOLET = "#6941C6"
-INK = "#1C2733"
-MUTED = "#5B6B7A"
-RULE = "#C9D2DB"
+INK = "#172331"
+MUTED = "#5A6878"
+RULE = "#D3DAE2"
 RISK_COLORS = {"high": "#B42318", "medium": "#B54708", "low": "#2E7D5B"}
+RISK_TINTS = {"high": "#FDECEA", "medium": "#FEF3E2", "low": "#E8F4EE"}
 RISK_BADGES = {"high": "red", "medium": "orange", "low": "green"}
+
+
+@dataclass(frozen=True)
+class Segment:
+    share: float
+    tone: str  # plm, team, high, medium, low, muted
+    label: str = ""
 
 
 @dataclass(frozen=True)
@@ -36,33 +45,47 @@ class Figure:
     alert: bool = False
     delta: str = ""
     delta_worse: bool | None = None
+    bar: tuple[Segment, ...] = field(default=())
 
 
 def inject_style() -> None:
     st.html(f"<style>{STYLE}</style>")
 
 
-def title_block(s: Services) -> None:
+def product_sheet(s: Services) -> None:
+    """The root assembly and the provenance key, pinned in the sidebar on every page."""
     root = s.plm.root()
-    cells = [
-        ("tb-product", "Product", root.name, ""),
-        ("", "PLM ID", root.plm_id, "tb-mono"),
-        ("", "Revision", root.revision, ""),
-        ("", "Maturity", root.maturity, ""),
-        ("", "Declared mass", f"{root.mass_kg} kg", ""),
-        ("", f"OEM extract, {len(s.plm.products())} products", XML_PATH.name, "tb-mono"),
+    specs = [
+        ("Revision", root.revision),
+        ("Maturity", root.maturity),
+        ("Declared mass", f"{root.mass_kg} kg"),
+        ("Products", str(len(s.plm.products()))),
     ]
-    body = "".join(
-        f'<div class="{cls}"><span class="tb-label">{label}</span>'
-        f'<span class="tb-value {value_cls}">{escape(str(value))}</span></div>'
-        for cls, label, value, value_cls in cells
+    rows = "".join(f"<div><dt>{label}</dt><dd>{escape(value)}</dd></div>" for label, value in specs)
+    st.html(
+        '<section class="sb-sheet" aria-label="Root assembly">'
+        f'<p class="sb-caption">Root assembly</p><p class="sb-name">{escape(root.name)}</p>'
+        f'<p class="sb-id">{escape(root.plm_id)}</p><dl class="sb-specs">{rows}</dl>'
+        f'<p class="sb-file">Source: {escape(XML_PATH.name)}</p></section>'
+        '<div class="sb-key">'
+        '<span><i class="plm-swatch is-plm"></i>OEM extract</span>'
+        '<span><i class="plm-swatch is-team"></i>Team data, not in the extract</span>'
+        "</div>"
     )
-    st.html(f'<div class="plm-titleblock" role="group" aria-label="Root assembly">{body}</div>')
 
 
 def page_header(title: str, lede: str) -> None:
     st.header(title, anchor=False)
     st.html(f'<p class="plm-lede">{escape(lede)}</p>')
+
+
+def microbar(segments: Sequence[Segment], label: str = "") -> str:
+    spans = []
+    for seg in segments:
+        title = f' title="{escape(seg.label)}"' if seg.label else ""
+        spans.append(f'<span class="mb-{seg.tone}" style="width:{max(seg.share, 0) * 100:.2f}%"{title}></span>')
+    aria = f' role="img" aria-label="{escape(label)}"' if label else ' aria-hidden="true"'
+    return f'<div class="plm-microbar"{aria}>{"".join(spans)}</div>'
 
 
 def figures(items: Sequence[Figure]) -> None:
@@ -73,22 +96,14 @@ def figures(items: Sequence[Figure]) -> None:
         if item.delta:
             tone = {True: "is-worse", False: "is-better", None: ""}[item.delta_worse]
             delta = f'<div class="plm-figure-delta {tone}">{escape(item.delta)}</div>'
+        bar = microbar(item.bar, ", ".join(seg.label for seg in item.bar if seg.label)) if item.bar else ""
         note = f'<div class="plm-figure-note">{escape(item.note)}</div>' if item.note else ""
         cells.append(
             f'<div class="{" ".join(c for c in classes if c)}">'
             f'<div class="plm-figure-label">{escape(item.label)}</div>'
-            f'<div class="plm-figure-value">{escape(item.value)}</div>{delta}{note}</div>'
+            f'<div class="plm-figure-value">{escape(item.value)}</div>{delta}{bar}{note}</div>'
         )
     st.html(f'<div class="plm-figures">{"".join(cells)}</div>')
-
-
-def key() -> None:
-    st.html(
-        '<div class="plm-key">'
-        '<span><i class="plm-swatch is-plm"></i>From the OEM extract</span>'
-        '<span><i class="plm-swatch is-team"></i>Team data from data/enrichment/, not in the extract</span>'
-        "</div>"
-    )
 
 
 def insight(text: str) -> None:
@@ -130,7 +145,7 @@ def show_sources(refs: Iterable[SourceRef], title: str = "Where these figures co
     unique = list(dict.fromkeys(refs))
     if not unique:
         return
-    with st.expander(f"{title} ({len(unique)})"):
+    with st.expander(f"{title} ({len(unique)})", icon=":material/link:"):
         source_chips(unique)
 
 
@@ -154,6 +169,36 @@ def risk_badge(level: str, criticality: float | None = None) -> None:
     st.badge(text, color=RISK_BADGES.get(level, "gray"))
 
 
+def level_style(value: object) -> str:
+    if value not in RISK_COLORS:
+        return ""
+    return f"color: {RISK_COLORS[value]}; background-color: {RISK_TINTS[value]}; font-weight: 600"
+
+
+def part_filters(parts: pd.DataFrame) -> pd.DataFrame:
+    """Material and maturity filters in a popover. Shared keys, so the choice follows the user across pages."""
+    with st.popover("Filter parts", icon=":material/filter_list:"):
+        materials = st.multiselect(
+            "Material", sorted(parts["Material"].unique()), placeholder="All materials", key="filter-materials"
+        )
+        maturities = st.multiselect(
+            "Maturity", sorted(parts["Maturity"].unique()), placeholder="All states", key="filter-maturities"
+        )
+    if materials:
+        parts = parts[parts["Material"].isin(materials)]
+    if maturities:
+        parts = parts[parts["Maturity"].isin(maturities)]
+    return parts
+
+
+def header_with_filters(title: str, lede: str, parts: pd.DataFrame) -> pd.DataFrame:
+    head, action = st.columns([5, 1], vertical_alignment="bottom")
+    with head:
+        page_header(title, lede)
+    with action:
+        return part_filters(parts)
+
+
 def plotly_layout(fig, height: int) -> None:
     fig.update_layout(
         height=height,
@@ -162,5 +207,5 @@ def plotly_layout(fig, height: int) -> None:
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="IBM Plex Sans, sans-serif", color=INK, size=13),
         legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0, title=None),
-        hoverlabel=dict(font_family="IBM Plex Sans, sans-serif"),
+        hoverlabel=dict(font_family="IBM Plex Sans, sans-serif", bgcolor="white", bordercolor=RULE),
     )
