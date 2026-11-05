@@ -65,8 +65,8 @@ def product_sheet(s: Services) -> None:
     ]
     rows = "".join(f"<div><dt>{label}</dt><dd>{escape(value)}</dd></div>" for label, value in specs)
     origin = "reference extract" if s.dataset.reference else "uploaded"
-    missing = list(s.enrichment.missing_files()) + ([] if s.viewer else ["3D view"])
-    team = f"Not provided: {', '.join(missing)}" if missing else "Prices, suppliers, sourcing and 3D view provided"
+    missing = list(s.enrichment.missing_files())
+    team = f"Not provided: {', '.join(missing)}" if missing else "Prices, suppliers and sourcing provided"
     st.html(
         '<section class="sb-sheet" aria-label="Root assembly">'
         f'<p class="sb-caption">Root assembly</p><p class="sb-name">{escape(root.name)}</p>'

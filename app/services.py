@@ -17,12 +17,21 @@ from plm.analysis.cost import MaterialCostService
 from plm.analysis.impact import ChangeImpactService
 from plm.analysis.risk import Criterion, PartRisk, RiskService
 from plm.model import Product
-from plm.parser import VIEWER_FILE, CsvEnrichmentRepository, PlmData, ViewerData, XmlPlmRepository, load, load_viewer
+from plm.parser import (
+    PROFILES_FILE,
+    CsvEnrichmentRepository,
+    PlmData,
+    ViewerData,
+    ViewerError,
+    XmlPlmRepository,
+    build_view,
+    load,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 XML_PATH = REPO_ROOT / "data" / "raw" / "XPDMXML_ECAR_PLM.xml"
 ENRICHMENT_DIR = REPO_ROOT / "data" / "enrichment"
-VIEWER_PATH = REPO_ROOT / "data" / "raw" / VIEWER_FILE
+PROFILES_PATH = REPO_ROOT / "data" / "raw" / PROFILES_FILE
 NON_PLM = "non-PLM source"
 DATASET_KEY = "dataset"
 MAX_CACHED_DATASETS = 8
@@ -33,14 +42,13 @@ class Dataset:
     xml_path: Path
     enrichment_dir: Path
     reference: bool = False
-    viewer_path: Path | None = None
 
     @property
     def name(self) -> str:
         return self.xml_path.name
 
 
-REFERENCE = Dataset(XML_PATH, ENRICHMENT_DIR, reference=True, viewer_path=VIEWER_PATH)
+REFERENCE = Dataset(XML_PATH, ENRICHMENT_DIR, reference=True)
 
 
 @dataclass(frozen=True)
@@ -51,6 +59,7 @@ class Services:
     risk: RiskService
     impact: ChangeImpactService
     viewer: ViewerData | None = None
+    viewer_problem: str | None = None
 
     @property
     def plm(self) -> XmlPlmRepository:
@@ -74,23 +83,23 @@ def active_dataset() -> Dataset:
 
 
 @st.cache_resource(max_entries=MAX_CACHED_DATASETS, show_spinner="Loading the PLM data...")
-def _build(xml_path: str, enrichment_dir: str, reference: bool, viewer_path: str) -> Services:
-    dataset = Dataset(Path(xml_path), Path(enrichment_dir), reference, Path(viewer_path) if viewer_path else None)
+def _build(xml_path: str, enrichment_dir: str, reference: bool) -> Services:
+    dataset = Dataset(Path(xml_path), Path(enrichment_dir), reference)
     data = load(dataset.xml_path, dataset.enrichment_dir)
     cost = MaterialCostService(data.plm, data.enrichment)
     risk = RiskService(data.plm, data.enrichment, cost)
     impact = ChangeImpactService(data.plm, data.enrichment, cost, risk)
-    viewer = (
-        load_viewer(dataset.viewer_path, data.plm)
-        if dataset.viewer_path is not None and dataset.viewer_path.is_file()
-        else None
+    try:
+        viewer, problem = build_view(data.plm, PROFILES_PATH), None
+    except ViewerError as exc:
+        viewer, problem = None, "; ".join(exc.problems)
+    return Services(
+        dataset=dataset, data=data, cost=cost, risk=risk, impact=impact, viewer=viewer, viewer_problem=problem
     )
-    return Services(dataset=dataset, data=data, cost=cost, risk=risk, impact=impact, viewer=viewer)
 
 
 def build_services(dataset: Dataset) -> Services:
-    viewer = str(dataset.viewer_path) if dataset.viewer_path else ""
-    return _build(str(dataset.xml_path), str(dataset.enrichment_dir), dataset.reference, viewer)
+    return _build(str(dataset.xml_path), str(dataset.enrichment_dir), dataset.reference)
 
 
 def get_services() -> Services:

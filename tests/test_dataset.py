@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 from conftest import DERIVED_ID_PREFIX as DERIVED_PREFIX
-from conftest import ENRICHMENT_DIR, VIEWER_PATH, XML_PATH
+from conftest import ENRICHMENT_DIR, XML_PATH
 
 from plm.parser import MATERIAL_PRICES_FILE, PART_SOURCING_FILE, SUPPLIERS_FILE
 
@@ -24,7 +24,7 @@ import dataset  # noqa: E402
 from services import Dataset, build_services  # noqa: E402
 
 
-def _render_view(app_dir: str, view: str, xml_path: str, enrichment_dir: str, viewer_path: str = "") -> None:
+def _render_view(app_dir: str, view: str, xml_path: str, enrichment_dir: str) -> None:
     import importlib
     import sys
     from pathlib import Path
@@ -34,13 +34,12 @@ def _render_view(app_dir: str, view: str, xml_path: str, enrichment_dir: str, vi
     from services import Dataset, build_services
 
     ui.inject_style()
-    viewer = Path(viewer_path) if viewer_path else None
-    services = build_services(Dataset(Path(xml_path), Path(enrichment_dir), viewer_path=viewer))
+    services = build_services(Dataset(Path(xml_path), Path(enrichment_dir)))
     importlib.import_module(f"views.{view}").render(services)
 
 
-def _view(view: str, xml_path: Path, enrichment_dir: Path, viewer_path: Path | None = None) -> AppTest:
-    args = (str(APP.parent), view, str(xml_path), str(enrichment_dir), str(viewer_path or ""))
+def _view(view: str, xml_path: Path, enrichment_dir: Path) -> AppTest:
+    args = (str(APP.parent), view, str(xml_path), str(enrichment_dir))
     return AppTest.from_function(_render_view, args=args, default_timeout=60).run()
 
 
@@ -211,7 +210,7 @@ def _frames(at: AppTest) -> list[str]:
     ],
 )
 def test_reference_views_draw_the_3d_view(plm, view: str, expected: str) -> None:
-    at = _view(view, XML_PATH, ENRICHMENT_DIR, VIEWER_PATH)
+    at = _view(view, XML_PATH, ENRICHMENT_DIR)
     assert not at.exception, [e.value for e in at.exception]
     frames = _frames(at)
     assert frames and any(expected in f for f in frames)
@@ -223,41 +222,28 @@ def test_reference_views_draw_the_3d_view(plm, view: str, expected: str) -> None
 def test_risk_colours_follow_the_risk_levels(plm) -> None:
     import ui
 
-    frame = next(f for f in _frames(_view("risks", XML_PATH, ENRICHMENT_DIR, VIEWER_PATH)) if '"Risk"' in f)
-    services = build_services(Dataset(XML_PATH, ENRICHMENT_DIR, viewer_path=VIEWER_PATH))
+    frame = next(f for f in _frames(_view("risks", XML_PATH, ENRICHMENT_DIR)) if '"Risk"' in f)
+    services = build_services(Dataset(XML_PATH, ENRICHMENT_DIR))
     top = services.risk.ranking()[0]
     assert f'"{top.plm_id}":"{ui.RISK_COLORS[top.level]}"' in frame
 
 
 @pytest.mark.parametrize("view", ["risks", "impact", "explorer"])
-def test_missing_3d_view_is_stated(derived_xml, derived_enrichment, view: str) -> None:
+def test_another_extract_is_drawn_as_markers(derived_xml, derived_enrichment, view: str) -> None:
     at = _view(view, derived_xml, derived_enrichment())
-    assert not _frames(at)
-    assert "needs viewer_3d.html" in _texts(at)
-
-
-def test_uploaded_3d_view_is_drawn(derived_xml, derived_enrichment, derived_viewer) -> None:
-    at = _view("impact", derived_xml, derived_enrichment(), derived_viewer)
     assert not at.exception, [e.value for e in at.exception]
-    assert any(DERIVED_PREFIX in f for f in _frames(at))
+    frames = _frames(at)
+    assert frames and any(DERIVED_PREFIX in f and '"t":"generic"' in f for f in frames)
+    assert any("36 part(s) without a profile are shown as markers" in c.value for c in at.caption)
 
 
-def test_upload_with_its_3d_view_is_accepted(derived_xml, derived_viewer) -> None:
-    staged = dataset.stage(derived_xml.name, derived_xml.read_bytes(), {}, derived_viewer.read_bytes())
+def test_uploaded_extract_gets_its_3d_view_from_the_xml(derived_xml) -> None:
+    staged = dataset.stage(derived_xml.name, derived_xml.read_bytes(), {})
     try:
-        assert dataset.validate(staged) == []
+        assert sorted(p.name for p in staged.xml_path.parent.iterdir()) == sorted(["enrichment", derived_xml.name])
         assert build_services(staged).viewer is not None
     finally:
         dataset.discard(staged)
-
-
-def test_upload_with_the_reference_3d_view_is_refused(derived_xml) -> None:
-    staged = dataset.stage(derived_xml.name, derived_xml.read_bytes(), {}, VIEWER_PATH.read_bytes())
-    try:
-        problems = dataset.validate(staged)
-    finally:
-        dataset.discard(staged)
-    assert len(problems) == 1 and "built from another extract" in problems[0]
 
 
 def _card_of_side_shaft(app_dir: str) -> None:

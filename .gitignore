@@ -31,3 +31,6 @@ dist/
 *.xml
 !docs/**/*.xml
 !data/raw/*.xml
+
+# Dossier de travail du viewer 3D : contient des données dérivées du partenaire
+ecar-viewer/

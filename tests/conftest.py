@@ -11,7 +11,6 @@ from plm.parser import PlmData, XmlPlmRepository, load
 REPO_ROOT = Path(__file__).resolve().parents[1]
 XML_PATH = REPO_ROOT / "data" / "raw" / "XPDMXML_ECAR_PLM.xml"
 ENRICHMENT_DIR = REPO_ROOT / "data" / "enrichment"
-VIEWER_PATH = REPO_ROOT / "data" / "raw" / "viewer_3d.html"
 DERIVED_ID_PREFIX = "prd-99000001-"
 
 
@@ -62,13 +61,3 @@ def by_name(plm: XmlPlmRepository) -> Callable[[str], list[Product]]:
         return [p for p in plm.products() if p.name == name]
 
     return find
-
-
-@pytest.fixture(scope="session")
-def derived_viewer(derived_xml: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """The reference 3D view with the plm_ids of the derived extract."""
-    if not VIEWER_PATH.is_file():
-        pytest.skip(f"3D view not found at {VIEWER_PATH}")
-    path = tmp_path_factory.mktemp("viewer") / "viewer_3d.html"
-    path.write_text(derive(VIEWER_PATH.read_text(encoding="utf-8")), encoding="utf-8")
-    return path

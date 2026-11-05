@@ -8,7 +8,7 @@ from plm.parser.enrichment import (
     EnrichmentError,
 )
 from plm.parser.loader import DEFAULT_ENRICHMENT_DIR, DEFAULT_XML_PATH, PlmData, load
-from plm.parser.viewer import VIEWER_FILE, ViewerData, ViewerError, load_viewer
+from plm.parser.viewer import PROFILES_FILE, ViewerData, ViewerError, build_view
 from plm.parser.xml_reader import PlmParseError, PlmValidationError, XmlPlmRepository, normalize_name
 
 __all__ = [
@@ -17,8 +17,8 @@ __all__ = [
     "ENRICHMENT_FILES",
     "MATERIAL_PRICES_FILE",
     "PART_SOURCING_FILE",
+    "PROFILES_FILE",
     "SUPPLIERS_FILE",
-    "VIEWER_FILE",
     "CoverageReport",
     "CsvEnrichmentRepository",
     "EnrichmentError",
@@ -28,7 +28,7 @@ __all__ = [
     "ViewerData",
     "ViewerError",
     "XmlPlmRepository",
+    "build_view",
     "load",
-    "load_viewer",
     "normalize_name",
 ]
