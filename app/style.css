@@ -39,11 +39,82 @@ h1, h2, h3, h4 {
     letter-spacing: -0.005em;
 }
 
-/* Sidebar shell */
+/* Sidebar shell & header */
+
+[data-testid="stSidebar"] {
+    background-color: #0D2B45 !important;
+}
 
 [data-testid="stSidebarHeader"] {
-    padding-top: 1.25rem;
-    padding-bottom: 0.75rem;
+    height: auto !important;
+    min-height: 110px !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    position: relative !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+[data-testid="stSidebarCollapseButton"] {
+    position: absolute !important;
+    top: 0.5rem !important;
+    right: 0.5rem !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    display: block !important;
+    z-index: 20 !important;
+}
+
+/* Logo header styling - centered horizontally in the blue sidebar & enlarged */
+[data-testid="stSidebarHeader"] [data-testid="stLogoLink"],
+[data-testid="stSidebarHeader"] button[data-testid="stLogoLink"],
+[data-testid="stSidebarHeader"] a[data-testid="stLogoLink"],
+[data-testid="stSidebarHeader"] > button,
+[data-testid="stSidebarHeader"] > a,
+[data-testid="stLogoLink"],
+button[data-testid="stLogoLink"],
+a[data-testid="stLogoLink"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    cursor: pointer !important;
+    text-align: center !important;
+}
+
+[data-testid="stSidebarLogo"],
+img[data-testid="stSidebarLogo"],
+[data-testid="stSidebarHeader"] img,
+[data-testid="stSidebarHeader"] img.stLogo,
+img.stLogo,
+[data-testid="stLogo"],
+img[data-testid="stLogo"] {
+    height: auto !important;
+    width: 100% !important;
+    max-width: 250px !important;
+    min-height: 85px !important;
+    max-height: 125px !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 [data-testid="stNavSectionHeader"] {

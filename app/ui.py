@@ -50,7 +50,8 @@ class Figure:
 
 
 def inject_style() -> None:
-    st.html(f"<style>{STYLE}</style>")
+    style = (Path(__file__).parent / "style.css").read_text(encoding="utf-8")
+    st.html(f"<style>{style}</style>")
 
 
 def product_sheet(s: Services) -> None:
