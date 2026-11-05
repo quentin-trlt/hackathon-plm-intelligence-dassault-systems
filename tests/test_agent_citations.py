@@ -67,3 +67,10 @@ def test_zero_width_spaces_inside_brackets_are_ignored(registry: EvidenceRegistr
     checked = check_citations(f"Mass 2 kg [{zwsp}E1][{zwsp}E2], 3 kg [E3{zwsp}].", registry)
     assert checked.text == "Mass 2 kg [E1][E2], 3 kg [E3]." and checked.cited == ("E1", "E2", "E3")
     assert checked.warnings == ()
+
+
+@pytest.mark.parametrize("text", ["14 screws [**E1**].", "14 screws [*E1*, _E3_].", "14 screws [**E1**–**E3**]."])
+def test_emphasised_ids_are_normalised(registry: EvidenceRegistry, text: str) -> None:
+    checked = check_citations(text, registry)
+    assert checked.cited[0] == "E1" and "*" not in checked.text and "_" not in checked.text
+    assert checked.uncited_figures == 0

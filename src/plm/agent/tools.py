@@ -913,7 +913,8 @@ TOOLS: tuple[Tool, ...] = (
     Tool(
         "get_where_used",
         "Every place a product is used: paths from the root, cumulative quantities and impacted assemblies. "
-        "For the impact of changing or replacing a part, also call get_sourcing and get_unit_cost on it.",
+        "For the impact of changing or replacing a part, call assess_change instead: it returns the impacted "
+        "assemblies together with the suppliers, their lead times and the cost change.",
         _params({"plm_id": _PLM_ID}, ("plm_id",)),
         get_where_used,
     ),
@@ -1020,7 +1021,9 @@ TOOLS: tuple[Tool, ...] = (
         "assess_change",
         "Impact of changing a component: either a new unit mass and/or material (new_mass_kg, new_material), or its "
         "replacement by another existing part (replacement_plm_id). Returns impacted assemblies with projected mass "
-        "and material cost, the motor mass and cost change, suppliers before and after, price volatility and risk.",
+        "and material cost, the motor mass and cost change, suppliers before and after with lead times, price "
+        "volatility and risk. When the question names no new mass, material or replacement, call it with plm_id "
+        "alone: it still returns the impacted assemblies and the current suppliers.",
         _params(
             {
                 "plm_id": _PLM_ID,

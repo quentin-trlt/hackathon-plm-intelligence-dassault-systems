@@ -206,7 +206,7 @@ def golden_cases(data: PlmData) -> list[Case]:
             "side_shaft_change",
             (
                 grounded,
-                used_tool("get_where_used"),
+                used_tool("get_where_used", "assess_change"),
                 mentions(*(core_name(a["name"]) for a in impacted if a["plm_id"] != root.plm_id)),
                 mentions(*(s["name"].split(" (")[0] for s in side_sourcing)),
                 has_numbers(*(s["lead_time_days"] for s in side_sourcing if s["lead_time_days"] is not None)),

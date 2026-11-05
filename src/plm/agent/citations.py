@@ -1,7 +1,7 @@
 """Citation check on the model's final answer.
 
-Accepts `[E3]`, `【E3】`, grouped forms such as `[E3, E5]` and ranges such as `[E3–E5]`, and rewrites them as
-`[E3][E4][E5]`. A range is only expanded when every id in it exists.
+Accepts `[E3]`, `【E3】`, grouped forms such as `[E3, E5]`, ranges such as `[E3–E5]` and ids in bold or italics
+such as `[**E3**]`, and rewrites them as `[E3][E4][E5]`. A range is only expanded when every id in it exists.
 """
 
 from __future__ import annotations
@@ -11,8 +11,9 @@ from dataclasses import dataclass
 
 from plm.agent.evidence import EvidenceRegistry
 
-_ITEM = r"E\d+(?:\s*[-\u2010-\u2014]\s*E?\d+)?"
+_ITEM = r"[*_]{0,2}E\d+[*_]{0,2}(?:\s*[-\u2010-\u2014]\s*[*_]{0,2}E?\d+[*_]{0,2})?"
 _GROUP = re.compile(rf"[\[【]\s*({_ITEM}(?:\s*[,;]\s*{_ITEM})*)\s*[\]】]")
+_EMPHASIS = re.compile(r"[*_]")
 _SEPARATOR = re.compile(r"\s*[,;]\s*")
 _RANGE = re.compile(r"E(\d+)\s*[-\u2010-\u2014]\s*E?(\d+)")
 _CITATION = re.compile(r"\[E\d+\]")
@@ -38,7 +39,7 @@ def check_citations(text: str, registry: EvidenceRegistry) -> CheckedAnswer:
     unknown: dict[str, None] = {}
 
     def rewrite(match: re.Match[str]) -> str:
-        ids = [i for item in _SEPARATOR.split(match.group(1)) for i in _expand(item, registry)]
+        ids = [i for item in _SEPARATOR.split(match.group(1)) for i in _expand(_EMPHASIS.sub("", item), registry)]
         known = [i for i in ids if i in registry]
         unknown.update(dict.fromkeys(i for i in ids if i not in registry))
         cited.update(dict.fromkeys(known))
