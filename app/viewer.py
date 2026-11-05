@@ -24,16 +24,21 @@ TEMPLATE = Path(__file__).parent / "assets" / "viewer_3d_template.html"
 DATA_MARK = "/*PLM_DATA*/null"
 CONFIG_MARK = "/*PLM_CONFIG*/{}"
 COMPACT_HEIGHT = 380
-FULL_HEIGHT = 720
+FULL_HEIGHT = 840
 CHECK_DOTS = {"ok": "low", "check": "medium"}
 
 
 @cache
-def _template() -> tuple[str, str, str]:
+def _split_template(modified_ns: int) -> tuple[str, str, str]:
     text = TEMPLATE.read_text(encoding="utf-8")
     before, rest = text.split(DATA_MARK)
     middle, after = rest.split(CONFIG_MARK)
     return before, middle, after
+
+
+def _template() -> tuple[str, str, str]:
+    """The template split at its two markers, read again whenever the file changes on disk."""
+    return _split_template(TEMPLATE.stat().st_mtime_ns)
 
 
 def _script_json(value: Any) -> str:

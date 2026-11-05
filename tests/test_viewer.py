@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -119,3 +120,17 @@ def test_consistency_checks_of_the_reference_view(plm) -> None:
 def test_mass_gap_is_flagged(plm) -> None:
     checks = load_viewer(VIEWER_PATH, plm).checks(plm.root().mass_kg + 1.0)
     assert checks[1].status == "check"
+
+
+def test_template_edits_are_picked_up_without_restart(monkeypatch, tmp_path) -> None:
+    pytest.importorskip("streamlit")
+    sys.path.insert(0, str(APP_DIR))
+    import viewer as app_viewer
+
+    template = tmp_path / "template.html"
+    template.write_text(f"v1 {app_viewer.DATA_MARK} {app_viewer.CONFIG_MARK}", encoding="utf-8")
+    monkeypatch.setattr(app_viewer, "TEMPLATE", template)
+    assert app_viewer._template()[0] == "v1 "
+    template.write_text(f"v2 {app_viewer.DATA_MARK} {app_viewer.CONFIG_MARK}", encoding="utf-8")
+    os.utime(template, ns=(template.stat().st_atime_ns, template.stat().st_mtime_ns + 1_000_000))
+    assert app_viewer._template()[0] == "v2 "

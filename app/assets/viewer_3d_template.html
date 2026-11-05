@@ -34,7 +34,18 @@ input[type=search]{width:100%;padding:7px 10px;border:1px solid var(--line);bord
 .row .q{font-size:11px;color:var(--muted);background:#eef2f6;border-radius:9px;padding:0 7px}
 .dot{width:7px;height:7px;border-radius:50%;flex:none}
 .dot.xml{background:var(--xml)} .dot.estimated{background:var(--est)}
-.viewport{position:relative;background:linear-gradient(var(--view-top),var(--view-bot));min-height:300px}
+.center{display:flex;flex-direction:column;min-width:0;min-height:0}
+.viewport{position:relative;background:linear-gradient(var(--view-top),var(--view-bot));min-height:300px;flex:1}
+.part{background:var(--panel);border-top:1px solid var(--line);padding:10px 14px;max-height:280px;overflow:auto;flex:none}
+.part-empty{color:var(--muted);font-size:13px;margin:2px 0}
+.part-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:8px}
+.part-head h3{margin:0;font-size:15px}
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;background:#eef2f6;color:var(--muted)}
+.part-kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 16px;margin:0;font-size:12.5px}
+.part-kv dt{color:var(--muted);font-size:11px}
+.part-kv dd{margin:0;overflow-wrap:anywhere}
+.part-kv .span2{grid-column:span 2}
+.mono{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:11.5px}
 #c{width:100%;height:100%;display:block}
 .toolbar{position:absolute;top:12px;left:12px;right:12px;display:flex;flex-wrap:wrap;gap:8px;pointer-events:none}
 .tb{pointer-events:auto;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:8px;padding:5px 8px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);box-shadow:0 1px 2px rgba(16,32,48,.06)}
@@ -50,7 +61,7 @@ input[type=search]{width:100%;padding:7px 10px;border:1px solid var(--line);bord
 @media (max-width: 1000px){
   .app{grid-template-columns:1fr;grid-template-rows:auto 60vh auto;height:auto}
   aside{border:0;max-height:none}
-  aside.left{order:2} .viewport{order:1;height:60vh}
+  aside.left{order:2} .center{order:1} .viewport{flex:none;height:60vh}
   header .sub,header .stat{display:none}
   .hint{display:none} .legend{font-size:11px;padding:6px 8px;max-width:200px}
   .tb{padding:3px 6px}
@@ -58,6 +69,8 @@ input[type=search]{width:100%;padding:7px 10px;border:1px solid var(--line);bord
 body.compact header,body.compact aside,body.compact .hint{display:none}
 body.compact .app{grid-template-columns:1fr;grid-template-rows:1fr;height:100%}
 body.compact .viewport{height:100%;min-height:0}
+body.compact .center{height:100%}
+body.compact .part{display:none}
 body.compact .legend{max-width:220px}
 body.compact #tb-iso{display:none}
 body.compact .toolbar{top:8px;left:8px;right:8px;gap:6px}
@@ -81,6 +94,7 @@ body.compact .tb input[type=range]{width:64px}
       <div id="tree"></div>
     </div>
   </aside>
+  <div class="center">
   <main class="viewport" id="vp">
     <canvas id="c" aria-label="Interactive 3D view of the product"></canvas>
     <div class="toolbar">
@@ -98,6 +112,8 @@ body.compact .tb input[type=range]{width:64px}
     <div class="hint">Drag: rotate · Right-drag: pan · Wheel: zoom · Click: select</div>
     <div id="tip"></div>
   </main>
+  <section class="part" id="card" aria-live="polite"></section>
+  </div>
 </div>
 <script>/**
  * @license
@@ -1395,9 +1411,28 @@ function drawTree(filter=''){
 }
 document.getElementById('q').addEventListener('input', e => drawTree(e.target.value));
 
+// ---------- part card ----------
+function card(pid){
+  const C = document.getElementById('card');
+  if(!pid){ C.innerHTML = '<p class="part-empty">Click a part in the 3D view or in the list to see its PLM data and where each value comes from.</p>'; return; }
+  const occ = items.filter(i => i.pid === pid), it = occ[0];
+  const kv = (label, value, cls = '') => `<div class="${cls}"><dt>${label}</dt><dd>${value}</dd></div>`;
+  C.innerHTML = `<div class="part-head"><h3>${esc(it.name)}</h3>
+    <span class="badge">${esc(it.block)}</span><span class="badge">Rev ${esc(it.rev)}</span></div>
+  <dl class="part-kv">
+    ${kv('Material', esc(it.material))}
+    ${kv('Unit mass', `${num(it.mass, 3)} kg`)}
+    ${kv('Quantity in the product', `${occ.length}${occ.length > 1 ? ` (${num(occ.length * it.mass, 3)} kg)` : ''}`)}
+    ${kv('Item (EI)', esc(it.ei || 'none: instanced directly'))}
+    ${kv('Description', it.desc ? esc(it.desc) : '<span class="small">empty in the extract</span>')}
+    ${kv('PLM ID', `<span class="mono">${esc(it.plm)}</span>`)}
+    ${kv('Product element', `<span class="mono">${esc(it.pid)}</span>, XML line ${esc(it.pline)}`)}
+    ${kv('3DEXPERIENCE XID', `<span class="mono">${esc(it.xid)}</span>`, 'span2')}
+  </dl>`;
+}
 function select(pid, frame){
   selected = (selected === pid && !frame) ? null : pid;
-  drawTree(document.getElementById('q').value); refresh();
+  card(selected); drawTree(document.getElementById('q').value); refresh();
   if(selected && frame) frameOn(byPid[selected]);
 }
 
@@ -1453,7 +1488,7 @@ document.querySelectorAll('[data-hs]').forEach(b => b.onclick = () => { hs = b.d
 document.querySelectorAll('[data-col]').forEach(b => b.onclick = () => { colorMode = b.dataset.col; setGroup('col', colorMode); refresh(); });
 setGroup('col', colorMode);
 document.getElementById('ex').addEventListener('input', e => { explode = e.target.value / 100; refresh(); });
-document.getElementById('reset').onclick = () => { selected = null; drawTree(document.getElementById('q').value); refresh(); FOCUS.size ? frameOn(CONFIG.focus.flatMap(p => byPlm[p] || [])) : home(); };
+document.getElementById('reset').onclick = () => { selected = null; card(null); drawTree(document.getElementById('q').value); refresh(); FOCUS.size ? frameOn(CONFIG.focus.flatMap(p => byPlm[p] || [])) : home(); };
 
 // ---------- header ----------
 document.getElementById('s-parts').textContent = DATA.n_parts;
@@ -1463,7 +1498,7 @@ document.getElementById('s-mass').textContent = num(DATA.total_mass, 1);
 // ---------- loop ----------
 function resize(){ const w = vp.clientWidth, h = vp.clientHeight; if(!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 new ResizeObserver(resize).observe(vp); resize();
-drawTree(); refresh();
+drawTree(); card(null); refresh();
 FOCUS.size ? frameOn(CONFIG.focus.flatMap(p => byPlm[p] || [])) : home();
 (function loop(){ controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
 </script>
