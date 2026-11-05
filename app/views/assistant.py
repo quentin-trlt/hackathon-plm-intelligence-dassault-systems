@@ -22,8 +22,7 @@ from services import MAX_CACHED_DATASETS, REFERENCE, REPO_ROOT, Dataset, Service
 MAX_REFS_SHOWN = 5
 _CITATION = re.compile(r"\[(E\d+)\]")
 GENERIC_QUESTIONS = tuple(
-    QUESTIONS[i]
-    for i in ("subassemblies", "most_critical", "heaviest_materials", "single_source", "top_supplier", "off_topic_fr")
+    QUESTIONS[i] for i in ("subassemblies", "most_critical", "heaviest_materials", "single_source", "top_supplier")
 )
 
 

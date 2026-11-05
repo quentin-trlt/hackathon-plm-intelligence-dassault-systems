@@ -72,6 +72,7 @@ def test_golden_cases_cover_every_question(plm_data: PlmData) -> None:
     assert [c.id for c in cases] == list(QUESTIONS)
     assert all(c.checks for c in cases)
     assert set(DEMO_QUESTIONS) <= set(QUESTIONS.values())
+    assert not {QUESTIONS["off_topic_fr"], QUESTIONS["off_topic_en"]} & set(DEMO_QUESTIONS)
 
 
 def test_golden_checks_accept_a_correct_answer_and_reject_a_wrong_one(plm_data: PlmData) -> None:

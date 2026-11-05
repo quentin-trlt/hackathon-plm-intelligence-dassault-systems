@@ -70,10 +70,10 @@ Brief: query the data in natural language, retrieving and displaying the PLM sou
 - [x] Citation, grounding and data-origin checks before an answer is shown
 - [x] Golden-question evaluation (`python -m plm.agent.eval`) and replay mode
 - [x] Integrated in the Assistant view of the app; standalone test page kept (`app/assistant.py`)
-- [ ] **P1** Re-record the replays with `python -m plm.agent.eval --record` (needs `PLM_LLM_API_KEY` in `.env`; do it once the data files are final, any CSV change invalidates them again): the 9 recorded answers are ignored since commit 7a822d5 changed `material_prices.csv`
+- [ ] **P1** The demo runs on the live model (`PLM_AGENT_REPLAY=off`), no recorded answers. Run `python -m plm.agent.eval` once on the final data to check that the 17 questions pass, and make the live assistant robust to the Groq rate limit
 - [x] **P2** Risk tool on `RiskService` (part ranking, supplier and material exposure), so that "which part is the most critical?" uses the official score
 - [x] **P2** Change impact tool, once `ChangeImpactService` exists
-- [ ] **P2** Golden questions on risk and change impact in the evaluation, then record them. Questions added (`most_critical`, `price_exposure`, `screw_copper_change`); recording still needs an API key, see the P1 item above
+- [x] **P2** Golden questions on risk and change impact in the evaluation (`most_critical`, `price_exposure`, `screw_copper_change`)
 
 ## Deliverable and cross-cutting
 

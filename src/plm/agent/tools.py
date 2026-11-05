@@ -592,6 +592,8 @@ def aggregate_leaves(ctx: ToolContext, group_by: str, metric: str, top: int | No
     refs: dict[str, list[SourceRef]] = defaultdict(list)
     ids: dict[str, str | None] = {}
     total = 0.0
+    counted: set[str] = set()
+    total_refs: list[SourceRef] = []
     unpriced: dict[str, Product] = {}
 
     for occ in ctx.leaf_occurrences():
@@ -610,6 +612,8 @@ def aggregate_leaves(ctx: ToolContext, group_by: str, metric: str, top: int | No
             value = cost.value * quantity
             own_refs += cost.sources
         total += value
+        counted.add(leaf.plm_id)
+        total_refs += own_refs
 
         for key, key_id, extra_refs in _group_keys(ctx, group_by, leaf, occ):
             values[key] += value
@@ -640,11 +644,16 @@ def aggregate_leaves(ctx: ToolContext, group_by: str, metric: str, top: int | No
         "metric": metric,
         "unit": unit,
         "total": rounded(total),
+        "distinct_part_count": len(counted),
         "group_count": len(ordered),
         "truncated": len(ordered) > top,
         "groups": groups,
         "method": "Sum over physical parts, weighted by their cumulative quantity in the motor (wrappers excluded).",
     }
+    if total_refs:
+        result["total_evidence"] = ctx.cite(
+            f"Total {metric} over the {len(counted)} distinct physical parts", list(dict.fromkeys(total_refs))
+        )
     if group_by in ("supplier", "country"):
         result["origin"] = ENRICHMENT_ORIGIN
         result["note"] = (
@@ -956,7 +965,8 @@ TOOLS: tuple[Tool, ...] = (
         "aggregate_leaves",
         "Totals over all physical parts of the motor, grouped and sorted, with each group's share of the total. "
         "subassembly = the major subassemblies under the root; assembly = the nearest real assembly. "
-        "count = number of physical units (a screw used 14 times counts 14), not of distinct parts. "
+        "count = number of physical units (a screw used 14 times counts 14); distinct_part_count gives the number "
+        "of different parts. For 'how many parts', report both. "
         "Use it for mass, cost or unit totals, rankings and percentages instead of computing yourself; "
         "for supplier dependency use get_supplier_dependencies.",
         _params(

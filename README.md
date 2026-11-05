@@ -40,8 +40,8 @@ The parser reads the extract and translates it into an internal data model that 
 |---|---|
 | `data/raw/` | XML extract provided by the OEM (see [Data](#data)) |
 | `data/enrichment/` | Non-PLM data written by the team: material prices, suppliers, part sourcing |
-| `data/agent_replays/` | Assistant answers recorded for the demo (see [Replay mode](#replay-mode)) |
-| `docs/` | XML mapping, data contract, risk rules, demo scenarios |
+| `data/agent_replays/` | Assistant answers recorded for offline tests and rehearsals, off by default (see [Replay mode](#replay-mode)) |
+| `docs/` | XML mapping, data contract, risk rules, assistant design |
 | `src/plm/parser/` | XML and enrichment loading, mapping to the data model |
 | `src/plm/analysis/` | BOM exploration, cost, risk, change impact |
 | `src/plm/agent/` | AI assistant with source citation |
@@ -146,7 +146,7 @@ python -m plm.agent                                # interactive session in the 
 python -m plm.agent.eval                           # golden-question evaluation (live model)
 ```
 
-`python -m plm.agent.eval` runs 14 reference questions and checks each answer automatically. The checks cover figures, names, the tools used, citations, and the refusal of off-topic requests. Expected values are computed from the current data, so the evaluation stays valid when the enrichment files change. The evaluation needs the network and is not part of `pytest`. The offline tests cover the tools, the loop (with a scripted model), the citation check, the evaluation checks and the replay mode.
+`python -m plm.agent.eval` runs 17 reference questions and checks each answer automatically. The checks cover figures, names, the tools used, citations, and the refusal of off-topic requests. Expected values are computed from the current data, so the evaluation stays valid when the enrichment files change. The evaluation needs the network and is not part of `pytest`. The offline tests cover the tools, the loop (with a scripted model), the citation check, the evaluation checks and the replay mode.
 
 ### Replay mode
 
@@ -178,7 +178,7 @@ Each recorded answer stores a fingerprint of the XML and CSV files, and is ignor
 | Analysis | BOM graph, risks, change impact | `src/plm/analysis` | |
 | UI | Interface and demo flow | `app/` | |
 | Agent | AI assistant with sources | `src/plm/agent`, `app/views/assistant.py`, `app/assistant.py` | |
-| Pitch | Demo scenarios, slides | `presentation/`, `docs/` | |
+| Pitch | Slides | `presentation/` | |
 
 ## Git conventions
 

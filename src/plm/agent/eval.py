@@ -56,7 +56,6 @@ DEMO_IDS = (
     "stator_cost_share",
     "gear_wheel",
     "rotor_magnet",
-    "off_topic_fr",
 )
 DEMO_QUESTIONS = tuple(QUESTIONS[i] for i in DEMO_IDS)
 

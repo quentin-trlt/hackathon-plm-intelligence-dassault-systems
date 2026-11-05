@@ -379,3 +379,11 @@ def test_tools_answer_on_another_extract_without_enrichment(derived_xml, tmp_pat
         call(other, name, **arguments)
     prompt = system_prompt(data.plm, data.enrichment)
     assert "No material prices were provided" in prompt and "No part sourcing data was provided" in prompt
+
+
+def test_aggregate_total_has_its_own_evidence_and_distinct_count(ctx: ToolContext, plm_data: PlmData) -> None:
+    result = call(ctx, "aggregate_leaves", group_by="material", metric="count", top=3)
+    assert result["truncated"] and result["total"] == 70
+    assert result["distinct_part_count"] == len(plm_data.plm.leaves()) == 36
+    evidence = ctx.registry.get(result["total_evidence"])
+    assert evidence is not None and len(evidence.refs) > len(result["groups"])
