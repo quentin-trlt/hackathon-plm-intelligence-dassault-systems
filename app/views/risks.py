@@ -8,10 +8,12 @@ import streamlit as st
 
 import nav
 import ui
+import viewer
 from plm.analysis.risk import PartRisk
 from plm.parser import MATERIAL_PRICES_FILE
 from services import Services, leaf_frame
 
+NOT_SCORED_COLOR = "#9AA5B1"
 ZONE_TINTS = {"high": "rgba(180, 35, 24, 0.16)", "medium": "rgba(224, 138, 46, 0.18)", "low": "rgba(46, 125, 91, 0.11)"}
 
 
@@ -124,6 +126,17 @@ def _ranking(ranking: list[PartRisk]) -> None:
     nav.link("structure", "Open Product structure", icon=":material/account_tree:")
 
 
+def _in_3d(s: Services, ranking: list[PartRisk]) -> None:
+    st.subheader("Where the risks sit", anchor=False)
+    colors = {leaf.plm_id: NOT_SCORED_COLOR for leaf in s.plm.leaves() if leaf.plm_id in s.risk.excluded}
+    colors.update({r.plm_id: ui.RISK_COLORS[r.level] for r in ranking})
+    legend = [(f"{level.capitalize()} supply risk", ui.RISK_COLORS[level]) for level in ("high", "medium", "low")]
+    if s.risk.excluded:
+        legend.append(("Not scored", NOT_SCORED_COLOR))
+    viewer.show(s, colors=colors, legend=legend, color_label="Risk", ghost_others=True, height=460)
+    st.caption("Each part in the colour of its supply risk level. Parts outside the filters are ghosted.")
+
+
 def _price_exposure(s: Services, price: list[PartRisk]) -> None:
     st.subheader("Price exposure", anchor=False)
     if not s.has_prices:
@@ -207,6 +220,7 @@ def render(s: Services) -> None:
         _heat_map(s, ranking)
     with right:
         _ranking(ranking)
+    _in_3d(s, ranking)
     _price_exposure(s, price)
     _reuse(s, ranking)
     ui.show_sources([ref for r in ranking for ref in r.sources], "Where the risk scores come from")

@@ -83,3 +83,4 @@ Brief: web application, dashboard or comparable interface.
 - [x] **P2** Fix the lint issues already on `main`: import order in `tests/test_risk.py`, formatting of `src/plm/analysis/risk.py`
 - [x] **P3** Smoke tests of the app views with Streamlit `AppTest`
 - [x] **P2** Change dataset from the sidebar: another XPDMXML extract with optional enrichment files, checked at upload, kept for the session only. Figures that need a missing file say so; the risk score rests on the remaining criteria (`app/dataset.py`, `tests/test_dataset.py`)
+- [x] **P2** 3D view in Product structure (whole product, and the selected product in its card), Change impact and Risks, from the exported viewer. Optional upload with another extract: only its data is read, refused if built from another extract (`app/viewer.py`, `src/plm/parser/viewer.py`, `tests/test_viewer.py`)

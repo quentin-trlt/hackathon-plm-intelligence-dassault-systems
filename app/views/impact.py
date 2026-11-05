@@ -8,12 +8,16 @@ import pandas as pd
 import streamlit as st
 
 import ui
+import viewer
 from plm.analysis.impact import ChangeImpact
 from plm.analysis.risk import PartRisk
 from plm.parser import MATERIAL_PRICES_FILE, PART_SOURCING_FILE
 from services import Services, label, leaves_below, sourcing_frame
 
 DEFAULT_TARGET = "ECAR-3D_DifferentialSideShaft"
+CHANGED_COLOR = "#1F6FB2"
+PROPOSED_COLOR = "#E08A2E"
+CONTEXT_COLOR = "#8DBFB2"
 MODES = ("Change mass or material", "Replace by an existing part")
 
 
@@ -210,6 +214,29 @@ def _suppliers(s: Services, plm_id: str) -> None:
     )
 
 
+def _in_3d(s: Services, result: ChangeImpact) -> None:
+    """The changed component and its replacement in colour, the rest of the impacted subassemblies as context."""
+    st.subheader("Where the change lands", anchor=False)
+    changed = leaves_below(s, result.target.plm_id)
+    proposed = leaves_below(s, result.replacement.plm_id) if result.replacement else []
+    context = [
+        leaf
+        for a in result.impacted
+        if a.depth == 1
+        for leaf in leaves_below(s, a.plm_id)
+        if leaf not in changed and leaf not in proposed
+    ]
+    colors = {leaf: CONTEXT_COLOR for leaf in context}
+    colors.update({leaf: CHANGED_COLOR for leaf in changed})
+    colors.update({leaf: PROPOSED_COLOR for leaf in proposed})
+    legend = [("Changed component", CHANGED_COLOR)]
+    if proposed:
+        legend.append(("Proposed replacement", PROPOSED_COLOR))
+    if context:
+        legend.append(("Rest of the impacted subassembly", CONTEXT_COLOR))
+    viewer.show(s, focus=changed + proposed, colors=colors, legend=legend, color_label="Change", ghost_others=True)
+
+
 def _before_after(s: Services, result: ChangeImpact) -> None:
     st.subheader("Before and after", anchor=False)
     before, after = st.columns(2, gap="large")
@@ -254,6 +281,7 @@ def render(s: Services) -> None:
             "requalification or validation cost: the real cost of a change is higher."
         )
         _propagation(result)
+        _in_3d(s, result)
         _impacted(s, result)
         _before_after(s, result)
         ui.show_sources(result.sources)

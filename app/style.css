@@ -627,3 +627,8 @@ div[class*="st-key-att-"] {
         animation: none !important;
     }
 }
+
+.viewer-checks {
+    display: grid;
+    gap: 0.35rem;
+}

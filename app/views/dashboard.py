@@ -294,6 +294,18 @@ def _data_quality(s: Services) -> None:
             )
         if missing:
             checks.append(("Enrichment files", f"Not provided: {', '.join(missing)}", "missing data"))
+        if s.viewer is None:
+            checks.append(("3D view", "Not provided with this dataset", "missing data"))
+        else:
+            drawn = sum(1 for p in leaves if s.viewer.covers(p.plm_id))
+            checks.append(
+                (
+                    "3D view",
+                    f"{drawn}/{len(leaves)} leaf parts drawn, {s.viewer.placed_from_xml}/{len(s.viewer.items)} "
+                    "positions read from the XML",
+                    "; ".join(s.viewer.warnings) or "consistent with the extract",
+                )
+            )
         checks.append(
             (
                 "Enrichment coverage",

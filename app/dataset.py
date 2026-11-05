@@ -20,9 +20,11 @@ from plm.parser import (
     MATERIAL_PRICES_FILE,
     PART_SOURCING_FILE,
     SUPPLIERS_FILE,
+    VIEWER_FILE,
     EnrichmentError,
     PlmParseError,
     PlmValidationError,
+    ViewerError,
 )
 from services import DATASET_KEY, REFERENCE, Dataset, active_dataset, build_services
 
@@ -32,7 +34,7 @@ ENRICHMENT_LABELS = {
     SUPPLIERS_FILE: "Suppliers",
     PART_SOURCING_FILE: "Part sourcing",
 }
-LOAD_ERRORS = (OSError, PlmParseError, PlmValidationError, EnrichmentError, UnicodeDecodeError)
+LOAD_ERRORS = (OSError, PlmParseError, PlmValidationError, EnrichmentError, ViewerError, UnicodeDecodeError)
 MAX_PROBLEMS_SHOWN = 15
 _UNSAFE = re.compile(r"[^\w.\- ]")
 
@@ -52,8 +54,10 @@ def precheck(csv_files: Iterable[str]) -> list[str]:
     return problems
 
 
-def stage(xml_name: str, xml_content: bytes, csv_contents: dict[str, bytes]) -> Dataset:
-    """Write the files to a new temporary folder, the CSV files under their data contract names."""
+def stage(
+    xml_name: str, xml_content: bytes, csv_contents: dict[str, bytes], viewer_content: bytes | None = None
+) -> Dataset:
+    """Write the files to a new temporary folder, the CSV and 3D view files under their contract names."""
     root = Path(tempfile.mkdtemp(prefix=UPLOAD_PREFIX))
     xml_path = root / safe_xml_name(xml_name)
     xml_path.write_bytes(xml_content)
@@ -61,7 +65,11 @@ def stage(xml_name: str, xml_content: bytes, csv_contents: dict[str, bytes]) -> 
     enrichment_dir.mkdir()
     for file, content in csv_contents.items():
         (enrichment_dir / file).write_bytes(content)
-    return Dataset(xml_path, enrichment_dir)
+    viewer_path = None
+    if viewer_content is not None:
+        viewer_path = root / VIEWER_FILE
+        viewer_path.write_bytes(viewer_content)
+    return Dataset(xml_path, enrichment_dir, viewer_path=viewer_path)
 
 
 def validate(dataset: Dataset) -> list[str]:
@@ -91,12 +99,14 @@ def activate(dataset: Dataset) -> None:
         discard(previous)
 
 
-def load_upload(xml_name: str, xml_content: bytes, csv_contents: dict[str, bytes]) -> list[str]:
+def load_upload(
+    xml_name: str, xml_content: bytes, csv_contents: dict[str, bytes], viewer_content: bytes | None = None
+) -> list[str]:
     """Stage, check and activate an upload. Returns the problems found; nothing changes when there are any."""
     problems = precheck(csv_contents)
     if problems:
         return problems
-    dataset = stage(xml_name, xml_content, csv_contents)
+    dataset = stage(xml_name, xml_content, csv_contents, viewer_content)
     problems = validate(dataset)
     if problems:
         discard(dataset)
@@ -119,7 +129,8 @@ def dialog() -> None:
     st.caption(
         "Upload another 3DEXPERIENCE XPDMXML extract with the same structure. The enrichment files are optional: "
         "without them, the figures that need them say that the data is missing. Format of the CSV files in "
-        "docs/data_contract.md. The files stay in a temporary folder for this session only."
+        "docs/data_contract.md. The 3D view is the HTML viewer exported for this extract: only its data is read, "
+        "never its code. The files stay in a temporary folder for this session only."
     )
     xml = st.file_uploader("PLM extract (.xml)", type=["xml"], key="upload-xml")
     columns = st.columns(len(ENRICHMENT_LABELS))
@@ -127,6 +138,9 @@ def dialog() -> None:
         file: column.file_uploader(f"{text} (optional)", type=["csv"], key=f"upload-{file}", help=f"Read as {file}.")
         for column, (file, text) in zip(columns, ENRICHMENT_LABELS.items(), strict=True)
     }
+    viewer = st.file_uploader(
+        "3D view (optional)", type=["html", "htm"], key="upload-viewer", help=f"Read as {VIEWER_FILE}."
+    )
     with st.container(horizontal=True):
         load = st.button("Load this dataset", type="primary", disabled=xml is None, icon=":material/upload:")
         reset = st.button("Back to the reference dataset", disabled=current.reference, icon=":material/restore:")
@@ -139,6 +153,7 @@ def dialog() -> None:
                 xml.name,
                 xml.getvalue(),
                 {file: upload.getvalue() for file, upload in uploads.items() if upload is not None},
+                viewer.getvalue() if viewer is not None else None,
             )
         if not problems:
             st.rerun()

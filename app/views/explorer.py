@@ -11,6 +11,7 @@ import pandas as pd
 import streamlit as st
 
 import ui
+import viewer
 from plm.model import Occurrence, Product, SourceRef
 from plm.parser import MATERIAL_PRICES_FILE, PART_SOURCING_FILE
 from services import Services, criteria_frame, label, leaves_below, part_risk, sourcing_frame
@@ -24,6 +25,7 @@ TREE_SELECTED = "tree-selected"
 KIND_BADGES = {"assembly": "blue", "part": "gray", "wrapper": "violet"}
 COMPARE_DEFAULT = "ECAR-EI_GEAR_WHEEL"
 MISSING = "Missing data"
+HIGHLIGHT_COLOR = "#E0562B"
 
 
 def _is_wrapper(s: Services, plm_id: str) -> bool:
@@ -289,7 +291,9 @@ def _card(s: Services, plm_id: str) -> None:
         ]
     )
 
-    t_attr, t_struct, t_source, t_risk = st.tabs(["PLM attributes", "Structure", "Cost and sourcing", "Risk"])
+    t_attr, t_struct, t_source, t_risk, t_3d = st.tabs(
+        ["PLM attributes", "Structure", "Cost and sourcing", "Risk", "3D"]
+    )
     refs: list[SourceRef] = [product.source]
     with t_attr:
         st.dataframe(_attributes(s, product), hide_index=True, width="stretch")
@@ -299,7 +303,27 @@ def _card(s: Services, plm_id: str) -> None:
         refs += _sourcing(s, product)
     with t_risk:
         refs += _risk(s, product)
+    with t_3d:
+        _in_3d(s, product)
     ui.show_sources(refs)
+
+
+def _in_3d(s: Services, product: Product) -> None:
+    """The product framed in the 3D view, every other part ghosted. The root shows the whole product."""
+    leaves = [] if product.is_root else leaves_below(s, product.plm_id)
+    if s.viewer is not None and leaves and not any(s.viewer.covers(p) for p in leaves):
+        st.info("This product is not drawn in the 3D view of the dataset.")
+        return
+    if len(leaves) > 1:
+        st.caption(f"The {len(leaves)} leaf parts below {product.name} are highlighted.")
+    viewer.show(
+        s,
+        focus=leaves,
+        colors=dict.fromkeys(leaves, HIGHLIGHT_COLOR) if leaves else None,
+        legend=[(product.name, HIGHLIGHT_COLOR)],
+        color_label="Selection",
+        ghost_others=True,
+    )
 
 
 def _filtered(s: Services, query: str, revisions: list[str], maturities: list[str]) -> set[str] | None:
@@ -550,9 +574,12 @@ def render(s: Services) -> None:
         "Product structure",
         "The expanded product structure from the OEM extract. Select a row to open its card.",
     )
-    browse, versions, compare = st.tabs(["Structure", "Versions and lifecycle", "Compare"])
+    browse, view_3d, versions, compare = st.tabs(["Structure", "3D view", "Versions and lifecycle", "Compare"])
     with browse:
         _browse(s)
+    with view_3d:
+        viewer.show(s, full=True)
+        viewer.consistency_checks(s)
     with versions:
         _versions(s)
     with compare:
