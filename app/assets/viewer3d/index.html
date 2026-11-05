@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<title>3D view</title>
+<style>/*STYLE*/</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="project"><span class="eyebrow" id="v-sub"></span><span id="v-title"></span></div>
+  <div class="stats"><div><b id="stat-parts"></b><span>parts</span></div><div><b id="stat-occ"></b><span>occurrences</span></div><div><b id="stat-mass"></b><span>kg · XML mass</span></div></div>
+  <button id="present" class="top-action" title="Hide the structure panel (P)"><span data-icon="expand"></span><span>Present</span></button>
+</header>
+<div class="workspace">
+  <aside class="explorer" aria-label="Product structure">
+    <div class="panel-head"><span class="eyebrow">ASSEMBLY EXPLORER</span><span class="panel-count" id="tree-count"></span></div>
+    <label class="search"><span data-icon="search"></span><input id="search" placeholder="Find a component…" aria-label="Search components"><kbd>/</kbd></label>
+    <div class="tree-root"><span data-icon="assembly"></span><div><strong id="root-name"></strong><small id="root-rev"></small></div><button id="collapse" class="icon-button" title="Collapse or expand all groups" aria-label="Collapse or expand all groups"><span data-icon="list"></span></button></div>
+    <nav id="tree" class="tree" aria-label="Components"></nav>
+  </aside>
+  <div class="center">
+    <main id="viewport" class="viewport" aria-label="3D assembly workspace">
+      <canvas id="scene" aria-label="Interactive 3D view. Drag to rotate, scroll to zoom. Choose parts in the explorer for keyboard access." tabindex="0"></canvas>
+      <div class="view-nav" id="view-nav" aria-label="Assembly scope"></div>
+      <div id="selection-banner" class="selection-banner" hidden><span id="selection-label"></span><button id="clear-selection" title="Clear selection" aria-label="Clear selection">×</button></div>
+      <div class="view-cube" aria-label="Camera views"><button data-camera="top" title="Top view">TOP</button><div><button data-camera="front" title="Front view">FRONT</button><button data-camera="iso" class="active" title="Isometric view">3D</button><button data-camera="side" title="Side view">SIDE</button></div><button id="fit" title="Fit visible parts (F)"><span data-icon="fit"></span> Fit view</button></div>
+      <div id="legend" class="legend" hidden></div>
+      <div id="tooltip" class="tooltip" hidden></div>
+      <div id="toast" class="toast" role="status" hidden></div>
+      <div class="bottom-controls">
+        <div class="preset-row" role="group" aria-label="Assembly presentation"><button data-preset="assembled"><span data-icon="assembly"></span>Assembled</button><button data-preset="inside" class="active"><span data-icon="layers"></span>Inside</button><button data-preset="exploded"><span data-icon="explode"></span>Exploded</button></div>
+        <div class="toolbar">
+          <div class="tool full-only"><label for="explode">Explode</label><input id="explode" type="range" min="0" max="100" value="0"><output id="explode-value">0%</output></div>
+          <div class="tool full-only"><button id="section" aria-pressed="false" title="Section the model"><span data-icon="section"></span>Section</button><input id="section-depth" aria-label="Section depth" type="range" min="0" max="100" value="52" disabled></div>
+          <div class="tool"><label for="render-mode" class="sr-only">Colour mode</label><select id="render-mode"><option value="custom" hidden></option><option value="material">Materials</option><option value="block">Subassemblies</option><option value="source">Placement source</option></select></div>
+          <button id="rotate" class="icon-button full-only" aria-label="Slow turntable" aria-pressed="false" title="Slow turntable"><span data-icon="rotate"></span></button>
+          <button id="capture" class="icon-button full-only" aria-label="Save model image" title="Save model image"><span data-icon="camera"></span></button>
+          <button id="reset" class="icon-button" aria-label="Reset viewer" title="Reset viewer (R)"><span data-icon="reset"></span></button>
+        </div>
+        <div class="disclosure"><span class="disclosure-dot"></span><span>Illustrative reconstruction · <b>not OEM CAD</b> · engineering values from XML</span></div>
+      </div>
+      <div class="interaction-hint">DRAG TO ORBIT <span>·</span> SCROLL TO ZOOM <span>·</span> CLICK TO INSPECT</div>
+      <div id="loading" class="loading"><span class="loader"></span><strong>Building the 3D scene</strong></div>
+      <div id="failure" class="failure" hidden><strong>The 3D view could not start.</strong><p id="failure-message"></p></div>
+    </main>
+    <section class="part" id="card" aria-live="polite"></section>
+  </div>
+</div>
+<footer class="statusbar"><span><i class="live-dot"></i> <span id="status-message"></span></span><button id="references-toggle" aria-pressed="false">Show modelling references <span id="reference-count"></span></button></footer>
+<script>/*THREE*/</script>
+<script>/*ORBIT*/</script>
+<script>/*ROOM*/</script>
+<script>/*BGU*/</script>
+<script>const DATA = /*PLM_DATA*/null;
+const CONFIG = Object.assign({mode: "full", focus: [], colors: null, color_label: "Highlight", legend: null, ghost_others: false, title: "3D view", subtitle: ""}, /*PLM_CONFIG*/{});</script>
+<script>/*GEOMETRY*/</script>
+<script>/*APP*/</script>
+</body>
+</html>

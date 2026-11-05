@@ -1,13 +1,14 @@
-"""3D view embedded in the pages: the app's own viewer template, filled with the checked data of the dataset.
+"""3D view embedded in the pages: the app's viewer (app/assets/viewer3d/), filled with the scene built from the extract.
 
-The template (app/assets/viewer_3d_template.html) holds three.js and the drawing code; the dataset only brings the
-JSON parts, positions and shapes. Each view tells the template which parts to frame, how to colour them and whether to
-show the full viewer or the 3D scene alone. The page drives the viewer; a click in the 3D view stays inside it.
+The viewer sources hold three.js and the drawing code; the dataset only brings the JSON scene. Each view tells the
+viewer which parts to frame, how to colour them and whether to show the full viewer or the 3D scene alone. The page
+drives the viewer; a click in the 3D view stays inside it.
 """
 
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterable
 from functools import cache
 from html import escape
@@ -16,29 +17,43 @@ from typing import Any
 
 import streamlit as st
 
-import ui
-from plm.parser import VIEWER_FILE, ViewerData
+from plm.parser import PROFILES_FILE, ViewerData
 from services import Services
 
-TEMPLATE = Path(__file__).parent / "assets" / "viewer_3d_template.html"
+ASSETS = Path(__file__).parent / "assets" / "viewer3d"
+SOURCES = {
+    "STYLE": "style.css",
+    "THREE": "vendor/three.min.js",
+    "ORBIT": "vendor/OrbitControls.js",
+    "ROOM": "vendor/RoomEnvironment.js",
+    "BGU": "vendor/BufferGeometryUtils.js",
+    "GEOMETRY": "geometry.js",
+    "APP": "app.js",
+}
 DATA_MARK = "/*PLM_DATA*/null"
 CONFIG_MARK = "/*PLM_CONFIG*/{}"
 COMPACT_HEIGHT = 380
 FULL_HEIGHT = 840
 CHECK_DOTS = {"ok": "low", "check": "medium"}
+_SOURCE_MARK = re.compile(r"/\*(" + "|".join(SOURCES) + r")\*/")
+
+
+def _files() -> list[Path]:
+    return [ASSETS / "index.html", *(ASSETS / name for name in SOURCES.values())]
 
 
 @cache
-def _split_template(modified_ns: int) -> tuple[str, str, str]:
-    text = TEMPLATE.read_text(encoding="utf-8")
-    before, rest = text.split(DATA_MARK)
+def _assemble(modified_ns: tuple[int, ...]) -> tuple[str, str, str]:
+    index = (ASSETS / "index.html").read_text(encoding="utf-8")
+    html = _SOURCE_MARK.sub(lambda m: (ASSETS / SOURCES[m.group(1)]).read_text(encoding="utf-8"), index)
+    before, rest = html.split(DATA_MARK)
     middle, after = rest.split(CONFIG_MARK)
     return before, middle, after
 
 
 def _template() -> tuple[str, str, str]:
-    """The template split at its two markers, read again whenever the file changes on disk."""
-    return _split_template(TEMPLATE.stat().st_mtime_ns)
+    """The viewer page split at its two markers, assembled again whenever a source file changes on disk."""
+    return _assemble(tuple(path.stat().st_mtime_ns for path in _files()))
 
 
 def _script_json(value: Any) -> str:
@@ -71,16 +86,21 @@ def consistency_checks(s: Services) -> None:
 
 def caption(viewer: ViewerData) -> str:
     total = len(viewer.items)
-    return (
-        "Schematic shapes sized from mass and typical density, not the OEM CAD. "
-        f"{viewer.placed_from_xml} of {total} positions read from the XML, {total - viewer.placed_from_xml} estimated."
+    text = (
+        "Illustrative reconstruction from the XML, not the OEM CAD: shapes come from profiles matched by PLM ID. "
+        f"{viewer.placed_from_xml} of {total} positions read from the XML, {total - viewer.placed_from_xml} "
+        "reconstructed."
     )
+    if viewer.profiles_file is None:
+        return text + f" No shape profiles ({PROFILES_FILE}): every part is a marker."
+    if viewer.markers:
+        return text + f" {len(viewer.markers)} part(s) without a profile are shown as markers."
+    return text
 
 
 def show(
     s: Services,
     *,
-    what: str = "the 3D view",
     full: bool = False,
     focus: Iterable[str] = (),
     colors: dict[str, str] | None = None,
@@ -89,9 +109,9 @@ def show(
     ghost_others: bool = False,
     height: int | None = None,
 ) -> None:
-    """Draw the 3D view of the dataset, or say that it was not provided."""
+    """Draw the 3D view of the dataset, or say why it cannot be drawn."""
     if s.viewer is None:
-        ui.missing_data(what, VIEWER_FILE)
+        st.info(f"The 3D view cannot be drawn for this extract: {s.viewer_problem}", icon=":material/info:")
         return
     root = s.plm.root()
     config = {
@@ -101,9 +121,8 @@ def show(
         "legend": legend,
         "color_label": color_label,
         "ghost_others": ghost_others,
-        "title": f"{root.name} · 3D view",
-        "subtitle": f"Built from {s.dataset.name}",
-        "root_mass": root.mass_kg,
+        "title": root.name,
+        "subtitle": f"3D view · built from {s.dataset.name}",
     }
     st.iframe(page(s.viewer, config), height=height or (FULL_HEIGHT if full else COMPACT_HEIGHT))
     st.caption(caption(s.viewer))

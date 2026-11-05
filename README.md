@@ -38,7 +38,7 @@ The parser reads the extract and translates it into an internal data model that 
 
 | Folder | Role |
 |---|---|
-| `data/raw/` | XML extract provided by the OEM (see [Data](#data)) |
+| `data/raw/` | XML extract provided by the OEM and the 3D shape profiles derived from it (see [Data](#data)) |
 | `data/enrichment/` | Non-PLM data written by the team: material prices, suppliers, part sourcing |
 | `data/agent_replays/` | Assistant answers recorded for offline tests and rehearsals, off by default (see [Replay mode](#replay-mode)) |
 | `docs/` | XML mapping, data contract, risk rules, assistant design |
@@ -101,7 +101,7 @@ Every figure it shows comes from `load()` and the analysis services; values from
 
 The **Change dataset** button in the sidebar loads another XPDMXML extract in the same format, with its enrichment files (`material_prices.csv`, `suppliers.csv`, `part_sourcing.csv`) as optional uploads. The files are checked like the reference ones: a malformed extract or a CSV that breaks [the data contract](docs/data_contract.md) is refused and the active dataset is kept. They are kept in a temporary folder for the browser session only, never in the repository. Figures, charts and columns that need a missing file say so instead of showing a value, and the risk score then rests on the criteria that remain (see [docs/risk_rules.md](docs/risk_rules.md)). The assistant works on the active dataset; recorded replays only exist for the reference extract.
 
-The **3D view** draws the product from the viewer exported for the extract (`data/raw/viewer_3d.html` for the reference one): the whole product in the "3D view" tab of Product structure, the selected product in the "3D" tab of its card, the changed component and its subassembly in Change impact, and every part in the colour of its risk level in Risks. Shapes are schematic primitives sized from mass and typical density, not the OEM CAD; most positions are read from the XML and the others are estimated, as each view states. The viewer can be uploaded with another extract. Only its `const DATA` JSON is read and type-checked, then drawn in the app's own template (`app/assets/viewer_3d_template.html`); its code never runs. A viewer whose parts are not in the extract is refused. The reference viewer holds partner data and follows the same rules as the XML.
+The **3D view** is rebuilt from the active extract each time it is loaded: the whole product in the "3D view" tab of Product structure, the selected product in the "3D" tab of its card, the changed component and its subassembly in Change impact, and every part in the colour of its risk level in Risks. Positions compose the `RelativeTransformation3D` of every instance from the root; shapes are illustrative profiles (`data/raw/geometry_reference.json`, partner-derived like the XML) matched by PLM ID and moved to the XML position. They are not the OEM CAD. A part without a profile, for instance in another extract, is drawn as a marker at its XML origin, and the consistency checks under the viewer say so. The viewer sources (`app/assets/viewer3d/`, three.js r147 under the MIT licence) hold no partner data; the scene is injected as JSON and nothing is sent back to the app.
 
 ## AI assistant
 
